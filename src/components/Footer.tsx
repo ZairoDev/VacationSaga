@@ -62,8 +62,8 @@ const widgetMenus: WidgetFooterMenu[] = [
     id: "2",
     title: "Help Desk",
     menus: [
-      { href: "#", label: "Owner Help" },
-      { href: "#", label: "Traveller Help" },
+      { href: "/owner-help", label: "Owner Help" },
+      { href: "/traveller-help", label: "Traveller Help" },
       { href: "/privacy-policy", label: "Privacy Policy" },
       { href: "/termsandconditions", label: "Terms & Conditions" },
       { href: "/contact", label: "Support" },

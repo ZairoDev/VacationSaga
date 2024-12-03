@@ -20,7 +20,7 @@ const PrivacyPolicy = () => {
         );
         const currentSection = sectionElements.find(
             (section: any) =>
-                section?.getBoundingClientRect().top <=150 &&
+                section?.getBoundingClientRect().top <=110 &&
                 section?.getBoundingClientRect().bottom > 100
         );
         if (currentSection) {
@@ -69,7 +69,7 @@ and stored by us in our data base and will not be shared with any third party .<
                     <li className='sm:text-xl text-base'>Disputes over property quality or condition.</li>
                     <li className='sm:text-xl text-base'>Reservation agreements between travelers and property owners.</li>
                     </ul>
-                    <p className='sm:text-xl text-base m-5'> we act as a middleman to facilitate smooth transaction between the holiday maker and the property owner</p>
+                    <p className='sm:text-xl text-base '> we act as a middleman to facilitate smooth transaction between the holiday maker and the property owner</p>
                 </section>
 
 
