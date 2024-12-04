@@ -108,7 +108,7 @@ const socials: SocialType[] = [
   {
     name: "Pinterest",
     icon: "lab la-instagram",
-    href: "https://in.pinterest.com/marketingvacationsaga/",
+    href: "https://in.pinterest.com/vacationsaga/",
   },
 ];
 
