@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    background: #525252;
+    border-radius: 10px; 
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f1f1f127; 
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1cdcdb4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  cursor: pointer;
+}
+
+.slick-slide {
+  padding: 0 10px; /* Add horizontal padding to each slide */
+}
+
+.card-container {
+  margin: 0 10px; /* Optional: adjust the margin if necessary */
+}
