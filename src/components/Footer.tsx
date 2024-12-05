@@ -132,7 +132,7 @@ const renderItem = (item: SocialType, index: number) => {
 const Footer: React.FC = () => {
   const renderWidgetMenuItem = (menu: WidgetFooterMenu, index: number) => {
     return (
-      <div key={index} className="text-sm px-4">
+      <div key={index} className="text-sm px-4 ">
         <h2 className="font-semibold text-neutral-700 dark:text-neutral-200">
           {menu.title}
         </h2>
@@ -154,7 +154,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <div className=" py-2 px-8">
+    <div className=" py-2 bg-white dark:bg-[#111827] px-8">
       <FooterNav />
 
       <div className="nc-Footer relative  border-t border-neutral-200 dark:border-neutral-700">
