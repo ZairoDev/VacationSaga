@@ -186,7 +186,7 @@ const Footer: React.FC = () => {
         <div className=" w-full flex justify-center">
           <h1>
             Managed by{" "}
-            <span className=" text-md">Zairo International Pvt. Ltd.</span>
+            <span className=" text-md">Zairo International Private Limited.</span>
           </h1>
           {/* <img src="/zairo.jfif" alt="" /> */}
         </div>

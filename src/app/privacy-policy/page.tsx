@@ -101,11 +101,11 @@ and stored by us in our data base and will not be shared with any third party .<
                     <li className='sm:text-xl text-base'>We do not make any exclusive contract with our registered property owners and registered travelers 
                     which means you are totally free to work with other companies while working with our company</li>
                     <li className='sm:text-xl text-base'>MWe may provide you with an online payment portal for your connivance but we are not liable for
-any losses you suffer due to the decision of PayPal and bank. In case your payment is declined 
-by PayPal or by bank, you must directly contact them and we are not accountable for the same. You 
-agree to indemnify us from or against any or all the claims or legal fees incurred by you
-against an action brought by you against the payment gateway. In case you need any assistance 
-regarding approval of your payments, you can directly reach to PayPal or bank's customer support</li>
+                    any losses you suffer due to the decision of PayPal and bank. In case your payment is declined 
+                    by PayPal or by bank, you must directly contact them and we are not accountable for the same. You 
+                    agree to indemnify us from or against any or all the claims or legal fees incurred by you
+                    against an action brought by you against the payment gateway. In case you need any assistance 
+                    regarding approval of your payments, you can directly reach to PayPal or bank's customer support</li>
                     <li className='sm:text-xl text-base'>In case you find any content, video or photos defamatory or against public policy, you can notify us 
                     on the email address provided on the website, mentioning the reason as to why you find the material inappropriate</li>
                     <li className='sm:text-xl text-base'>We provide advertising services for our registered customers and we also serve as in accommodation search system 
