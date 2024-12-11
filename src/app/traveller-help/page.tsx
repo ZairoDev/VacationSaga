@@ -1,5 +1,5 @@
 'use client'
-import React, { Fragment, useRef, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 import Input from "@/shared/Input";
 import axios from "axios";
 import { Dialog, Transition } from "@headlessui/react";
@@ -34,7 +34,6 @@ function Page() {
       setResults(response.data.questions);
     } catch (err) {
       setError("Something went wrong while fetching results");
-
     } finally {
       setLoading(false);
     }
@@ -42,7 +41,7 @@ function Page() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
-    console.log(term)
+    console.log(term, "Term gonna print here")
     setSearchTerm(term);
     if (term.trim()) {
       handleSearch(term);
@@ -51,12 +50,17 @@ function Page() {
     }
   };
 
+  useEffect(() => {
+    handleSearch("")
+  }, [searchTerm])
+
+
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const name2Ref = useRef<HTMLInputElement>(null);
   const numberRef = useRef<HTMLInputElement>(null);
-  const ScheduleRef=useRef<HTMLInputElement>(null);         
+  const ScheduleRef = useRef<HTMLInputElement>(null);
 
   const [sendDetailsLoading, setSendDetailsLoading] = useState<boolean>(false);
 
