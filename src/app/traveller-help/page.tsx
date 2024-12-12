@@ -15,6 +15,7 @@ import { BsWhatsapp } from "react-icons/bs";
 import { IoCallOutline } from "react-icons/io5";
 import Link from "next/link";
 
+
 function Page() {
   const [searchTerm, setSearchTerm] = useState(""); // To store user input
   const [results, setResults] = useState([]); // To store search results
@@ -38,7 +39,7 @@ function Page() {
       setLoading(false);
     }
   };
-
+     
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     console.log(term, "Term gonna print here")
@@ -92,19 +93,21 @@ function Page() {
   const handleScheduleForm = async () => {
     // e.preventDefault();
     setSendDetailsLoading(true);
-    if (!name2Ref.current?.value || !numberRef.current?.value) {
+    if (!name2Ref.current?.value || !numberRef.current?.value || !ScheduleRef.current?.value) {
       return;
     }
     try {
       const response = await axios.post("/api/schedule", {
         name: name2Ref.current?.value,
         number: numberRef.current?.value,
+        Schedule: ScheduleRef.current?.value,
 
       });
       if (response) {
         toast.success(response.data.message);
         name2Ref.current!.value = "";
         numberRef.current!.value = "";
+        ScheduleRef.current!.value = "";
       }
     } catch (err: any) {
       toast.error(err.response.data.error);
@@ -296,7 +299,7 @@ function Page() {
                               className="grid grid-cols-1 gap-6"
                               // action={handleContactForm}
                               // method="post"
-                              onSubmit={handleContactForm}
+                              onSubmit={handleScheduleForm}
                             >
                               <label className="block">
                                 <Label>Full name</Label>
