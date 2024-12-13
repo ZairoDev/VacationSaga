@@ -62,8 +62,8 @@ const widgetMenus: WidgetFooterMenu[] = [
     id: "2",
     title: "Help Desk",
     menus: [
-      { href: "#", label: "Owner Help" },
-      { href: "#", label: "Traveller Help" },
+      { href: "/owner-help", label: "Owner Help" },
+      { href: "/traveller-help", label: "Traveller Help" },
       { href: "/privacy-policy", label: "Privacy Policy" },
       { href: "/termsandconditions", label: "Terms & Conditions" },
       { href: "/contact", label: "Support" },
@@ -186,7 +186,7 @@ const Footer: React.FC = () => {
         <div className=" w-full flex justify-center">
           <h1>
             Managed by{" "}
-            <span className=" text-md">Zairo International Pvt. Ltd.</span>
+            <span className=" text-md">Zairo International Private Limited.</span>
           </h1>
           {/* <img src="/zairo.jfif" alt="" /> */}
         </div>
