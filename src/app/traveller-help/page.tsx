@@ -151,7 +151,7 @@ function Page() {
           !loading && searchTerm.trim() && <div className="   flex-col justify-center items center">
 
             <div className="flex justify-center items-center"><img src="/notfound.png " className="w-72" alt="" /></div>
-            <p className="flex justify-center items-center text-base"> Didn't found what you're looking for? No worries, we’ve got more options for you!  </p>
+            <p className="flex justify-center items-center text-base"> Didn&apos;t found what you&apos;re looking for? No worries we&apos;ve got more options for you!  </p>
             <div className="flex sm:flex-row flex-col justify-center">
 
 
