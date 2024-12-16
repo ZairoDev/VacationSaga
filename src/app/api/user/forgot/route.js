@@ -1,14 +1,21 @@
 import { connectDb } from "../../../../helper/db";
 import User from "../../../../models/user";
 import { sendEmail } from "../../../../helper/mailer";
+import Travellers from "@/models/traveller";
 
 connectDb();
 
 export async function POST(request) {
   try {
     const { email } = await request.json();
-    const user = await User.findOne({ email });
-    console.log("user", user);
+    let user = await User.findOne({ email });
+    console.log("user in forgot route: ", user);
+
+    if (!user) {
+      user = await Travellers.findOne({ email });
+    }
+
+    console.log("user after traveller check: ", user);
 
     if (user) {
       await sendEmail({ email, emailType: "RESET", userId: user._id });
