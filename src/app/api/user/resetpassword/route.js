@@ -1,24 +1,38 @@
 // TODO : The above code is working fine without decoded feature
 
+import Travellers from "@/models/traveller";
 import User from "@/models/user";
 import bcryptjs from "bcryptjs";
 
 export async function POST(request) {
   try {
     const { token, newPassword } = await request.json();
+    console.log("new password: ", token, newPassword);
 
     // Decode the token received from the request
     const decodedToken = decodeURIComponent(token);
 
-    const user = await User.findOne({
+    let user = "";
+
+    user = await User.findOne({
       forgotPasswordToken: decodedToken,
       forgotPasswordTokenExpiry: { $gt: Date.now() },
     });
 
     if (!user) {
-      return new Response(JSON.stringify({ error: "Invalid or expired token" }), {
-        status: 400,
+      user = await Travellers.findOne({
+        forgotPasswordToken: decodedToken,
+        forgotPasswordTokenExpiry: { $gt: Date.now() },
       });
+    }
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired token" }),
+        {
+          status: 400,
+        }
+      );
     }
     const hashedPassword = await bcryptjs.hash(newPassword, 10);
     user.password = hashedPassword;

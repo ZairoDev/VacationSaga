@@ -7,6 +7,7 @@ import {
   ResetPasswordTemplate,
   VerificationTemplate,
 } from "@/app/emailTemplate/email";
+import Travellers from "@/models/traveller";
 
 interface SendEmailOptions {
   email: string;
@@ -44,12 +45,23 @@ export const sendEmail = async ({
       const hashedToken = await bcryptjs.hash(userId.toString(), 10);
       const encodedToken = encodeURIComponent(hashedToken);
 
-      await Users.findByIdAndUpdate(userId, {
-        $set: {
-          forgotPasswordToken: hashedToken,
-          forgotPasswordTokenExpiry: new Date(Date.now() + 3600000),
-        },
-      });
+      const user = await Users.findById(userId);
+
+      if (user) {
+        await Users.findByIdAndUpdate(userId, {
+          $set: {
+            forgotPasswordToken: hashedToken,
+            forgotPasswordTokenExpiry: new Date(Date.now() + 3600000),
+          },
+        });
+      } else {
+        const traveller = await Travellers.findByIdAndUpdate(userId, {
+          $set: {
+            forgotPasswordToken: hashedToken,
+            forgotPasswordTokenExpiry: new Date(Date.now() + 3600000),
+          },
+        });
+      }
 
       templateContent = ResetPasswordTemplate(encodedToken);
     } else if (emailType === "PROPERTY_LISTED") {
@@ -78,8 +90,6 @@ export const sendEmail = async ({
           : "Property Listed Successfully",
       html: templateContent,
     };
-
-    console.log("Sending email with options:", mailOptions); // Debug log
 
     const mailResponse = await transporter.sendMail(mailOptions);
     return mailResponse;
