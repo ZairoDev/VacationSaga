@@ -48,7 +48,7 @@ const PrivacyPolicy = () => {
                     <h2 className="text-3xl font-semibold text-orange-500 mb-4">Introduction</h2>
                     <p className='sm:text-base text-sm'>The term &quot;Users&quot; and &quot;customers&quot; refers to people who use our website to find a suitable rental 
 as well as to those who list their property with us. Your personal information will be collected 
-and stored by us in our data sm and will not be shared with any third party .</p>
+and stored by us in our database and will not be shared with any third party .</p>
                     <p className='sm:text-base text-sm'>By using our website, you consent to the collection and transfer of
                     your data, including to other countries where we have branches.</p>
                 </section>

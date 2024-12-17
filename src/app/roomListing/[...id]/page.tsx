@@ -190,5 +190,4 @@ const Page = ({ params }: PageProps) => {
     </div>
   );
 };
-
 export default Page;
