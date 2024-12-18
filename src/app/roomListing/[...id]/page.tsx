@@ -115,9 +115,9 @@ const Page = ({ params }: PageProps) => {
         <div >
 
           <div className=" w-[90vw] relative flex mx-auto">
-            <div className=" w-full flex justify-center md:block md:w-1/2 p-4 relative">
+            <div className=" w-full flex justify-center md:block md:w-1/2 p-4  relative ">
               {/* <p className=" absolute z-10 top-6 right-4 text-xl font-semibold text-white p-2 rounded-full bg-neutral-700">{currentIndex + 1}/5</p> */}
-              <img src={quickListing.propertyImages?.[currentIndex]} alt="cover-image" className=" rounded-2xl md:h-" />
+              <img src={quickListing.propertyImages?.[currentIndex]} alt="cover-image" className=" rounded-2xl h-full " />
               <IoIosArrowBack
                 onClick={() => {
                   if (currentIndex > 0) {
@@ -142,7 +142,7 @@ const Page = ({ params }: PageProps) => {
                 ))}
               </div> */}
             </div>
-            <div className=" w-1/2 p-4 md:grid grid-cols-2 grid-rows-2 gap-2 hidden">
+            <div className=" w-1/2 py-4 md:grid grid-cols-2 grid-rows-2 gap-2 hidden">
               {quickListing.propertyImages.filter((item, index) => index >= 1 && index <= 4).map((imageUrl, index) => (
                 <img src={imageUrl} alt="images" key={index} className=" rounded-2xl" />
               ))}
@@ -160,12 +160,9 @@ const Page = ({ params }: PageProps) => {
           <div className=" w-[90vw] border border-neutral-600 p-4 rounded-2xl mx-auto mt-4">
             <div className=" ">
               <p className=" text-3xl font-semibold">{quickListing?.QID}</p>
-            
-            
-              <p className=" whitespace-nowrap">
-                <span className=" sm:font-bold">Property Name</span> -{" "}
-                {quickListing?.propertyName}
-              </p>
+
+
+
               <p>
                 <span className=" sm:font-bold">Price</span> - €{" "}
                 {quickListing?.basePrice}
@@ -174,6 +171,11 @@ const Page = ({ params }: PageProps) => {
                 <span className=" sm:font-bold">Location</span> -{" "}
                 {quickListing?.address}
               </p>
+              <p>
+                <span className=" sm:font-bold">Description</span> -{" "}
+                {quickListing?.description}
+              </p>
+
             </div>
           </div>
         </div>
@@ -188,5 +190,4 @@ const Page = ({ params }: PageProps) => {
     </div>
   );
 };
-
 export default Page;
