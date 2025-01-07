@@ -55,6 +55,7 @@ import { PropertiesDataType, PropertyDataType } from "@/data/types";
 import { useLoadScript } from "@react-google-maps/api";
 import MapWithCircle from "@/components/MapWithCircle";
 import Script from "next/script";
+import { toast } from "sonner";
 
 export interface ListingStayDetailPageProps {
   params: {
@@ -201,7 +202,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           newDates.push(currDt);
           currDt.setDate(currDt.getDate() + 1);
         }
-        console.log("newDates: ", newDates);
+        // console.log("newDates: ", newDates);
         setAlreadyBookedDates((prev) => [...prev, ...newDates]);
       });
     });
@@ -264,7 +265,22 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
         console.log("error: ", err);
       }
     };
+
+    const getBookedDates = async () => {
+      try {
+        const response = await axios.post(
+          "/api/newProperties/getBlockedDates",
+          { propertyId: params.id[0] }
+        );
+
+        setAlreadyBookedDates((prev) => [...prev, ...response?.data?.data])
+      } catch (err: any) {
+        console.log("error in fetching blocked dates");
+      }
+    };
+
     getProperties();
+    getBookedDates();
   }, []);
 
   useEffect(() => {

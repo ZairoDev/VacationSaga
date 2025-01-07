@@ -78,7 +78,8 @@ const SectionDateRange = ({
             // )}
             renderDayContents={(day, date) => {
               const price = getPriceForDate(date || new Date());
-              const booked = isBooked(date || new Date());
+              const booked =
+                isBooked(date || new Date()) || (price && price < 0);
               // console.log("booked: ", booked);
               return (
                 <div

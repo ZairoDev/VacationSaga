@@ -13,6 +13,11 @@ import { StaySearchFormFields } from "../type";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import ButtonPrimary from "@/shared/ButtonPrimary";
 import { IoExitOutline } from "react-icons/io5";
+import StaySearchForm from "../(HeroSearchFormSmall)/(stay-search-form)/StaySearchForm";
+import LocationInput from "../(HeroSearchForm)/LocationInput";
+import StayDatesRangeInput from "../(HeroSearchForm)/(stay-search-form)/StayDatesRangeInput";
+import GuestsInput from "../(HeroSearchForm)/GuestsInput";
+import { SearchInputProvider } from "@/context/SearchInput";
 
 interface Header3Props {
   className?: string;
@@ -22,7 +27,8 @@ let WIN_PREV_POSITION = 0;
 
 const Header3: FC<Header3Props> = ({ className = "" }) => {
   const headerInnerRef = useRef<HTMLDivElement>(null);
-  const [showHeroSearch, setShowHeroSearch] = useState<StaySearchFormFields | null>(null);
+  const [showHeroSearch, setShowHeroSearch] =
+    useState<StaySearchFormFields | null>(null);
   const [currentTab, setCurrentTab] = useState<SearchTab>("Short Term Rentals");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -111,20 +117,32 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
       }`}
     >
       <div className="flex items-center font-medium text-sm">
-        <span onClick={() => setShowHeroSearch("location")} className="block pl-5 pr-4 cursor-pointer py-3">
+        <span
+          onClick={() => setShowHeroSearch("location")}
+          className="block pl-5 pr-4 cursor-pointer py-3"
+        >
           Location
         </span>
         <span className="h-5 w-[1px] bg-neutral-300 dark:bg-neutral-700"></span>
-        <span onClick={() => setShowHeroSearch("dates")} className="block px-4 cursor-pointer py-3">
+        <span
+          onClick={() => setShowHeroSearch("dates")}
+          className="block px-4 cursor-pointer py-3"
+        >
           Check In
         </span>
         <span className="h-5 w-[1px] bg-neutral-300 dark:bg-neutral-700"></span>
-        <span onClick={() => setShowHeroSearch("guests")} className="block px-4 cursor-pointer font-normal py-3">
+        <span
+          onClick={() => setShowHeroSearch("guests")}
+          className="block px-4 cursor-pointer font-normal py-3"
+        >
           Add guests
         </span>
       </div>
 
-      <div className="flex-shrink-0 ml-auto pr-2 cursor-pointer" onClick={() => setShowHeroSearch("location")}>
+      <div
+        className="flex-shrink-0 ml-auto pr-2 cursor-pointer"
+        onClick={() => setShowHeroSearch("location")}
+      >
         <span className="w-8 h-8 flex items-center justify-center rounded-full bg-primary-6000 text-white">
           <MagnifyingGlassIcon className="w-5 h-5" />
         </span>
@@ -140,11 +158,14 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
         }`}
       ></div>
       {showHeroSearch && <div id="nc-Header-3-anchor"></div>}
-      <header ref={headerInnerRef} className={`sticky top-0 z-40 ${className} bg-white dark:bg-[#111827]`}>
-        <div className="relative px-4 lg:container h-[88px] flex">
+      <header
+        ref={headerInnerRef}
+        className={`sticky top-0 z-40 ${className} bg-white dark:bg-[#111827]`}
+      >
+        <div className="relative px-4 lg:container h-[88px] flex ">
           <div className="flex-1 flex justify-between">
-            <div className="relative z-10 hidden md:flex flex-1 items-center">
-              <Logo />
+            <div className="relative z-10 md:flex flex-1 items-center">
+              <Logo className=" w-44 h-24" />
             </div>
 
             <div className="hidden md:flex relative z-10 flex-1 justify-end text-neutral-700 dark:text-neutral-100">
@@ -161,7 +182,9 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
                     <ButtonPrimary>My Profile</ButtonPrimary>
                   </Link>
                 ) : (
-                  <ButtonPrimary onClick={() => setShowLogin((prev) => !prev)}>Login</ButtonPrimary>
+                  <ButtonPrimary onClick={() => setShowLogin((prev) => !prev)}>
+                    Login
+                  </ButtonPrimary>
                 )}
 
                 <div
@@ -170,14 +193,18 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
                   }`}
                   ref={loginRef}
                 >
-                  <Link href={{ pathname: "/login", query: { role: "Traveller" } }}>
+                  <Link
+                    href={{ pathname: "/login", query: { role: "Traveller" } }}
+                  >
                     <ButtonPrimary className="w-52 flex justify-between">
-                      Login as Traveller <IoExitOutline className="text-xl font-extrabold" />
+                      Login as Traveller{" "}
+                      <IoExitOutline className="text-xl font-extrabold" />
                     </ButtonPrimary>
                   </Link>
                   <Link href={{ pathname: "/login", query: { role: "Owner" } }}>
                     <ButtonPrimary className="w-52 flex justify-between">
-                      Login as Owner <IoExitOutline className="text-xl font-extrabold" />
+                      Login as Owner{" "}
+                      <IoExitOutline className="text-xl font-extrabold" />
                     </ButtonPrimary>
                   </Link>
                 </div>

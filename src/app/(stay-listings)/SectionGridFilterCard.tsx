@@ -88,7 +88,7 @@ const SectionGridFilterCard: FC<SectionGridFilterCardProps> = ({
 
   useEffect(() => {
     const getProperties = async () => {
-      console.log('country: ', country);
+      // console.log('country: ', country);
       const response = await axios.get(`/api/countryspecificproperties/${country}`);
       if (response.data) {
         setCountrySpecificProperties(response?.data);

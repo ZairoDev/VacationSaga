@@ -14,9 +14,9 @@ const StaySearchForm: FC<{}> = ({}) => {
         <SearchInputProvider>
           <form className=" w-full relative mt-8 flex flex-col shadow-xl dark:shadow-2xl rounded-lg bg-white dark:bg-neutral-800 ">
             <LocationInput className="flex-[1.5]" />
-            <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
+            {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <StayDatesRangeInput className="flex-1" />
-            <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
+            {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <GuestsInput className="flex-1" />
           </form>
         </SearchInputProvider>

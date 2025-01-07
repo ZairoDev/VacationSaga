@@ -71,7 +71,10 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   const isAnyDateBooked = (start: Date, end: Date) => {
     let date = new Date(start);
     while (date <= end) {
-      if (isBooked(date)) {
+      const month = date.getMonth();
+      const day = date.getDate() - 1;
+      if (isBooked(date) || (prices && prices[month][day] < 0)) {
+        console.log("yes booked");
         return true;
       }
       date.setDate(date.getDate() + 1);
@@ -206,7 +209,8 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
                   )}
                   renderDayContents={(day, date) => {
                     const price = getPriceForDate(date || new Date());
-                    const booked = isBooked(date || new Date());
+                    const booked =
+                      isBooked(date || new Date()) || (price && price < 0);
                     // console.log("booked: ", booked);
                     return (
                       <div

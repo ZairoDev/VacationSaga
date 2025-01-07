@@ -444,7 +444,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                       />
                     </span>
                   </div>
-                  <div className=" px-8 py-4 overflow-auto text-neutral-700 dark:text-neutral-300 divide-y divide-neutral-200">
+                  <div className="px-8 py-4 overflow-auto text-neutral-700 dark:text-neutral-300 divide-y divide-neutral-200">
                     {/* <StayDatesRangeInput
                       className="flex-1"
                       prices={property?.pricePerDay?.[index] || []}
@@ -456,6 +456,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                       // onDatesChange={handleDatesChange}
                     /> */}
                     <CustomDateRangePrice
+                      pId={properties?.[index]._id ?? ""}
                       className="flex-1"
                       prices={portionFields?.[index]?.pricePerDay || []}
                       externalBookedDates={alreadyBookedDates}

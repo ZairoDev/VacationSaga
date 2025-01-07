@@ -37,19 +37,16 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
   const [selectedRentalType, setSelectedRentalType] = useState<string>();
 
   useEffect(() => {
-    console.log("user._id: ", user?._id);
+    console.log("user._id in useEffect: ", user);
     const fetchProperties = async () => {
       if (user?._id) {
         setLoading(true);
         try {
-          // const response = await axios.post("/api/user/fetchpropertybyuserid", {
-          //   userId: user._id,
-          // });
           const response = await axios.post(
-            "/api/newProperties/getPropertyByUserId",
-            { userId: user._id }
+            "/api/newProperties/getPropertyByUserEmail",
+            { userId: user._id, userEmail: user.email }
           );
-          console.log("response: ", response.data.properties);
+          console.log("response in author: ", response.data.properties);
           setProperties(response.data.properties);
         } catch (error) {
           console.error("Error fetching properties:", error);
@@ -75,12 +72,12 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
     (property) =>
       property.commonProperties?.[0]?.rentalType === selectedRentalType
   );
-  console.log(
-    "filtered Properties: ",
-    selectedRentalType,
-    intermediateFilteredProperties.length,
-    intermediateFilteredProperties
-  );
+  // console.log(
+  //   "filtered Properties: ",
+  //   selectedRentalType,
+  //   intermediateFilteredProperties.length,
+  //   intermediateFilteredProperties
+  // );
 
   useEffect(() => {
     const newPropertiesArray: PropertiesDataType[] = [];

@@ -354,6 +354,7 @@ const EditPropertyPage: React.FC = () => {
                     /> */}
                     {loading && <BarLoader />}
                     <CustomDateRangePrice
+                      pId={property?._id ?? ""}
                       className="flex-1"
                       prices={property?.pricePerDay?.[index] || []}
                       externalBookedDates={alreadyBookedDates}

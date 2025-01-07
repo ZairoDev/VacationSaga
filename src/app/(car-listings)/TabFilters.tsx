@@ -105,9 +105,7 @@ const TabFilters = () => {
   const [tempBedrooms, setTempBedrooms] = useState<number[]>([3, 3, 2]);
   const [tempExtraFilters, setTempExtraFilters] = useState<object>({});
 
-
-  const [placeApply, setPlaceApply] = useState<boolean>()
-
+  const [placeApply, setPlaceApply] = useState<boolean>();
 
   //
   const closeModalMoreFilter = () => setisOpenMoreFilter(false);
@@ -134,7 +132,6 @@ const TabFilters = () => {
       </span>
     );
   };
-
 
   const renderTabsTypeOfPlace = () => {
     return (
@@ -206,12 +203,17 @@ const TabFilters = () => {
                     {/* <ButtonThird onClick={close} sizeClass="px-4 py-2 sm:px-5">
                       Clear
                     </ButtonThird> */}
-                    <ButtonThird onClick={() => setPlaceType("")} sizeClass="px-4 py-2 sm:px-5">
+                    <ButtonThird
+                      onClick={() => setPlaceType("")}
+                      sizeClass="px-4 py-2 sm:px-5"
+                    >
                       Clear
                     </ButtonThird>
                     <ButtonPrimary
                       // onClick={close}
-                      onClick={() => {setPlaceType(tempPlaceType); console.log('placeType: ', placeType)}}
+                      onClick={() => {
+                        setPlaceType(tempPlaceType);
+                      }}
                       sizeClass="px-4 py-2 sm:px-5"
                     >
                       Apply
@@ -339,7 +341,8 @@ const TabFilters = () => {
                             value={tempPriceRange[0] || 0}
                             onChange={(e) => {
                               let newTempPriceRange = [...tempPriceRange];
-                              newTempPriceRange[0] = parseInt(e.target.value) || 0;
+                              newTempPriceRange[0] =
+                                parseInt(e.target.value) || 0;
                               setTempPriceRange(newTempPriceRange);
                             }}
                           />
@@ -368,7 +371,8 @@ const TabFilters = () => {
                             value={tempPriceRange[1] || 0}
                             onChange={(e) => {
                               let newTempPriceRange = [...tempPriceRange];
-                              newTempPriceRange[1] = parseInt(e.target.value) || 0;
+                              newTempPriceRange[1] =
+                                parseInt(e.target.value) || 0;
                               setTempPriceRange(newTempPriceRange);
                             }}
                           />
@@ -382,7 +386,10 @@ const TabFilters = () => {
                     </ButtonThird>
                     <ButtonPrimary
                       // onClick={close}
-                      onClick={() => {setPriceRange(tempPriceRange); console.log('PriceRange: ', priceRange)}}
+                      onClick={() => {
+                        setPriceRange(tempPriceRange);
+                        console.log("PriceRange: ", priceRange);
+                      }}
                       sizeClass="px-4 py-2 sm:px-5"
                     >
                       Apply

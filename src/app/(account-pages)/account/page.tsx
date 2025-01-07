@@ -116,10 +116,6 @@ const AccountPage = () => {
           },
         }
       );
-
-      console.log("response: ", response);
-      console.log(randomNumberToAddInImageName);
-      console.log(file.name);
       const imageUrl = `https://vacationsaga.b-cdn.net/ProfilePictures/${randomNumberToAddInImageName}${file.name}`;
 
       setProfilePic(imageUrl);

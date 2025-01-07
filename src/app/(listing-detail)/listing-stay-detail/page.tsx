@@ -69,7 +69,6 @@ import { RiMoneyEuroCircleFill } from "react-icons/ri";
 import { BentoGridDemo } from "@/components/BentoGrid";
 import { EventInterface } from "@/app/editproperty/page";
 import dateParser from "@/helper/dateParser";
-import CustomDateRangePrice from "@/components/CustomDateRangePrice";
 import { useLoadScript } from "@react-google-maps/api";
 import Script from "next/script";
 import MapWithCircle from "@/components/MapWithCircle";
@@ -281,7 +280,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = () => {
 
   const fetchAndParseICal = async (url: string) => {
     try {
-      console.log("url fethced:::: ", url);
+      // console.log("url fethced:::: ", url);
       const response = await axios.post("/api/ical", { url });
       // console.log("response:::: ", response);
       const parsedData = response.data.data;
@@ -337,7 +336,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = () => {
           newDates.push(currDt);
           currDt.setDate(currDt.getDate() + 1);
         }
-        console.log("newDates: ", newDates);
+        // console.log("newDates: ", newDates);
         setAlreadyBookedDates((prev) => [...prev, ...newDates]);
       });
     });

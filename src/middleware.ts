@@ -11,7 +11,7 @@ export function middleware(request: NextRequest) {
     path === "/";
 
   const token = request.cookies.get("token")?.value || "";
-  console.log(token);
+  // console.log(token);
 
   // Always allow access to the home route
   if (path === "/") {

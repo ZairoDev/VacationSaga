@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { LuLoader2 } from "react-icons/lu";
 
 export interface StayDatesRangeInputProps {
+  pId: string;
   className?: string;
   prices?: number[][];
   bookedDates?: Date[];
@@ -20,6 +21,7 @@ export interface StayDatesRangeInputProps {
 }
 
 const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
+  pId,
   className = "",
   prices,
   bookedDates = [],
@@ -32,8 +34,6 @@ const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
   // const [startDate, setStartDate] = useState<Date | null>(new Date());
   // const [endDate, setEndDate] = useState<Date | null>(new Date());
 
-  const params = useSearchParams();
-  const pId = params.get("id");
   const [bookingLoading, setBookingLoading] = useState<boolean>(false);
 
   const [selectedRange, setSelectedRange] = useState<
@@ -108,6 +108,23 @@ const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
     setBookingLoading(false);
   };
 
+  const handleBlockDates = async () => {
+    try {
+      const response = await axios.post(
+        "/api/newProperties/blockDatesInProperty",
+        {
+          propertyId: pId,
+          startDate: startDate,
+          endDate: endDate,
+          bookingStatus: "confirmed",
+        }
+      );
+      console.log("response: ", response);
+    } catch (error: any) {
+      console.log("Error: ", error);
+    }
+  };
+
   return (
     <div>
       <div className="p-5">
@@ -148,7 +165,7 @@ const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
           // }}
           renderDayContents={(day, date) => {
             const price = getPriceForDate(date || new Date());
-            const booked = isBooked(date || new Date());
+            const booked = isBooked(date || new Date()) || (price && price < 0);
             return (
               <div
                 style={{
@@ -171,7 +188,7 @@ const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
       </div>
       {startDate && endDate && (
         <div className="text-center my-4">
-          <button
+          {/* <button
             onClick={handleBookDates}
             className="px-4 py-2 bg-primary-6000 hover:bg-primary-700 text-white rounded"
           >
@@ -181,6 +198,18 @@ const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
               </p>
             ) : (
               "Book Selected Dates"
+            )}
+          </button> */}
+          <button
+            onClick={handleBlockDates}
+            className="px-4 py-2 bg-primary-6000 hover:bg-primary-700 text-white rounded"
+          >
+            {bookingLoading ? (
+              <p className=" flex gap-x-1 items-center">
+                Booking <LuLoader2 className=" animate-spin" />
+              </p>
+            ) : (
+              "Block Dates"
             )}
           </button>
         </div>

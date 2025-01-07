@@ -26,7 +26,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   {
     name: "Explore",
-    link: "/",
+    link: "/allproperties",
     icon: MagnifyingGlassIcon,
   },
   {

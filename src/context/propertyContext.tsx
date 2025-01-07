@@ -11,7 +11,6 @@ const MyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     const fetchData = async () => {
       const response = await axios.get("/api/allproperties");
-      console.log("data from context: ", response?.data);
       setAllProperties(response?.data);
     };
 
