@@ -1,16 +1,17 @@
-import { connectDb } from "@/helper/db";
-import { getDataFromToken } from "@/helper/getDataFromToken";
-import { Bookings } from "@/models/bookings";
-import { Properties } from "@/models/property";
-import Travellers from "@/models/traveller";
 import { NextRequest, NextResponse } from "next/server";
-import Users from "@/models/user";
-import { UserDataType } from "@/data/types";
+
 import {
   sendBookingEmailToOwner,
   sendBookingEmailToCompany,
   sendBookingEmailToTraveller,
 } from "@/helper/gmailMailer";
+import Users from "@/models/user";
+import { connectDb } from "@/helper/db";
+import Travellers from "@/models/traveller";
+import { UserDataType } from "@/data/types";
+import { Bookings } from "@/models/bookings";
+import { Properties } from "@/models/property";
+import { getDataFromToken } from "@/helper/getDataFromToken";
 
 connectDb();
 
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
       endDate,
       guests,
       price,
+      weeklyDiscount,
       bookingStatus,
     } = await request.json();
     const travellerId = getDataFromToken(request);
@@ -43,6 +45,7 @@ export async function POST(request: NextRequest) {
       !endDate ||
       !guests ||
       !price ||
+      !weeklyDiscount ||
       !bookingStatus
     ) {
       return NextResponse.json(
@@ -81,9 +84,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // console.log("Booking Created: ", booking);
-
-    console.log("Booking Created: ", booking);
     try {
       const bookingId = booking._id;
       if (!bookingId)

@@ -24,7 +24,6 @@ const GuestsInput: FC<GuestsInputProps> = ({
   onGuestsChange,
   totalNumberOfGuests = 3,
 }) => {
-
   // const [guestAdultsInputValue, setGuestAdultsInputValue] = useState<number>(
   //   () => {
   //     const savedPage = localStorage.getItem("guestsState") || "";
@@ -54,9 +53,17 @@ const GuestsInput: FC<GuestsInputProps> = ({
   //   }
   // );
 
-  const [guestAdultsInputValue, setGuestAdultsInputValue] = useState<number>(3);
-  const [guestChildrenInputValue, setGuestChildrenInputValue] = useState<number>(0);
-  const [guestInfantsInputValue, setGuestInfantsInputValue] = useState<number>(0);
+  const [totalGuests, setTotalGuests] = useState(0);
+  const [guestAdultsInputValue, setGuestAdultsInputValue] = useState<number>(0);
+  const [guestChildrenInputValue, setGuestChildrenInputValue] =
+    useState<number>(0);
+  const [guestInfantsInputValue, setGuestInfantsInputValue] =
+    useState<number>(0);
+
+  useEffect(() => {
+    setTotalGuests(totalNumberOfGuests);
+    setGuestAdultsInputValue(totalNumberOfGuests);
+  }, [totalNumberOfGuests]);
 
   const handleChangeData = (value: number, type: keyof GuestsObject) => {
     let newValue = {
@@ -76,6 +83,9 @@ const GuestsInput: FC<GuestsInputProps> = ({
       setGuestInfantsInputValue(value);
       newValue.guestInfants = value;
     }
+    setTotalGuests(
+      newValue.guestChildren + newValue.guestAdults + newValue.guestInfants
+    );
     updateTotalGuests(newValue);
   };
 
@@ -85,7 +95,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
       (newValue.guestAdults ? newValue.guestAdults : 0) +
       (newValue.guestInfants ? newValue.guestInfants : 0);
 
-    const newGuests : guestsState = {
+    const newGuests: guestsState = {
       adults: newValue.guestAdults || 0,
       children: newValue.guestChildren || 0,
       infants: newValue.guestInfants || 0,
@@ -103,11 +113,13 @@ const GuestsInput: FC<GuestsInputProps> = ({
       guestChildren: guestChildrenInputValue,
       guestInfants: guestInfantsInputValue,
     });
-  }, [guestAdultsInputValue, guestChildrenInputValue, guestInfantsInputValue, updateTotalGuests]);
+  }, [
+    guestAdultsInputValue,
+    guestChildrenInputValue,
+    guestInfantsInputValue,
+    updateTotalGuests,
+  ]);
 
-  // const guests = localStorage.getItem("totalGuests") || "";
-  const totalGuests = totalNumberOfGuests
-  
   return (
     <Popover className={`flex relative ${className}`}>
       {({ open }) => (
@@ -125,8 +137,11 @@ const GuestsInput: FC<GuestsInputProps> = ({
               </div>
               <div className="flex-grow">
                 <span className="block xl:text-lg font-semibold">
-                  {/* {totalGuests || ""} Guests */}
-                  {(guestAdultsInputValue || 0) + (guestChildrenInputValue || 0) + (guestInfantsInputValue || 0) || ""} Guests
+                  {totalGuests || ""} Guests
+                  {/* {(guestAdultsInputValue || 0) +
+                    (guestChildrenInputValue || 0) +
+                    (guestInfantsInputValue || 0) || ""}{" "} */}
+                  {/* Guests */}
                 </span>
                 <span className="block mt-1 text-sm text-neutral-400 leading-none font-light">
                   {totalGuests ? "Guests" : "Add guests"}

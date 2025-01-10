@@ -1,6 +1,7 @@
-import { Route } from "@/routers/types";
-import { StaticImageData } from "next/image";
 import { ObjectId } from "mongodb";
+import { StaticImageData } from "next/image";
+
+import { Route } from "@/routers/types";
 
 //  ######  CustomLink  ######## //
 export interface CustomLink {
@@ -112,9 +113,10 @@ export interface BookingDataType {
 }
 
 export interface TokenDataType {
-  id: string;
+  _id: string;
   name: string;
   email: string;
+  role: "Owner" | "Traveller";
   iat?: number;
   exp?: number;
 }

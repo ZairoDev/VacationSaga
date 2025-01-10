@@ -1,23 +1,20 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import SectionHero from "@/app/(server-components)/SectionHero";
-import BgGlassmorphism from "@/components/BgGlassmorphism";
-import { TaxonomyType } from "@/data/types";
-import SectionSliderNewCategories from "@/components/SectionSliderNewCategories";
-import SectionOurFeatures from "@/components/SectionOurFeatures";
-import BackgroundSection from "@/components/BackgroundSection";
-import SectionGridFeaturePlaces from "@/components/SectionGridFeaturePlaces";
-import SectionHowItWork from "@/components/SectionHowItWork";
-// import SectionSubscribe2 from "@/components/SectionSubscribe2";
-import SectionGridAuthorBox from "@/components/SectionGridAuthorBox";
-import SectionGridCategoryBox from "@/components/SectionGridCategoryBox";
-import SectionBecomeAnAuthor from "@/components/SectionBecomeAnAuthor";
-// import SectionVideos from "@/components/SectionVideos";
-import SectionClientSay from "@/components/SectionClientSay";
+
 import axios from "axios";
-import { ObjectId } from "mongodb";
+import React, { useEffect, useState } from "react";
 
-
+import { TaxonomyType } from "@/data/types";
+import BgGlassmorphism from "@/components/BgGlassmorphism";
+import SectionHowItWork from "@/components/SectionHowItWork";
+import SectionClientSay from "@/components/SectionClientSay";
+import BackgroundSection from "@/components/BackgroundSection";
+import SectionHero from "@/app/(server-components)/SectionHero";
+import SectionOurFeatures from "@/components/SectionOurFeatures";
+import SectionGridAuthorBox from "@/components/SectionGridAuthorBox";
+import SectionBecomeAnAuthor from "@/components/SectionBecomeAnAuthor";
+import SectionGridCategoryBox from "@/components/SectionGridCategoryBox";
+import SectionGridFeaturePlaces from "@/components/SectionGridFeaturePlaces";
+import SectionSliderNewCategories from "@/components/SectionSliderNewCategories";
 
 const DEMO_CATS: TaxonomyType[] = [
   {
@@ -88,7 +85,7 @@ const DEMO_CATS: TaxonomyType[] = [
 const DEMO_CATS_2: TaxonomyType[] = [
   {
     id: "1",
-    href: "/listing-stay-map" ,
+    href: "/listing-stay-map",
     name: "Enjoy the great cold",
     taxonomy: "category",
     count: 188288,
@@ -155,9 +152,9 @@ export interface Properties {
   _id?: string;
   userId?: string;
 
-  VSID?:string;
+  VSID?: string;
   isInstantBooking?: boolean;
-  rentalType?:string;
+  rentalType?: string;
   propertyType?: string;
   placeName?: string;
   rentalForm?: string;
@@ -170,7 +167,6 @@ export interface Properties {
   country?: string;
   center?: object;
 
-  
   portionName?: string[];
   portionSize?: number[];
   guests?: number[];
@@ -199,6 +195,7 @@ export interface Properties {
   additionalRules?: string[];
 
   reviews?: string[];
+  newReviews?: string;
 
   propertyCoverFileUrl?: string;
   propertyPictureUrls?: string[];
@@ -213,8 +210,6 @@ export interface Properties {
 }
 
 function PageHome() {
-
-
   const [GreeceProperties, setGreeceProperties] = useState<Properties[]>();
 
   const fetchProperties = async () => {
@@ -226,11 +221,12 @@ function PageHome() {
     fetchProperties();
   }, []);
 
-
   useEffect(() => {
-    localStorage.setItem('greeceTotalProperties', JSON.stringify(GreeceProperties?.length));
+    localStorage.setItem(
+      "greeceTotalProperties",
+      JSON.stringify(GreeceProperties?.length)
+    );
   }, [GreeceProperties]);
-
 
   return (
     <main className="nc-PageHome relative overflow-hidden">

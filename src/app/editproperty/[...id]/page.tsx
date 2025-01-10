@@ -1,31 +1,33 @@
 "use client";
-import { useState, useEffect, FormEvent, useRef, Fragment } from "react";
+
 import axios from "axios";
-import { useAuth } from "@/hooks/useAuth";
-import { useRouter, useSearchParams } from "next/navigation";
-import Input from "@/shared/Input";
-import { Properties } from "../../page";
-import { MdArrowDropDown, MdArrowRight } from "react-icons/md";
-import { toast, Toaster } from "sonner";
-import Button from "@/shared/Button";
-import { TrashIcon } from "@heroicons/react/24/solid";
-import { FaCirclePlus, FaCopy } from "react-icons/fa6";
-import Label from "@/components/Label";
-import { FaCalendarAlt } from "react-icons/fa";
-import { Dialog, Transition } from "@headlessui/react";
-import ButtonClose from "@/shared/ButtonClose";
-import "react-date-range/dist/styles.css"; // main css file
-import "react-date-range/dist/theme/default.css";
-import dateParser from "@/helper/dateParser";
-import CustomDateRangePrice from "@/components/CustomDateRangePrice";
-import BarLoader from "@/components/BarLoader";
-import { PropertiesDataType } from "@/data/types";
-import { BlurFade } from "@/components/BlurFade";
-import { NeonGradientCard } from "@/components/NeonCard";
 import Link from "next/link";
-import ButtonPrimary from "@/shared/ButtonPrimary";
+import { toast, Toaster } from "sonner";
+import "react-date-range/dist/styles.css";
 import { LuLoader2 } from "react-icons/lu";
-import { BsExclamationCircleFill } from "react-icons/bs";
+import { FaCalendarAlt } from "react-icons/fa";
+import "react-date-range/dist/theme/default.css";
+import { FaCirclePlus, FaCopy } from "react-icons/fa6";
+import { useRouter, useSearchParams } from "next/navigation";
+import { MdArrowDropDown, MdArrowRight } from "react-icons/md";
+import { useState, useEffect, FormEvent, useRef, Fragment } from "react";
+
+import Input from "@/shared/Input";
+import Button from "@/shared/Button";
+import Label from "@/components/Label";
+import Textarea from "@/shared/Textarea";
+import { useAuth } from "@/hooks/useAuth";
+import dateParser from "@/helper/dateParser";
+import BarLoader from "@/components/BarLoader";
+import ButtonClose from "@/shared/ButtonClose";
+import { BlurFade } from "@/components/BlurFade";
+import { PropertiesDataType } from "@/data/types";
+import ButtonPrimary from "@/shared/ButtonPrimary";
+import { TrashIcon } from "@heroicons/react/24/solid";
+import { Dialog, Transition } from "@headlessui/react";
+import CustomDateRangePrice from "@/components/CustomDateRangePrice";
+
+import { Properties } from "../../page";
 
 export interface EventInterface {
   title: string;
@@ -47,17 +49,21 @@ interface PageProps {
 }
 
 const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
+  const { user } = useAuth();
+
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const id = params.id[0];
   const commonId = params.id[1];
-  const { user } = useAuth();
-  const [property, setProperty] = useState<Properties | null>(null);
-  const [properties, setProperties] = useState<PropertiesDataType[]>();
+
   const [loading, setLoading] = useState<boolean>(false);
-  const [numberOfPortions, setNumberOfPortions] = useState<number>(1);
   const [refreshState, setRefreshState] = useState(false);
   const [allImages, setAllImages] = useState<string[]>([]);
+  const [property, setProperty] = useState<Properties | null>(null);
+  const [numberOfPortions, setNumberOfPortions] = useState<number>(1);
+  const [properties, setProperties] = useState<PropertiesDataType[]>([]);
+  const newReviewRef = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   const BlurFadeDemo = (images: string[]) => {
     return (
@@ -149,6 +155,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
     additionalRules: property?.additionalRules,
 
     reviews: property?.reviews,
+    newReviews: property?.newReviews,
 
     propertyCoverFileUrl: property?.propertyCoverFileUrl,
     propertyPictureUrls: property?.propertyPictureUrls,
@@ -185,60 +192,61 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
   >([]);
 
   useEffect(() => {
-    if (property) {
-      setFormData({
-        VSID: property.VSID,
-        rentalType: property.rentalType,
+    // if (property) {
+    //   setFormData({
+    //     VSID: property.VSID,
+    //     rentalType: property.rentalType,
 
-        isInstantBooking: property.isInstantBooking,
-        propertyType: property.propertyType,
-        placeName: property.placeName,
-        rentalForm: property.rentalForm,
-        numberOfPortions: property.numberOfPortions,
+    //     isInstantBooking: property.isInstantBooking,
+    //     propertyType: property.propertyType,
+    //     placeName: property.placeName,
+    //     rentalForm: property.rentalForm,
+    //     numberOfPortions: property.numberOfPortions,
 
-        street: property.street,
-        postalCode: property.postalCode,
-        city: property.city,
-        state: property.state,
-        country: property.country,
+    //     street: property.street,
+    //     postalCode: property.postalCode,
+    //     city: property.city,
+    //     state: property.state,
+    //     country: property.country,
 
-        portionName: property.portionName,
-        portionSize: property.portionSize,
-        guests: property.guests,
-        bedrooms: property.bedrooms,
-        beds: property.beds,
-        bathroom: property.bathroom,
-        kitchen: property.kitchen,
-        childrenAge: property.childrenAge,
+    //     portionName: property.portionName,
+    //     portionSize: property.portionSize,
+    //     guests: property.guests,
+    //     bedrooms: property.bedrooms,
+    //     beds: property.beds,
+    //     bathroom: property.bathroom,
+    //     kitchen: property.kitchen,
+    //     childrenAge: property.childrenAge,
 
-        basePrice: property.basePrice,
-        weekendPrice: property.weekendPrice,
-        monthlyDiscount: property.monthlyDiscount,
+    //     basePrice: property.basePrice,
+    //     weekendPrice: property.weekendPrice,
+    //     monthlyDiscount: property.monthlyDiscount,
 
-        pricePerDay: property?.pricePerDay,
-        icalLinks: property?.icalLinks,
+    //     pricePerDay: property?.pricePerDay,
+    //     icalLinks: property?.icalLinks,
 
-        smoking: property.smoking,
-        pet: property.pet,
-        party: property.party,
-        cooking: property.cooking,
-        additionalRules: property.additionalRules,
+    //     smoking: property.smoking,
+    //     pet: property.pet,
+    //     party: property.party,
+    //     cooking: property.cooking,
+    //     additionalRules: property.additionalRules,
 
-        reviews: property.reviews,
+    //     reviews: property.reviews,
+    //     newReviewss: property?.newReviewss,
 
-        night: property.night,
-        time: property.time,
-        datesPerPortion: property.datesPerPortion,
+    //     night: property.night,
+    //     time: property.time,
+    //     datesPerPortion: property.datesPerPortion,
 
-        // isLive: property.isLive,
-      });
-      // setInstantBookingToggle(property?.isInstantBooking || false);
-      const url = (property.icalLinks as { [key: string]: string })?.[
-        "Airbnb"
-      ] as string;
-      console.log("url: ", url);
-      fetchBookedDates(url);
-    }
+    //     // isLive: property.isLive,
+    //   });
+    //   // setInstantBookingToggle(property?.isInstantBooking || false);
+    //   const url = (property.icalLinks as { [key: string]: string })?.[
+    //     "Airbnb"
+    //   ] as string;
+    //   console.log("url: ", url);
+    //   fetchBookedDates(url);
+    // }
 
     if (properties) {
       setCommonFields({
@@ -275,6 +283,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
           weekendPrice: properties[i].weekendPrice,
           weeklyDiscount: properties[i].weeklyDiscount,
           isInstantBooking: properties[i].isInstantBooking,
+          newReviews: properties[i].newReviews,
         };
         setAllImages((prev) => [...prev, ...properties[i].propertyImages]);
         portionSpecificFields.push(newObj);
@@ -295,8 +304,19 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+
+    // adding extra description
+    const updatedPortionFields = portionFields.map((portionData, index) => {
+      const newDescription = newReviewRef.current[index]?.value ?? "";
+
+      return {
+        ...portionData,
+        newReviews: `${portionData.newReviews} || ${newDescription}`,
+      };
+    });
+
     if (!user) {
-      console.error("User not authenticated");
+      toast.error("User not Authenticated");
       return;
     }
 
@@ -308,7 +328,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
         commonId,
         Ids,
         commonFields,
-        portionFields,
+        portionFields: updatedPortionFields,
       });
       toast.success("Property updated successfully");
       setLoading(false);
@@ -558,8 +578,6 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
       const response = await axios.post("/api/ical/createIcal", {
         propertyId: id,
       });
-      console.log("response:: ", response);
-      console.log("response: ", response.data);
     } catch (error: any) {
       console.log("error: ", error);
     }
@@ -1190,7 +1208,10 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
 
                       <div className=" flex space-x-4 justify-between">
                         <div>
-                          <label htmlFor="childrenAge">
+                          <label
+                            htmlFor="childrenAge"
+                            className=" text-sm truncate"
+                          >
                             Children&apos;s Age
                             <Input
                               className=" bg-transparent w-full rounded-2xl"
@@ -1215,7 +1236,10 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                         </div>
 
                         <div>
-                          <label htmlFor="basePrice">
+                          <label
+                            htmlFor="basePrice"
+                            className=" text-sm truncate"
+                          >
                             Base Price Of Portion {index + 1}
                             <Input
                               className=" bg-transparent w-full rounded-2xl"
@@ -1240,7 +1264,10 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                         </div>
 
                         <div>
-                          <label htmlFor="weekendPrice">
+                          <label
+                            htmlFor="weekendPrice"
+                            className=" text-sm truncate"
+                          >
                             Weekend Price {index + 1}
                             <Input
                               className=" bg-transparent w-full rounded-2xl"
@@ -1263,6 +1290,64 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                             />
                           </label>
                         </div>
+
+                        <div className=" ">
+                          <label
+                            htmlFor="weeklyDiscount"
+                            className=" text-sm truncate"
+                          >
+                            Weekly Discount {index + 1}
+                            <Input
+                              className=" bg-transparent w-full rounded-2xl"
+                              type="number"
+                              name="weeklyDiscount"
+                              value={
+                                portionFields?.[index]?.weeklyDiscount || ""
+                              }
+                              onChange={(e) => {
+                                const newPortionData = {
+                                  ...portionFields?.[index],
+                                };
+                                newPortionData.weeklyDiscount = parseInt(
+                                  e.target.value
+                                );
+                                setPortionFields((prev) => {
+                                  const newPortionArray = [...prev];
+                                  newPortionArray[index] = newPortionData;
+                                  return newPortionArray;
+                                });
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className=" flex flex-col gap-y-2">
+                        <p>
+                          Description{" "}
+                          <span className=" text-xs">
+                            (This description is non-editable although you can
+                            add a new description)
+                          </span>
+                        </p>
+                        <Textarea
+                          className=" text-neutral-600 cursor-not-allowed"
+                          defaultValue={
+                            portionFields?.[index]?.newReviews ?? ""
+                          }
+                          disabled
+                        ></Textarea>
+                        <span className=" text-sm ml-2">
+                          ( Enter the new description here)
+                        </span>
+                        <Textarea
+                          placeholder="Enter description"
+                          ref={(el) => {
+                            if (el) {
+                              newReviewRef.current[index] = el;
+                            }
+                          }}
+                        />
                       </div>
 
                       <div className=" w-full flex justify-between mt-4 gap-x-2 items-center ">

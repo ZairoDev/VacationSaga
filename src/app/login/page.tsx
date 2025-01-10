@@ -1,28 +1,32 @@
 "use client";
-import React, { FC, useState, useEffect } from "react";
-import { Toaster, toast } from "sonner";
-import { CgSpinner } from "react-icons/cg";
+
 import axios from "axios";
-import Input from "@/shared/Input";
-import { useRouter, useSearchParams } from "next/navigation";
-import ButtonPrimary from "@/shared/ButtonPrimary";
 import Link from "next/link";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Cookies from "js-cookie";
 import { parseCookies } from "nookies";
+import { Toaster, toast } from "sonner";
+import { CgSpinner } from "react-icons/cg";
+import React, { FC, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+
+import Input from "@/shared/Input";
+import { useAuthStore } from "@/AuthStore";
+import ButtonPrimary from "@/shared/ButtonPrimary";
 
 export interface PageLoginProps {}
 
 const PageLogin: FC<PageLoginProps> = ({}) => {
+  const router = useRouter();
+  const params = useSearchParams();
+  const role = params.get("role");
+
+  const { setToken } = useAuthStore();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
-  const token = Cookies.get("token");
-  const params = useSearchParams();
-
-  const role = params.get("role");
 
   useEffect(() => {
     const { token } = parseCookies();
@@ -36,14 +40,15 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
     setIsLoggingIn(true);
     try {
       const response = await axios.post("/api/user/login", {
+        role,
         email,
         password,
-        role,
       });
       if (response.status === 200) {
         toast.success("Login successful");
         Cookies.set("token", response.data.token, { expires: 1 });
         localStorage.setItem("token", response.data.token);
+        setToken(response.data.tokenData);
         router.push("/");
       }
     } catch (err) {

@@ -1,8 +1,9 @@
-import { connectDb } from "../../../../helper/db";
-import User from "../../../../models/user";
-import { NextResponse } from "next/server";
-import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import bcryptjs from "bcryptjs";
+import { NextResponse } from "next/server";
+
+import User from "../../../../models/user";
+import { connectDb } from "../../../../helper/db";
 import Travellers from "../../../../models/traveller";
 
 connectDb();
@@ -64,6 +65,14 @@ export async function POST(request) {
       message: "Login successful",
       success: true,
       token, // Include the token in the response data
+      tokenData: {
+        _id: LoginUser._id,
+        name: LoginUser.name,
+        email: LoginUser.email,
+        role: role,
+        isVerified: LoginUser.isVerified,
+        profilePic: LoginUser?.profilePic ?? "",
+      },
     });
     response.cookies.set("token", token, {
       httpOnly: true,

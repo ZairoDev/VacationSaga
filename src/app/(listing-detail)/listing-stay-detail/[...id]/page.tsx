@@ -1,61 +1,63 @@
 "use client";
-import React, { FC, Fragment, useEffect, useRef, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { ArrowRightIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
-import CommentListing from "@/components/CommentListing";
-import FiveStartIconForRate from "@/components/FiveStartIconForRate";
-import Badge from "@/shared/Badge";
-import ButtonCircle from "@/shared/ButtonCircle";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import ButtonSecondary from "@/shared/ButtonSecondary";
-import ButtonClose from "@/shared/ButtonClose";
-import Input from "@/shared/Input";
-import LikeSaveBtns from "@/components/LikeSaveBtns";
-import { usePathname, useRouter } from "next/navigation";
-import StayDatesRangeInput from "../StayDatesRangeInput";
-import GuestsInput from "../GuestsInput";
-import SectionDateRange from "../../SectionDateRange";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { FaHotTub, FaMapMarkerAlt, FaUser } from "react-icons/fa";
-import {
-  IoIosArrowDropdownCircle,
-  IoIosArrowDroprightCircle,
-  IoIosBed,
-  IoIosCompass,
-  IoMdFlame,
-} from "react-icons/io";
-import { FaBath } from "react-icons/fa";
-import { SlSizeFullscreen } from "react-icons/sl";
+
 import {
   MdConstruction,
   MdHomeWork,
   MdOutlineEnergySavingsLeaf,
 } from "react-icons/md";
-import "react-responsive-carousel/lib/styles/carousel.min.css";
+import {
+  IoIosBed,
+  IoMdFlame,
+  IoIosCompass,
+  IoIosArrowDropdownCircle,
+  IoIosArrowDroprightCircle,
+} from "react-icons/io";
 import axios from "axios";
-import { CiCalendar } from "react-icons/ci";
-import { BiMessageAltDetail, BiSolidArea } from "react-icons/bi";
-import { FaRegClock } from "react-icons/fa";
-import { IoLanguageOutline } from "react-icons/io5";
+import Link from "next/link";
+import Slider from "react-slick";
+import Script from "next/script";
+import { FaBath } from "react-icons/fa";
+import "slick-carousel/slick/slick.css";
 import { FaCheck } from "react-icons/fa";
-import { useAuth } from "@/hooks/useAuth";
-import { BsExclamationCircleFill } from "react-icons/bs";
-import MobileFooterSticky from "../../(components)/MobileFooterSticky";
+import { CiCalendar } from "react-icons/ci";
+import { FaRegClock } from "react-icons/fa";
+import "slick-carousel/slick/slick-theme.css";
 import { PiStudentBold } from "react-icons/pi";
 import { SiLevelsdotfyi } from "react-icons/si";
+import { useSearchParams } from "next/navigation";
+import { SlSizeFullscreen } from "react-icons/sl";
+import { IoLanguageOutline } from "react-icons/io5";
 import { RiMoneyEuroCircleFill } from "react-icons/ri";
-import { BentoGridDemo } from "@/components/BentoGrid";
-import { EventInterface } from "@/app/editproperty/page";
+import { BsExclamationCircleFill } from "react-icons/bs";
+import { usePathname, useRouter } from "next/navigation";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+import { BiMessageAltDetail, BiSolidArea } from "react-icons/bi";
+import React, { FC, Fragment, useEffect, useState } from "react";
+import { FaHotTub, FaMapMarkerAlt, FaUser } from "react-icons/fa";
+
+import Input from "@/shared/Input";
+import Badge from "@/shared/Badge";
+import { useAuth } from "@/hooks/useAuth";
 import dateParser from "@/helper/dateParser";
-import { PropertiesDataType, PropertyDataType } from "@/data/types";
-import { useLoadScript } from "@react-google-maps/api";
+import ButtonClose from "@/shared/ButtonClose";
+import ButtonCircle from "@/shared/ButtonCircle";
+import ButtonPrimary from "@/shared/ButtonPrimary";
+import LikeSaveBtns from "@/components/LikeSaveBtns";
 import MapWithCircle from "@/components/MapWithCircle";
-import Script from "next/script";
-import { toast } from "sonner";
+import ButtonSecondary from "@/shared/ButtonSecondary";
+import { useLoadScript } from "@react-google-maps/api";
+import { BentoGridDemo } from "@/components/BentoGrid";
+import { Dialog, Transition } from "@headlessui/react";
+import { EventInterface } from "@/app/editproperty/page";
+import CommentListing from "@/components/CommentListing";
+import { PropertiesDataType, PropertyDataType } from "@/data/types";
+import FiveStartIconForRate from "@/components/FiveStartIconForRate";
+import { ArrowRightIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
+
+import GuestsInput from "../GuestsInput";
+import SectionDateRange from "../../SectionDateRange";
+import StayDatesRangeInput from "../StayDatesRangeInput";
+import MobileFooterSticky from "../../(components)/MobileFooterSticky";
 
 export interface ListingStayDetailPageProps {
   params: {
@@ -95,6 +97,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const [propertyId, setPropertyId] = useState<string>("");
   const [username, setUsername] = useState<string | null>(null);
   const [userIdOfProperty, setUserIdOfProperty] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>();
   const [language, setLanguage] = useState<string>("");
   const [allAmenities, setAllAmenities] = useState<any[]>([]);
   const [commonProperties, setCommonProperties] =
@@ -152,6 +155,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const [bookedState, setBookedState] = useState<boolean>(false);
   const [alreadyBookedDates, setAlreadyBookedDates] = useState<Date[]>([]);
   const [bookedDates, setBookedDates] = useState<EventInterface[]>([]);
+  const [bookingPrice, setBookingPrice] = useState(0);
   const fetchAndParseICal = async (url: string) => {
     try {
       const response = await axios.post("/api/ical", { url });
@@ -181,7 +185,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       return;
     }
     const airbnbBookings = await fetchAndParseICal(url);
-    console.log("airbnbBookings", airbnbBookings, airbnbBookings?.length);
+    // console.log("airbnbBookings", airbnbBookings, airbnbBookings?.length);
     const eventsFromAirbnb: EventInterface[] = [];
     airbnbBookings?.forEach((event) => {
       const stdt = dateParser(event.startDate?.toLocaleString() || "");
@@ -220,6 +224,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           fetchBookedDates(response.data?.property?.icalLinks?.["Airbnb"]);
           setParticularProperty(response?.data?.property);
           setUserIdOfProperty(response?.data?.property?.userId);
+          setUserEmail(response?.data?.property?.email);
           setPropertyId(response?.data?.property?._id);
           setCenter(response?.data?.property?.center);
           try {
@@ -273,7 +278,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           { propertyId: params.id[0] }
         );
 
-        setAlreadyBookedDates((prev) => [...prev, ...response?.data?.data])
+        setAlreadyBookedDates((prev) => [...prev, ...response?.data?.data]);
       } catch (err: any) {
         console.log("error in fetching blocked dates");
       }
@@ -288,9 +293,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       try {
         const response = await axios.post("/api/getUsername", {
           userId: userIdOfProperty,
+          email: userEmail,
         });
         if (response.data) {
-          const tempName = response?.data?.user?.name;
+          const tempName = response?.data?.name;
           if (tempName) {
             const name = tempName.charAt(0).toUpperCase() + tempName.slice(1);
             setUsername(name);
@@ -661,13 +667,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
             {particularProperty?.rentalType === "Short Term" ? (
               <div className="p-4 flex justify-between items-center space-x-4 rounded-lg">
                 <span>Weekly Discount</span>{" "}
-                <span>{particularProperty?.monthlyDiscount}</span>
+                <span>€ {particularProperty?.weeklyDiscount}</span>
               </div>
             ) : (
               <div className="p-4 flex justify-between items-center space-x-4 rounded-lg">
                 {" "}
                 <span>Monthly Discount</span>
-                <span>- {particularProperty?.monthlyDiscount} % </span>
+                <span>€{particularProperty?.monthlyDiscount} % </span>
               </div>
             )}
 
@@ -1042,10 +1048,29 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       setMinNightStay(nights);
       setNumberOfNights(Math.max(nights, minNights));
 
-      const st = startDate?.toISOString()?.split("T")?.[0];
       const nd = endDate?.toISOString()?.split("T")?.[0];
+      const st = startDate?.toISOString()?.split("T")?.[0];
       setStdt(st || dt1);
       setNddt(nd || dt2);
+
+      let totalAmount = 0;
+
+      const stdt = new Date(startDate ?? new Date());
+      const nddt = new Date(endDate ?? new Date());
+
+      while (stdt < nddt) {
+        const month = stdt.getMonth();
+        const day = stdt.getDate();
+        // console.log("price: ", particularProperty?.pricePerDay[month][day - 1]);
+        totalAmount += particularProperty?.pricePerDay[month][day - 1] ?? 0;
+        stdt.setDate(stdt.getDate() + 1);
+      }
+
+      if (nights >= 7) {
+        totalAmount -= particularProperty?.weeklyDiscount || 0;
+      }
+      // console.log("total amount: ", totalAmount);
+      setBookingPrice(totalAmount);
     };
 
     const calculateDateDifference = (start: Date | null, end: Date | null) => {
@@ -1085,11 +1110,11 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
         <form className="flex flex-col border border-neutral-200 dark:border-neutral-700 rounded-3xl">
           {bookedState && (
             <StayDatesRangeInput
-              className="flex-1 z-[11]"
               onDatesChange={handleDatesChange}
               minNights={minNights}
               prices={particularProperty?.pricePerDay}
               externalBookedDates={alreadyBookedDates}
+              className="flex-1 z-[11]"
             />
           )}
           <div className="w-full border-b border-neutral-200 dark:border-neutral-700"></div>
@@ -1116,18 +1141,26 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               )}
             </span>
             <span>€ {totalPrice}</span>
+            {/* <span>€ {bookingPrice}</span> */}
           </div>
 
           <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
             <span>Service charge</span>
             <span>€ 6</span>
           </div>
+          {nights >= 7 && (
+            <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
+              <span>Weekly Discount</span>
+              <span>- €{particularProperty?.weeklyDiscount}</span>
+            </div>
+          )}
 
           <div className="border-b border-neutral-200 dark:border-neutral-700"></div>
 
           <div className="flex justify-between font-semibold">
             <span>Total</span>
-            <span>€ {totalPrice + 6} </span>
+            {/* <span>€ {totalPrice + 6} </span> */}
+            <span>€ {bookingPrice + 6} </span>
           </div>
         </div>
 
@@ -1142,6 +1175,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               guests: totalGuests,
             },
           }}
+          className=" w-auto flex justify-center"
         >
           <ButtonPrimary>Reserve</ButtonPrimary>
         </Link>

@@ -32,7 +32,6 @@ export async function POST(request) {
         },
       },
     ]);
-    console.log("properties: ", properties);
 
     if (!properties) {
       return NextResponse.json(

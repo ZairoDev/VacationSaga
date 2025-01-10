@@ -1,26 +1,29 @@
 "use client";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import React, { FC, Fragment, useState, useEffect } from "react";
-import { BiLoaderAlt } from "react-icons/bi";
-import ButtonPrimary from "@/shared/ButtonPrimary";
-import StartRating from "@/components/StartRating";
-import NcModal from "@/shared/NcModal";
-import ModalSelectDate from "@/components/ModalSelectDateTwo";
-import converSelectedDateToString from "@/utils/converSelectedDateToString";
-import ModalSelectGuests from "@/components/ModalSelectGuests";
-import { GuestsObject } from "../(client-components)/type";
-import { useSearchParams } from "next/navigation";
+
 import axios from "axios";
-import { AiFillQuestionCircle } from "react-icons/ai";
-import { useRouter } from "next/navigation";
+import { toast, Toaster } from "sonner";
 import { LuLoader2 } from "react-icons/lu";
+import { useRouter } from "next/navigation";
+import { BiLoaderAlt } from "react-icons/bi";
+import { useSearchParams } from "next/navigation";
+import { AiFillQuestionCircle } from "react-icons/ai";
+import React, { FC, useState, useEffect } from "react";
+
 import {
+  TokenDataType,
   BookingDataType,
   PropertiesDataType,
-  TokenDataType,
 } from "@/data/types";
-import { toast, Toaster } from "sonner";
+import NcModal from "@/shared/NcModal";
+import StartRating from "@/components/StartRating";
+import ButtonPrimary from "@/shared/ButtonPrimary";
+import ModalSelectDate from "@/components/ModalSelectDateTwo";
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import ModalSelectGuests from "@/components/ModalSelectGuests";
+import converSelectedDateToString from "@/utils/converSelectedDateToString";
+
 import calculatePrice from "@/helper/calculatePrice";
+import { GuestsObject } from "../(client-components)/type";
 
 export interface CheckOutPagePageMainProps {
   className?: string;
@@ -55,6 +58,7 @@ const CheckOutPagePageMain: FC<CheckOutPagePageMainProps> = ({
   const [loggedInUser, setLoggedInUser] = useState<TokenDataType | undefined>();
   const [totalPrice, setTotalPrice] = useState(6);
   const [booking, setBooking] = useState<BookingDataType>();
+  const [bookingPrice, setBookingPrice] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const getLoggedInUser = async () => {
@@ -231,7 +235,9 @@ const CheckOutPagePageMain: FC<CheckOutPagePageMainProps> = ({
       const Price = calculatePrice(
         startDate,
         endDate,
-        particularProperty?.pricePerDay
+        particularProperty?.pricePerDay,
+        particularProperty?.weeklyDiscount,
+        particularProperty?.isInstantBooking ? true : false
       );
       if (Price) setTotalPrice(Price);
       const savedDates = JSON.stringify({
@@ -248,6 +254,7 @@ const CheckOutPagePageMain: FC<CheckOutPagePageMainProps> = ({
           (guests?.guestChildren || 0) +
           (guests?.guestInfants || 0),
         price: Price,
+        weeklyDiscount: particularProperty?.weeklyDiscount || 0,
         bookingStatus,
       });
       setBooking(response.data.booking);
@@ -312,6 +319,12 @@ const CheckOutPagePageMain: FC<CheckOutPagePageMainProps> = ({
             <span>Service charge</span>
             <span>€ 6</span>
           </div>
+          {calculateDifferenceBetweenDates(startone, endone) >= 7 && (
+            <div className="flex justify-between text-neutral-6000 dark:text-neutral-300">
+              <span>Weekly Discount</span>
+              <span>- €{particularProperty?.weeklyDiscount}</span>
+            </div>
+          )}
 
           <div className="border-b border-neutral-200 dark:border-neutral-700"></div>
           <div className="flex justify-between font-semibold">
@@ -322,7 +335,12 @@ const CheckOutPagePageMain: FC<CheckOutPagePageMainProps> = ({
               €{" "}
               {calculateDifferenceBetweenDates(startone, endone) *
                 Number(particularProperty?.basePrice || 100) +
-                6}{" "}
+                6 -
+                Number(
+                  calculateDifferenceBetweenDates(startDate, endDate) >= 7
+                    ? particularProperty?.weeklyDiscount
+                    : 0
+                )}
             </span>
           </div>
           <div className=" w-full flex justify-center mt-2">
