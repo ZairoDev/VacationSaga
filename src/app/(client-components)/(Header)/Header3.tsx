@@ -18,6 +18,7 @@ import LocationInput from "../(HeroSearchForm)/LocationInput";
 import StayDatesRangeInput from "../(HeroSearchForm)/(stay-search-form)/StayDatesRangeInput";
 import GuestsInput from "../(HeroSearchForm)/GuestsInput";
 import { SearchInputProvider } from "@/context/SearchInput";
+import { useAuthStore } from "@/AuthStore";
 
 interface Header3Props {
   className?: string;
@@ -33,7 +34,8 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const loginRef = useRef<HTMLDivElement>(null);
-  const [token, setToken] = useState<string>("");
+  // const [token, setToken] = useState<string>("");
+  const { token } = useAuthStore();
 
   useOutsideAlerter(headerInnerRef, () => {
     setShowHeroSearch(null);
@@ -47,12 +49,12 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
   }, [pathname]);
 
   // Fetch token on client side only
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setToken(localStorage.getItem("token") || "");
-      WIN_PREV_POSITION = window.pageYOffset;
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     setToken(localStorage.getItem("token") || "");
+  //     WIN_PREV_POSITION = window.pageYOffset;
+  //   }
+  // }, []);
 
   // Hide search form on scroll
   useEffect(() => {
