@@ -230,14 +230,6 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
                     ))
                   ) : (
                     <>
-                      <div className=" flex flex-col h-60 border border-neutral-700 rounded-lg justify-center items-center gap-y-2">
-                        <Link href={"/add-listing/1"} target="_blank">
-                          <FaRegSquarePlus className=" text-7xl text-neutral-600 hover:text-primary-6000 cursor-pointer" />
-                        </Link>
-                        <p className=" text-neutral-600 text-lg ">
-                          Add Short Term Properties
-                        </p>
-                      </div>
                       {filteredProperties?.map((item, index: number) => (
                         <div key={index}>
                           <Link
@@ -266,6 +258,14 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
                           </Link>
                         </div>
                       ))}
+                      <div className=" flex flex-col h-60 border border-neutral-700 rounded-lg justify-center items-center gap-y-2">
+                        <Link href={"/add-listing/1"} target="_blank">
+                          <FaRegSquarePlus className=" text-7xl text-neutral-600 hover:text-primary-6000 cursor-pointer" />
+                        </Link>
+                        <p className=" text-neutral-600 text-lg ">
+                          Add Short Term Properties
+                        </p>
+                      </div>
                     </>
                   )}
                 </div>
@@ -291,14 +291,6 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
                     ))
                   ) : (
                     <>
-                      <div className=" flex flex-col h-80 border border-neutral-700 rounded-lg justify-center items-center gap-y-2">
-                        <Link href={"/add-listing/1"} target="_blank">
-                          <FaRegSquarePlus className=" text-7xl text-neutral-600 hover:text-primary-6000 cursor-pointer" />
-                        </Link>
-                        <p className=" text-neutral-600 text-lg ">
-                          Add Long Term Properties
-                        </p>
-                      </div>
                       {filteredProperties?.map((item, index) => (
                         <>
                           <Link
@@ -328,6 +320,14 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
                           </Link>
                         </>
                       ))}
+                      <div className=" flex flex-col h-80 border border-neutral-700 rounded-lg justify-center items-center gap-y-2">
+                        <Link href={"/add-listing/1"} target="_blank">
+                          <FaRegSquarePlus className=" text-7xl text-neutral-600 hover:text-primary-6000 cursor-pointer" />
+                        </Link>
+                        <p className=" text-neutral-600 text-lg ">
+                          Add Long Term Properties
+                        </p>
+                      </div>
                     </>
                   )}
                 </div>

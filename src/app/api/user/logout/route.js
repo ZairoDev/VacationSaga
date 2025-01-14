@@ -10,6 +10,15 @@ export async function GET(request) {
     );
     response.cookies.delete("token");
 
+    await response.cookies.delete({
+      name: "token",
+      path: "/",
+      sameSite: "none",
+      secure: true,
+    });
+
+    response.headers.set("Cache-Control", "no-store");
+
     return response;
   } catch {}
 }
