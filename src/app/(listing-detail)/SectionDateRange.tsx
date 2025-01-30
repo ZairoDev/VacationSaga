@@ -40,9 +40,9 @@ const SectionDateRange = ({
   const isBooked = (date: Date) => {
     return currentBookedDates.some(
       (bookedDate) =>
-        bookedDate.getDate() === date.getDate() &&
-        bookedDate.getMonth() === date.getMonth() &&
-        bookedDate.getFullYear() === date.getFullYear()
+        new Date(bookedDate).getDate() === date.getDate() &&
+        new Date(bookedDate).getMonth() === date.getMonth() &&
+        new Date(bookedDate).getFullYear() === date.getFullYear()
     );
   };
 

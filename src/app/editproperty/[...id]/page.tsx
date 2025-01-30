@@ -18,16 +18,30 @@ import Label from "@/components/Label";
 import Textarea from "@/shared/Textarea";
 import { useAuth } from "@/hooks/useAuth";
 import dateParser from "@/helper/dateParser";
-import BarLoader from "@/components/BarLoader";
 import ButtonClose from "@/shared/ButtonClose";
+import Editor from "@/components/editor/editor";
 import { BlurFade } from "@/components/BlurFade";
 import { PropertiesDataType } from "@/data/types";
 import ButtonPrimary from "@/shared/ButtonPrimary";
-import { TrashIcon } from "@heroicons/react/24/solid";
 import { Dialog, Transition } from "@headlessui/react";
 import CustomDateRangePrice from "@/components/CustomDateRangePrice";
 
 import { Properties } from "../../page";
+
+const defaultValue = {
+  type: "doc",
+  content: [
+    {
+      type: "paragraph",
+      content: [
+        {
+          type: "text",
+          text: "Type / to get the option.",
+        },
+      ],
+    },
+  ],
+};
 
 export interface EventInterface {
   title: string;
@@ -57,13 +71,16 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
   const id = params.id[0];
   const commonId = params.id[1];
 
+  const [wordCount, setWordCount] = useState(0);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshState, setRefreshState] = useState(false);
   const [allImages, setAllImages] = useState<string[]>([]);
+  const [content, setContent] = useState<any>(defaultValue);
   const [property, setProperty] = useState<Properties | null>(null);
   const [numberOfPortions, setNumberOfPortions] = useState<number>(1);
   const [properties, setProperties] = useState<PropertiesDataType[]>([]);
-  const newReviewRef = useRef<(HTMLTextAreaElement | null)[]>([]);
+  // const newReviewRef = useRef<(HTMLTextAreaElement | null)[]>([]);
+  const newReviewRef = useRef<(string | null)[]>([]);
 
   const BlurFadeDemo = (images: string[]) => {
     return (
@@ -283,6 +300,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
           weekendPrice: properties[i].weekendPrice,
           weeklyDiscount: properties[i].weeklyDiscount,
           isInstantBooking: properties[i].isInstantBooking,
+          reviews: properties[i].reviews,
           newReviews: properties[i].newReviews,
         };
         setAllImages((prev) => [...prev, ...properties[i].propertyImages]);
@@ -307,11 +325,12 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
 
     // adding extra description
     const updatedPortionFields = portionFields.map((portionData, index) => {
-      const newDescription = newReviewRef.current[index]?.value ?? "";
+      // const newDescription = newReviewRef.current[index]?.value ?? "";
+      const newDescription = newReviewRef.current[index];
 
       return {
         ...portionData,
-        newReviews: `${portionData.newReviews} || ${newDescription}`,
+        newReviews: `${newDescription}`,
       };
     });
 
@@ -621,6 +640,7 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                 />
               </label>
             </div>
+
             <div className=" flex justify-between">
               <div className=" w-2/5">
                 <h1 className="text-xl dark:text-white font-medium">
@@ -1332,21 +1352,36 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
                         </p>
                         <Textarea
                           className=" text-neutral-600 cursor-not-allowed"
-                          defaultValue={
-                            portionFields?.[index]?.newReviews ?? ""
-                          }
+                          defaultValue={portionFields?.[index]?.reviews ?? ""}
                           disabled
-                        ></Textarea>
-                        <span className=" text-sm ml-2">
-                          ( Enter the new description here)
-                        </span>
-                        <Textarea
+                        />
+
+                        {/* <Textarea
                           placeholder="Enter description"
                           ref={(el) => {
                             if (el) {
                               newReviewRef.current[index] = el;
                             }
                           }}
+                        /> */}
+                        <p>New Description </p>
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: portionFields?.[index]?.newReviews ?? "",
+                          }}
+                          className=" disabled:cursor-not-allowed p-8 rounded-md border"
+                        ></div>
+                        <span className=" text-sm ml-2">
+                          Enter the new description here (old one will be
+                          replaced by this)
+                        </span>
+                        <Editor
+                          initialValue={defaultValue}
+                          onChange={(value) => {
+                            setContent(value);
+                            newReviewRef.current[index] = value;
+                          }}
+                          setWordCount={setWordCount}
                         />
                       </div>
 

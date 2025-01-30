@@ -2,14 +2,16 @@
  * @type {import('next').NextConfig}
  */
 
+const path = require("path");
+
 const nextConfig = {
   reactStrictMode: false,
   experimental: {
     typedRoutes: true,
     client: {
       useWebpack: false, // Optional: this can be false if you don't need custom webpack configuration for client builds
-      useClient: true
-    }
+      useClient: true,
+    },
   },
   images: {
     remotePatterns: [
@@ -92,6 +94,13 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Ensure that all imports of 'yjs' resolve to the same instance
+      config.resolve.alias["yjs"] = path.resolve(__dirname, "node_modules/yjs");
+    }
+    return config;
   },
 };
 

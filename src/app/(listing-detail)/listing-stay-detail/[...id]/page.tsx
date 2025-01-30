@@ -514,9 +514,16 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           />
         </div>
         <h2 className="text-2xl font-semibold  mb-2">Stay information</h2>
-        {particularProperty?.newReviews
-          ? particularProperty?.newReviews
-          : particularProperty?.reviews}
+        {particularProperty?.newReviews ? (
+          <div
+            dangerouslySetInnerHTML={{
+              __html: particularProperty?.newReviews ?? "",
+            }}
+            className=" disabled:cursor-not-allowed px-4"
+          ></div>
+        ) : (
+          particularProperty?.reviews
+        )}
       </div>
     );
   };

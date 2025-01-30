@@ -32,3 +32,12 @@
 .card-container {
   margin: 0 10px; /* Optional: adjust the margin if necessary */
 }
+
+
+.ProseMirror {
+  max-height: 200px;
+  padding: 10px;
+  /* border: 1px solid #ddd; */
+  border-radius: 5px;
+  overflow-y: auto;
+}
