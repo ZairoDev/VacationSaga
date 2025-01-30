@@ -292,7 +292,7 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
                   ) : (
                     <>
                       {filteredProperties?.map((item, index) => (
-                        <>
+                        <div key={index}>
                           <Link
                             className="text-primary-6000 "
                             href={{
@@ -318,7 +318,7 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
                             />
                             <BsPencilSquare className="  text-primary-6000 mt-2 text-xl rounded-lg" />
                           </Link>
-                        </>
+                        </div>
                       ))}
                       <div className=" flex flex-col h-80 border border-neutral-700 rounded-lg justify-center items-center gap-y-2">
                         <Link href={"/add-listing/1"} target="_blank">

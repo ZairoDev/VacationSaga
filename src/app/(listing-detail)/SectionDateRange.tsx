@@ -1,13 +1,15 @@
 "use client";
-import React, { FC, Fragment, useEffect, useState } from "react";
+
 import DatePicker from "react-datepicker";
-import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
+import React, { useEffect, useState } from "react";
+
 import DatePickerCustomDay from "@/components/DatePickerCustomDay";
+import DatePickerCustomHeaderTwoMonth from "@/components/DatePickerCustomHeaderTwoMonth";
 
 interface SectionDateRangeProps {
   prices?: number[][];
-  externalBookedDates?: Date[];
   bookedDates?: Date[];
+  externalBookedDates?: Date[];
 }
 
 const SectionDateRange = ({
@@ -17,6 +19,7 @@ const SectionDateRange = ({
 }: SectionDateRangeProps) => {
   const [startDate, setStartDate] = useState<Date | null>(new Date(new Date()));
   const [endDate, setEndDate] = useState<Date | null>(new Date());
+
   const onChangeDate = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     setStartDate(start);

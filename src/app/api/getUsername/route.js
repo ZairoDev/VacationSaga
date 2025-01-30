@@ -11,8 +11,13 @@ export async function POST(request) {
   }
 
   try {
-    // const user = await Users.findOne({ _id: userId });
-    const user = await Users.findOne({ email: email });
+    let user;
+    if (email) {
+      user = await Users.findOne({ email: email });
+    }
+    if (!user) {
+      user = await Users.findById(userId);
+    }
     return NextResponse.json(user);
   } catch (error) {
     return NextResponse.json({ error: "Error fetching user" }, { status: 500 });
