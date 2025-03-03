@@ -90,6 +90,7 @@
     "slick-carousel": "^1.8.1",
     "sonner": "^1.5.0",
     "styled-components": "^6.1.13",
+    "swiper": "^11.2.4",
     "tailwind-merge": "^2.5.2",
     "tailwind-scrollbar-hide": "^1.1.7",
     "typescript": "5.2.2",

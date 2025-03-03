@@ -5,8 +5,6 @@ import {
   Plane,
   MapPin,
   Users,
-  Phone,
-  MessageSquare,
   ChevronDown,
   ChevronUp,
   Facebook,
@@ -15,6 +13,13 @@ import {
   Linkedin,
 } from 'lucide-react';
 import Image from 'next/image';
+import {Swiper,SwiperSlide} from "swiper/react";
+import {Navigation,Pagination} from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+import "@/styles/index.scss"
 
 export default function Home() {
   // Refs for scroll functionality
@@ -26,6 +31,9 @@ export default function Home() {
 
   // State for accordion
   const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+  const [index,setIndex]=useState(0);
+  const [openModal,setOpenModal]=useState(false);
+  const itemsPerPage=3
 
   // Toggle accordion function
   const toggleAccordion = (index: number) => {
@@ -58,6 +66,7 @@ export default function Home() {
 
   const testimonials = [
     {
+      id: 1,
       initials: "JD",
       name: "John Doe",
       trip: "Bali Trip, 2024",
@@ -65,6 +74,7 @@ export default function Home() {
         "Our family vacation to Bali was absolutely perfect. The accommodations were luxurious, and the itinerary was well-balanced with adventure and relaxation.",
     },
     {
+      id: 2,
       initials: "JS",
       name: "Jane Smith",
       trip: "Europe Tour, 2023",
@@ -72,6 +82,7 @@ export default function Home() {
         "The European tour exceeded all my expectations. The guides were knowledgeable, the hotels were charming, and the entire experience was seamless.",
     },
     {
+      id: 3,
       initials: "RJ",
       name: "Robert Johnson",
       trip: "Japan Adventure, 2024",
@@ -79,6 +90,7 @@ export default function Home() {
         "Our trip to Japan was meticulously planned. From the cherry blossoms to the food tours, every detail was considered. Will definitely book with Vacation Saga again!",
     },
     {
+      id: 4,
       initials: "LM",
       name: "Laura Miller",
       trip: "African Safari, 2023",
@@ -86,6 +98,7 @@ export default function Home() {
         "The African Safari was an unforgettable adventure! The wildlife, the guides, and the accommodations were all top-notch.",
     },
     {
+      id: 5,
       initials: "MT",
       name: "Michael Thompson",
       trip: "Alaskan Cruise, 2024",
@@ -102,11 +115,10 @@ export default function Home() {
   };
 
 
- 
-
 
 
   return (
+ 
     <div className="min-h-screen bg-background">
       {/* Fixed Navigation Bar */}
       <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm z-50 shadow-sm">
@@ -168,10 +180,10 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </div>
+        </div> 
 
-        {/* Mobile Navigation Menu (hidden by default) */}
-        <div className="hidden md:hidden">
+       
+         <div className="hidden md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <button
               onClick={() => scrollToSection(heroRef)}
@@ -205,7 +217,7 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </header>
+      </header> 
 
       <main>
         {/* Hero Section */}
@@ -228,13 +240,13 @@ export default function Home() {
                     onClick={() => scrollToSection(servicesRef)}
                     className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
                   >
-                    Book Now
+                    Chat with Us
                   </button>
                   <button
-                    onClick={() => scrollToSection(servicesRef)}
+                    onClick={() => setOpenModal(true)}
                     className="px-8 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-white/10 md:py-4 md:text-lg md:px-10"
                   >
-                    Explore Packages
+                    Schedule a callback
                   </button>
                 </div>
               </div>
@@ -251,12 +263,74 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {openModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+          onClick={() => setOpenModal(false)} // Close modal when clicking outside
+        >
+          {/* Modal Box */}
+          <div
+            className="bg-white p-6 rounded-lg shadow-lg w-96 relative"
+            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+          >
+            <h2 className="text-xl font-bold">Modal Title</h2>
+            <p className="mt-2 text-gray-600">This is a simple popup modal.</p>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setOpenModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+            >
+              ✖
+            </button>
+          </div>
+        </div>
+      )}
         </section>
 
         {/* Testimonials Section (moved from below) */}
-        <section>
+        
+        <section ref={testimonialsRef} className="relative w-full max-w-7xl mx-auto mt-16 p-4 ">
 
-        </section>
+
+        <div className="text-center py-4">
+              <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+                What Our Clients Say
+              </h2>
+              <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
+                Don't just take our word for it
+              </p>
+            </div>
+      {/* Slider Wrapper */}
+      <Swiper
+        modules={[Navigation, Pagination]}
+        spaceBetween={20}
+        slidesPerView={1} // Default: 1 card visible
+        breakpoints={{
+          640: { slidesPerView: 1 }, // 1 card for small screens
+          768: { slidesPerView: 2 }, // 2 cards for medium screens
+          1024: { slidesPerView: 3 }, // 3 cards for large screens
+        }}
+        autoplay={{ delay: 3000 }}
+        pagination={{ clickable: true }}
+        
+        loop
+        className="w-full"
+      >
+        {testimonials.map((testimonial) => (
+          <SwiperSlide key={testimonial.id}>
+            <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center text-center">
+              
+              <p className="text-gray-600 italic">"{testimonial.review}"</p>
+              <h3 className="mt-4 text-lg font-semibold">{testimonial.name}</h3>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    </section>
+
+       
 
         {/* Services Section */}
         <section ref={servicesRef} className="py-16 bg-gray-50">
@@ -321,7 +395,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* About Us Section (moved from above) */}
+        
         <section ref={aboutRef} className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
@@ -388,7 +462,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FAQ Section with Accordion */}
+        
         <section ref={accordionRef} className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
@@ -431,8 +505,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-
-      {/* Footer with only social media links and company info */}
       <footer className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">

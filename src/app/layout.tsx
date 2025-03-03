@@ -1,16 +1,16 @@
+"use client"; // Ensures the component runs on the client side
+
+import { usePathname } from "next/navigation";
 import { Poppins } from "next/font/google";
 import SiteHeader from "./(client-components)/(Header)/SiteHeader";
 import ClientCommons from "./ClientCommons";
+import Footer from "@/components/Footer";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import { MyProvider } from "@/context/propertyContext";
 import "./globals.css";
 import "@/fonts/line-awesome-1.3.0/css/line-awesome.css";
 import "@/styles/index.scss";
 import "rc-slider/assets/index.css";
-import Footer from "@/components/Footer";
-import FooterNav from "@/components/FooterNav";
-import { Metadata } from "next";
-import GoogleAnalytics from "@/components/GoogleAnalytics";
-
-import { MyProvider } from "@/context/propertyContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -18,36 +18,24 @@ const poppins = Poppins({
   weight: ["300", "400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: "Vacation Saga",
-  description: "Booking online & rental online",
-  keywords: "Vacation, Saga, Booking, Rental, Property, Housing, Holiday, Holiday Packages",
-  viewport:
-    "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
-};
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
 
-export default function RootLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: any;
-}) {
+  // List of pages that should NOT have the global layout
+  const noLayoutPages = ["/landing-page"];
+
+  if (noLayoutPages.includes(pathname)) {
+    return <>{children}</>; // Renders the page without layout
+  }
+
   return (
     <MyProvider>
       <html lang="en" className={poppins.className}>
         <GoogleAnalytics />
         <body className="bg-white text-base dark:bg-neutral-900 text-neutral-900 dark:text-neutral-200">
-          {/* <SignedOut>
-              <SignInButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton/>
-            </SignedIn> */}
-          <ClientCommons />
+          <ClientCommons /> 
           <SiteHeader />
           {children}
-          <FooterNav />
           <Footer />
         </body>
       </html>
