@@ -20,27 +20,32 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import "@/styles/index.scss"
+import CallbackForm from './callback';
 
 export default function Home() {
-  // Refs for scroll functionality
+  
   const heroRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLDivElement>(null);
   const servicesRef = useRef<HTMLDivElement>(null);
   const aboutRef = useRef<HTMLDivElement>(null);
   const accordionRef = useRef<HTMLDivElement>(null);
 
-  // State for accordion
-  const [openAccordion, setOpenAccordion] = useState<number | null>(null);
-  const [index,setIndex]=useState(0);
-  const [openModal,setOpenModal]=useState(false);
-  const itemsPerPage=3
 
-  // Toggle accordion function
+  const [openAccordion, setOpenAccordion] = useState<number | null>(null);
+  const [showForm,setShowForm]=useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+ 
+
+
   const toggleAccordion = (index: number) => {
     setOpenAccordion(openAccordion === index ? null : index);
   };
 
-  // Accordion data
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  
   const accordionData = [
     {
       title: 'How far in advance should?',
@@ -107,28 +112,26 @@ export default function Home() {
     },
   ];
 
-  // Scroll to section function
+
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
     if (ref.current) {
       ref.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
-
-
-
-
+  
   return (
  
     <div className="min-h-screen bg-background">
-      {/* Fixed Navigation Bar */}
+    
       <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Plane className="h-8 w-8 text-orange-500" />
-              <span className="ml-2 text-xl font-bold text-gray-900">
+
+              <a href='https://www.vacationsaga.com/'><span className="ml-2 text-xl font-bold text-gray-900">
                 Vacation Saga
-              </span>
+              </span></a>
             </div>
             <nav className="hidden md:flex space-x-8">
               <button
@@ -163,7 +166,7 @@ export default function Home() {
               </button>
             </nav>
             <div className="md:hidden">
-              <button className="text-gray-700 hover:text-orange-500 focus:outline-none">
+              <button  onClick={toggleMobileMenu} className="text-gray-700 hover:text-orange-500 focus:outline-none">
                 <svg
                   className="h-6 w-6"
                   fill="none"
@@ -183,8 +186,8 @@ export default function Home() {
         </div> 
 
        
-         <div className="hidden md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}>
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-md">
             <button
               onClick={() => scrollToSection(heroRef)}
               className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50 w-full text-left"
@@ -220,7 +223,7 @@ export default function Home() {
       </header> 
 
       <main>
-        {/* Hero Section */}
+        
         <section
           ref={heroRef}
           className="pt-24 pb-16 bg-gradient-to-r from-orange-400 to-amber-500"
@@ -243,7 +246,7 @@ export default function Home() {
                     Chat with Us
                   </button>
                   <button
-                    onClick={() => setOpenModal(true)}
+                    onClick={() => setShowForm(true)}
                     className="px-8 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-white/10 md:py-4 md:text-lg md:px-10"
                   >
                     Schedule a callback
@@ -263,33 +266,12 @@ export default function Home() {
               </div>
             </div>
           </div>
+          {showForm && <CallbackForm onClose={() => setShowForm(false)} />}
 
-          {openModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
-          onClick={() => setOpenModal(false)} // Close modal when clicking outside
-        >
-          {/* Modal Box */}
-          <div
-            className="bg-white p-6 rounded-lg shadow-lg w-96 relative"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
-          >
-            <h2 className="text-xl font-bold">Modal Title</h2>
-            <p className="mt-2 text-gray-600">This is a simple popup modal.</p>
-
-            {/* Close Button */}
-            <button
-              onClick={() => setOpenModal(false)}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-            >
-              ✖
-            </button>
-          </div>
-        </div>
-      )}
+          
         </section>
 
-        {/* Testimonials Section (moved from below) */}
+  
         
         <section ref={testimonialsRef} className="relative w-full max-w-7xl mx-auto mt-16 p-4 ">
 
@@ -332,7 +314,7 @@ export default function Home() {
 
        
 
-        {/* Services Section */}
+       
         <section ref={servicesRef} className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
@@ -461,7 +443,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
         
         <section ref={accordionRef} className="py-16 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -504,6 +485,7 @@ export default function Home() {
             </div>
           </div>
         </section>
+
       </main>
       <footer className="bg-gray-900 text-white">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
