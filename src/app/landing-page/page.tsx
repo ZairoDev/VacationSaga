@@ -1,5 +1,6 @@
 'use client';
 
+import { FaPinterest } from "react-icons/fa";
 import { useRef, useState } from 'react';
 import {
   Plane,
@@ -7,6 +8,7 @@ import {
   Users,
   ChevronDown,
   ChevronUp,
+  
   Facebook,
   Twitter,
   Instagram,
@@ -127,7 +129,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Plane className="h-8 w-8 text-orange-500" />
+              <Image
+                src="https://vacationsaga.b-cdn.net/assets/vsround.png"
+                alt="Vacation Saga Logo"
+                width={45}
+                height={45}
+                className="mr-2"
+              />
 
               <a href='https://www.vacationsaga.com/'><span className="ml-2 text-xl font-bold text-gray-900">
                 Vacation Saga
@@ -492,30 +500,36 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-8 md:mb-0">
               <div className="flex items-center">
-                <Plane className="h-8 w-8 text-orange-500" />
+              <Image
+                src="https://vacationsaga.b-cdn.net/assets/vsround.png"
+                alt="Vacation Saga Logo"
+                width={45}
+                height={45}
+                className="mr-2"
+              />
                 <span className="ml-2 text-xl font-bold">Vacation Saga</span>
               </div>
               <p className="mt-4 text-base text-gray-400">
                 Creating unforgettable travel experiences since 2010.
               </p>
               <p className="mt-2 text-base text-gray-400">
-                123 Travel Lane, Adventure City, AC 12345
+              117/N/70 3rd Floor Kakadeo Kanpur
               </p>
               <p className="mt-2 text-base text-gray-400">
-                info@vacationsaga.com | +1 (555) 123-4567
+                info@vacationsaga.com | +91 8960980806
               </p>
             </div>
             <div className="flex space-x-6">
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://www.facebook.com/Vacationsaga/" className="text-gray-400 hover:text-white">
                 <Facebook className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
-                <Twitter className="h-6 w-6" />
+              <a href="https://in.pinterest.com/vacationsaga/" className="text-gray-400 hover:text-white">
+                <FaPinterest className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://www.instagram.com/vacationsaga/?hl=en" className="text-gray-400 hover:text-white">
                 <Instagram className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://in.linkedin.com/company/vacationsaga" className="text-gray-400 hover:text-white">
                 <Linkedin className="h-6 w-6" />
               </a>
             </div>
