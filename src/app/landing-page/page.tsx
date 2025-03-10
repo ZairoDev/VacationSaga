@@ -1,21 +1,23 @@
 "use client";
 
-import { FaPinterest } from "react-icons/fa";
+import Link from "next/link";
 import { useRef, useState } from "react";
+import { FaPinterest } from "react-icons/fa";
 import {
   Plane,
   MapPin,
   Users,
-  ChevronDown,
-  ChevronUp,
-  Facebook,
   Twitter,
-  Instagram,
+  Facebook,
   Linkedin,
+  Instagram,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
+
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -44,24 +46,24 @@ export default function Home() {
 
   const accordionData = [
     {
-      title: "How far in advance should?",
+      title: "How do I book a stay through Vacation Saga?",
       content:
-        "For peak season travel (summer, holidays), we recommend booking 6-8 months in advance. For off-peak travel, 3-4 months is usually sufficient to secure the best rates and availability.",
+        "Booking is easy! Browse our listings, choose your ideal stay, and confirm your reservation directly through our secure platform.",
     },
     {
-      title: "Do you offer travel insurance?",
+      title: "Are the properties verified?",
       content:
-        "Yes, we offer comprehensive travel insurance packages that cover trip cancellation, medical emergencies, lost luggage, and more. We strongly recommend purchasing travel insurance for all international trips.",
+        "Yes! All properties listed on Vacation Saga are handpicked and verified to ensure safety, comfort, and quality for our guests.",
     },
     {
-      title: "What payment methods do you accept?",
+      title: "Can I book long-term stays?",
       content:
-        "We accept all major credit cards, bank transfers, and PayPal. For certain destinations, we also offer payment plans to help you budget for your dream vacation.",
+        "Absolutely! We offer both short-term getaways and long-term rentals to suit your travel plans.",
     },
     {
-      title: "Can you accommodate special dietary requirements?",
+      title: "Do you offer customer support during my stay?",
       content:
-        "Absolutely! We can accommodate vegetarian, vegan, gluten-free, and other dietary requirements. Please let us know your needs when booking, and we'll ensure they're communicated to all relevant service providers.",
+        "Yes! Our support team is available 24/7 to assist you with any issues or questions during your vacation.",
     },
   ];
 
@@ -69,42 +71,42 @@ export default function Home() {
     {
       id: 1,
       initials: "JD",
-      name: "John Doe",
+      name: "Tzika Gershuni",
       trip: "Bali Trip, 2024",
       review:
-        "Our family vacation to Bali was absolutely perfect. The accommodations were luxurious, and the itinerary was well-balanced with adventure and relaxation.",
+        "Vacation Saga helped me rent my properties in Chania a few times both short terms and for longer terms as well. The team is very accommodating, very pleasant to work with and speak fluent English",
     },
     {
       id: 2,
       initials: "JS",
-      name: "Jane Smith",
+      name: "Kiki Tsopelou",
       trip: "Europe Tour, 2023",
       review:
-        "The European tour exceeded all my expectations. The guides were knowledgeable, the hotels were charming, and the entire experience was seamless.",
+        "I had the best experience with Vacation saga I have 12 apartments in Greece and they are managing these with the best way Thanks so much for everything Go on with your good work",
     },
     {
       id: 3,
       initials: "RJ",
-      name: "Robert Johnson",
+      name: "Yasmine Abid",
       trip: "Japan Adventure, 2024",
       review:
-        "Our trip to Japan was meticulously planned. From the cherry blossoms to the food tours, every detail was considered. Will definitely book with Vacation Saga again!",
+        "This agency is really professional, they’re always prompt with the answers and ready to help you find an apartment in no time. Special thank to the agent MAHEK who helped us through this journey",
     },
     {
       id: 4,
       initials: "LM",
-      name: "Laura Miller",
+      name: "Victor Costta",
       trip: "African Safari, 2023",
       review:
-        "The African Safari was an unforgettable adventure! The wildlife, the guides, and the accommodations were all top-notch.",
+        "I had a very satisfactory experience. The entire team served me very well, they accompanied me on the visit to choose an apartment. I recommend the company 100%. Everything went well.",
     },
     {
       id: 5,
       initials: "MT",
-      name: "Michael Thompson",
+      name: "Marialessandra Cecchi",
       trip: "Alaskan Cruise, 2024",
       review:
-        "The Alaskan cruise was breathtaking. From glaciers to wildlife, every moment was magical. Highly recommend!",
+        "I was in an urgent situation since I needed to find an apartment in a short time. Vacation Saga provided me with the right solution on time. Highly recommended.",
     },
   ];
 
@@ -230,23 +232,32 @@ export default function Home() {
           ref={heroRef}
           className="pt-24 pb-16 bg-gradient-to-r from-orange-400 to-amber-500"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
             <div className="lg:flex lg:items-center lg:justify-between">
-              <div className="lg:w-1/2">
-                <h1 className="text-4xl font-extrabold text-white sm:text-5xl md:text-6xl">
-                  Discover Your Perfect Getaway
+              <div className="lg:w-1/2 pr-4">
+                <h1 className="text-4xl font-extrabold text-white sm:text-4xl md:text-5xl">
+                  Your next address is just a click away!
                 </h1>
                 <p className="mt-3 max-w-md text-lg text-white opacity-90">
-                  Explore breathtaking destinations and create unforgettable memories with
-                  our expertly crafted vacation packages.
+                  We provide comfort, affordability, and flexibility for both short trips
+                  and long stays.
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <button
-                    onClick={() => scrollToSection(servicesRef)}
-                    className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                  <Link
+                    className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 flex items-center justify-center"
+                    href={`https://wa.me/+918960980806`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    Chat with Us
-                  </button>
+                    <div className=" flex items-center justify-center">
+                      Chat with Us
+                      <img
+                        src="https://vacationsaga.b-cdn.net/assets/wsp.png"
+                        alt="icon image"
+                        className="h-12 w-12"
+                      />
+                    </div>
+                  </Link>
                   <button
                     onClick={() => setShowForm(true)}
                     className="px-8 py-3 border border-white text-base font-medium rounded-md text-white hover:bg-white/10 md:py-4 md:text-lg md:px-10"
@@ -271,9 +282,21 @@ export default function Home() {
           {showForm && <CallbackForm onClose={() => setShowForm(false)} />}
         </section>
 
+        <section className=" flex justify-center mt-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <h2 className="text-4xl font-extrabold text-gray-900 text-center">
+              Why Choose Us?
+            </h2>
+            <p className=" text-neutral-600 text-lg mt-4 italic">
+              Personalized service, dedicated agents, and hassle-free rentals—because your
+              property deserves the best!
+            </p>
+          </div>
+        </section>
+
         <section
           ref={testimonialsRef}
-          className="relative w-full max-w-7xl mx-auto mt-16 p-4 "
+          className="relative w-full max-w-7xl mx-auto mt-4 p-4 "
         >
           <div className="text-center py-4">
             <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
@@ -327,11 +350,11 @@ export default function Home() {
                     <Plane className="h-6 w-6 text-orange-500" />
                   </div>
                   <h3 className="mt-4 text-xl font-medium text-gray-900">
-                    Vacation Packages
+                    Vacation Rentals
                   </h3>
                   <p className="mt-2 text-base text-gray-500">
-                    All-inclusive vacation packages to popular destinations worldwide,
-                    with flights, accommodations, and activities.
+                    Offering handpicked properties, from luxury villas to cozy stays. Find
+                    your perfect home away from home!
                   </p>
                 </div>
               </div>
@@ -342,10 +365,12 @@ export default function Home() {
                   <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
                     <Users className="h-6 w-6 text-orange-500" />
                   </div>
-                  <h3 className="mt-4 text-xl font-medium text-gray-900">Group Tours</h3>
+                  <h3 className="mt-4 text-xl font-medium text-gray-900">
+                    Short Term Rentals
+                  </h3>
                   <p className="mt-2 text-base text-gray-500">
-                    Guided group tours with expert local guides, perfect for solo
-                    travelers or those looking to meet new people.
+                    Get the best short-term rentals — great stays, great prices, great
+                    value.
                   </p>
                 </div>
               </div>
@@ -354,14 +379,15 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
                 <div className="p-6">
                   <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                    <MapPin className="h-6 w-6 text-orange-500" />
+                    {/* <MapPin className="h-6 w-6 text-orange-500" /> */}
+                    <Users className="h-6 w-6 text-orange-500" />
                   </div>
                   <h3 className="mt-4 text-xl font-medium text-gray-900">
-                    Custom Itineraries
+                    Long Term Rentals
                   </h3>
                   <p className="mt-2 text-base text-gray-500">
-                    Personalized travel itineraries designed specifically for your
-                    preferences, interests, and budget.
+                    Find comfortable and affordable long-term rentals — your home for as
+                    long as you need.
                   </p>
                 </div>
               </div>
@@ -376,7 +402,7 @@ export default function Home() {
                 About Us
               </h2>
               <p className="mt-4 max-w-2xl mx-auto text-xl text-gray-500">
-                Creating unforgettable travel experiences since 2010
+                Creating unforgettable travel experiences since 2017
               </p>
             </div>
             <div className="mt-12 lg:grid lg:grid-cols-2 lg:gap-8 lg:items-center">
@@ -486,7 +512,7 @@ export default function Home() {
                 <span className="ml-2 text-xl font-bold">Vacation Saga</span>
               </div>
               <p className="mt-4 text-base text-gray-400">
-                Creating unforgettable travel experiences since 2010.
+                Creating unforgettable travel experiences since 2017.
               </p>
               <p className="mt-2 text-base text-gray-400">
                 117/N/70 3rd Floor Kakadeo Kanpur
