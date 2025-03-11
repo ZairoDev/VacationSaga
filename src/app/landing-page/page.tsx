@@ -395,6 +395,28 @@ export default function Home() {
           </div>
         </section>
 
+        <section className=" flex justify-center h-[60vh] md:h-[70vh]">
+          <video
+            autoPlay
+            muted
+            loop
+            className=" hidden md:block rounded-2xl"
+          >
+            <source
+              src="/videos/vs-landingPage.mp4"
+              type="video/mp4"
+              className=" rounded-xl"
+            />
+          </video>
+          <video autoPlay muted loop className=" md:hidden rounded-2xl border-green-600">
+            <source
+              src="/videos/vs-landingPagePhone.mp4"
+              type="video/mp4"
+              className=" rounded-xl"
+            />
+          </video>
+        </section>
+
         <section ref={aboutRef} className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
