@@ -395,13 +395,11 @@ export default function Home() {
           </div>
         </section>
 
+        <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl mb-8 w-full text-center">
+          How We Work
+        </h2>
         <section className=" flex justify-center h-[60vh] md:h-[70vh]">
-          <video
-            autoPlay
-            muted
-            loop
-            className=" hidden md:block rounded-2xl"
-          >
+          <video autoPlay muted loop className=" hidden md:block rounded-2xl">
             <source
               src="/videos/vs-landingPage.mp4"
               type="video/mp4"

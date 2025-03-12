@@ -4,7 +4,7 @@ import axios from "axios";
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { GrGroup } from "react-icons/gr";
 
@@ -29,6 +29,9 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
   const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+
+  const [emailLoader, setEmailLoader] = useState(false);
+  const [phoneLoader, setPhoneLoader] = useState(false);
 
   // Form validation
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -57,6 +60,7 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
     setErrors((prev) => ({ ...prev, email: "" }));
 
     try {
+      setEmailLoader(true);
       const response = await axios.post(`/api/landingPage/verifyEmail`, {
         phone,
         email,
@@ -66,6 +70,8 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
       setShowEmailOtp(true);
     } catch (err: any) {
       setErrors((prev) => ({ ...prev, email: err.response.data.message }));
+    } finally {
+      setEmailLoader(false);
     }
   };
 
@@ -79,6 +85,7 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
     setErrors((prev) => ({ ...prev, phone: "", country: "" }));
 
     try {
+      setPhoneLoader(true);
       const response = await axios.post("/api/landingPage/verifyPhone", {
         email,
         phone,
@@ -88,6 +95,8 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
     } catch (err: any) {
       // console.log("error in sending OTP to mobile: ", err);
       toast.error(`Error in sending OTP to mobile: ${err.response.data.message}`);
+    } finally {
+      setPhoneLoader(false);
     }
   };
 
@@ -198,8 +207,8 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
             {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
-            <div className="col-span-3 flex gap-2">
+          <div className="gap-2">
+            <div className=" flex flex-col xss:flex-row gap-2">
               <PhoneInput
                 placeholder="Enter phone number"
                 value={phone}
@@ -210,7 +219,13 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
                 className="bg-orange-500 hover:bg-orange-600 text-white"
                 disabled={phoneVerified}
               >
-                {phoneVerified ? "Verified" : "Verify"}
+                {phoneLoader ? (
+                  <Loader2 className="animate-spin" />
+                ) : phoneVerified ? (
+                  "Verified"
+                ) : (
+                  "Verify"
+                )}
               </Button>
             </div>
             {errors.country && (
@@ -240,7 +255,7 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
           {errors.phoneOtp && <p className="text-xs text-red-500">{errors.phoneOtp}</p>}
 
           {/* Email */}
-          <div className="flex gap-2">
+          <div className="flex flex-col xss:flex-row gap-2">
             <Input
               id="email"
               type="email"
@@ -257,7 +272,13 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
               type="button"
               disabled={emailVerified}
             >
-              {emailVerified ? "Verified" : "Verify"}
+              {emailLoader ? (
+                <Loader2 className=" animate-spin" />
+              ) : emailVerified ? (
+                "Verified"
+              ) : (
+                "Verify"
+              )}
             </Button>
           </div>
           {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
@@ -283,15 +304,24 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
           {errors.emailOtp && <p className="text-xs text-red-500">{errors.emailOtp}</p>}
 
           <div>
-            <Input
-              id="budget"
-              type="number"
-              value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              className={errors.budget ? "border-red-500" : ""}
-              placeholder="Enter your budget in Euro €"
-              required
-            />
+            <div className="flex border border-neutral-600 rounded-md overflow-hidden">
+              <div className=" flex justify-center items-center font-semibold text-base bg-neutral-200 px-1">
+                €
+              </div>
+              <Input
+                id="budget"
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value)}
+                className={
+                  errors.budget
+                    ? "border-red-500 rounded-none border-none"
+                    : " rounded-none border-none"
+                }
+                placeholder="Enter budget in Euro €"
+                required
+              />
+            </div>
             {errors.budget && (
               <p className="mt-1 text-xs text-red-500">{errors.budget}</p>
             )}
