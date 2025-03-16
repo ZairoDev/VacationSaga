@@ -6,10 +6,11 @@ connectDb();
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { name, phone, email, budget, destination } = await req.json();
+    const { name, phone, email, budget, budgetType, duration, destination } =
+      await req.json();
     // console.log("name: ", name, phone, email, budget, destination);
 
-    if (!name || !phone || !email || !budget || !destination) {
+    if (!name || !phone || !email || !budget || !duration || !destination) {
       return NextResponse.json(
         { errors: { general: "All fields are required" } },
         { status: 400 }
@@ -23,7 +24,7 @@ export async function PATCH(req: NextRequest) {
 
     await landingPageForm.findOneAndUpdate(
       { email: email },
-      { $set: { name, budget, destination } }
+      { $set: { name, budget, budgetType, duration, destination } }
     );
 
     return NextResponse.json(

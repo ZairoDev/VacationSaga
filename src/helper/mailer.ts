@@ -147,7 +147,10 @@ export const verifyLandingPageEmail = async ({
 
     // Configure nodemailer transporter
     let transporter = nodemailer.createTransport({
-      service: "gmail",
+      // service: "gmail",
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
       auth: {
         user: "no-reply@vacationsaga.com",
         pass: process.env.GMAIL_APP_PASSWORD,

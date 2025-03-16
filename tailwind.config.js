@@ -33,7 +33,7 @@ module.exports = {
 
     extend: {
       screens: {
-        xss: "380px",
+        xxs: "380px",
         xs: "500px",
         xxl: "1840px",
       },

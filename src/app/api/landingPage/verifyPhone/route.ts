@@ -18,7 +18,8 @@ const client = twilio(accountSid, authToken);
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, phone, budget, destination, email } = await req.json();
+    const { name, phone, budget, duration, destination, email } = await req.json();
+    console.log("duration in verify phone: ", duration);
 
     if (!email && !phone) {
       return NextResponse.json(
@@ -47,6 +48,10 @@ export async function POST(req: NextRequest) {
         phone: phone,
         email: email != "" ? email : "a",
         budget: budget ?? 0,
+        duration:
+          duration?.to && duration?.from
+            ? duration
+            : { from: new Date(), to: new Date() },
         destination: destination ?? "a",
         phoneOTP: newOTP,
       });
@@ -59,9 +64,14 @@ export async function POST(req: NextRequest) {
 
     // console.log("phone: ", phone);
     client.messages.create({
-      from: "+447897037080",
-      to: `${phone}`,
-      body: `Your OTP code is ${newOTP}. Please use it to complete your verification process.`,
+      messagingServiceSid: "MG5b053ac4666ff04ad3946b4b939f5548",
+      // from: "whatsapp:+447897037080",
+      to: `whatsapp:${phone}`,
+      // body: `Your OTP code is ${newOTP}. Please use it to complete your verification process.`,
+      contentSid: "HXfe4d03946bf3e5b41bf5c98e9bcab1fa",
+      contentVariables: JSON.stringify({
+        "1": newOTP,
+      }),
     });
     // console.log("message sent");
 

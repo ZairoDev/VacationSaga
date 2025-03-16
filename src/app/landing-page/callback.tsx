@@ -11,6 +11,14 @@ import { GrGroup } from "react-icons/gr";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PhoneInputLayout as PhoneInput } from "@/components/PhoneInputLayout";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function CallbackForm({ onClose }: { onClose: () => void }) {
   // Form fields state
@@ -19,6 +27,11 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [budget, setBudget] = useState("");
+  const [budgetType, setBudgetType] = useState("night");
+  const [duration, setDuration] = useState<{ from: string; to: string }>({
+    from: "",
+    to: "",
+  });
   const [destination, setDestination] = useState("");
 
   // Verification states
@@ -161,6 +174,8 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
         phone,
         email,
         budget,
+        budgetType,
+        duration,
         destination,
       });
       setIsFormSubmitted(true);
@@ -208,7 +223,7 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="gap-2">
-            <div className=" flex flex-col xss:flex-row gap-2">
+            <div className=" flex flex-col xxs:flex-row gap-2">
               <PhoneInput
                 placeholder="Enter phone number"
                 value={phone}
@@ -255,7 +270,7 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
           {errors.phoneOtp && <p className="text-xs text-red-500">{errors.phoneOtp}</p>}
 
           {/* Email */}
-          <div className="flex flex-col xss:flex-row gap-2">
+          <div className="flex flex-col xxs:flex-row gap-2">
             <Input
               id="email"
               type="email"
@@ -284,24 +299,50 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
           {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
 
           {showEmailOtp && !emailVerified && (
-            <div className="flex gap-2">
-              <Input
-                id="emailOtp"
-                value={emailOtp}
-                onChange={(e) => setEmailOtp(e.target.value)}
-                className={errors.emailOtp ? "border-red-500" : ""}
-                placeholder="Enter OTP sent to your email"
-              />
-              <Button
-                onClick={verifyEmailOtp}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-                type="button"
-              >
-                Verify
-              </Button>
+            <div>
+              <div className="flex gap-2">
+                <Input
+                  id="emailOtp"
+                  value={emailOtp}
+                  onChange={(e) => setEmailOtp(e.target.value)}
+                  className={errors.emailOtp ? "border-red-500" : ""}
+                  placeholder="Enter OTP sent to your email"
+                />
+                <Button
+                  onClick={verifyEmailOtp}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                  type="button"
+                >
+                  Verify
+                </Button>
+              </div>
+              <p className=" text-xs mt-1">
+                (Check the spam folder if you don&apos;t see the email)
+              </p>
             </div>
           )}
           {errors.emailOtp && <p className="text-xs text-red-500">{errors.emailOtp}</p>}
+
+          <div className=" flex flex-row gap-x-1 md:justify-between gap-y-4">
+            <div className=" flex flex-col">
+              <span className=" text-sm font-medium">From: </span>
+              <Input
+                type="date"
+                className=" text-sm"
+                value={duration.from}
+                onChange={(e) => setDuration({ ...duration, from: e.target.value })}
+              />
+            </div>
+            <div className=" flex flex-col">
+              <span className=" text-sm font-medium">To: </span>
+              <Input
+                type="date"
+                className=" text-sm"
+                value={duration.to.toString()}
+                onChange={(e) => setDuration({ ...duration, to: e.target.value })}
+              />
+            </div>
+          </div>
 
           <div>
             <div className="flex border border-neutral-600 rounded-md overflow-hidden">
@@ -321,6 +362,22 @@ export default function CallbackForm({ onClose }: { onClose: () => void }) {
                 placeholder="Enter budget in Euro €"
                 required
               />
+              <Select
+                onValueChange={(value) => setBudgetType(value)}
+                defaultValue={budgetType}
+              >
+                <SelectTrigger className=" w-28">
+                  <SelectValue placeholder="price" />
+                </SelectTrigger>
+                <SelectContent className=" bg-white">
+                  <SelectItem value="night" className="font-medium">
+                    / night
+                  </SelectItem>
+                  <SelectItem value="month" className=" font-medium">
+                    / month
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {errors.budget && (
               <p className="mt-1 text-xs text-red-500">{errors.budget}</p>

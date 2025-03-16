@@ -12,7 +12,7 @@ const generateOTP = () => {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, phone, budget, destination, email } = await req.json();
+    const { name, phone, budget, duration, destination, email } = await req.json();
     // console.log("phone: ", phone, email);
 
     if (!email && !phone) {
@@ -40,6 +40,10 @@ export async function POST(req: NextRequest) {
         phone: phone != "" ? phone : 0,
         email: email,
         budget: budget ?? 0,
+        duration:
+          duration?.to && duration?.from
+            ? duration
+            : { from: new Date(), to: new Date() },
         destination: destination ?? "a",
         emailOTP: newOTP,
       });
