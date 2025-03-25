@@ -24,6 +24,7 @@ import "swiper/css/pagination";
 
 import "@/styles/index.scss";
 import CallbackForm from "./callback";
+import Script from "next/script";
 
 export default function Home() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -118,6 +119,11 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Script
+        async
+        src="https://www.googletagmanager.com/gtag/js?id=AW-16875003439"
+        strategy="afterInteractive"
+      />
       <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
