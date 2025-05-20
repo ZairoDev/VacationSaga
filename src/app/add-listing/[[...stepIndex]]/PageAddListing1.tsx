@@ -216,10 +216,10 @@ const PageAddListing1: FC<PageAddListing1Props> = () => {
         </div>
         <FormItem
           label="Choose a property type"
-          desc="Hotel: Professional hospitality businesses that usually have a unique style or theme defining their brand and decor"
+          desc=""
         >
           <Select onChange={handlePropertyTypeChange} value={propertyType}>
-            <option value="Hotel">Hotel</option>
+            {/* <option value="Hotel">Hotel</option> */}
             <option value="Cottage">Cottage</option>
             <option value="Villa">Villa</option>
             <option value="Cabin">Cabin</option>
