@@ -1,121 +1,85 @@
-import mongoose, { Schema, Document } from "mongoose"
-
-export interface IHotel extends Document {
-  hotelName: string
-  hotelType: string
-  starRating?: number
-  description: string
-  contactNumber: string
-  email: string
-  website?: string
-  ownerName: string
-
-  address: {
-    addressLine1: string
-    addressLine2?: string
-    city: string
-    state: string
-    country: string
-    pincode: string
-    latitude?: number
-    longitude?: number
-  }
-
-  coverImage: string
-  galleryImages?: string[]
-  videoUrl?: string
-
-  numberOfRooms: number
-
-  roomTypes: {
-    type: string
-    pricePerNight: number
-    maxOccupancy: number
-    amenities: string[]
-    refundable: boolean
-    extraBedPrice?: number
-    images?: string[]
-  }[]
-
-  amenities: string[]
-  checkInTime: string
-  checkOutTime: string
-  paymentOptions?: string[]
-  languagesSpoken?: string[]
-  petFriendly?: boolean
-
-  cancellationPolicy: string
-  houseRules: string
-  ageRestriction?: number
-  acceptsForeignGuests?: boolean
-
-  listedByUserId: mongoose.Types.ObjectId
-  isVerified: boolean
-  isLive: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-const HotelSchema: Schema = new Schema<IHotel>(
-  {
-    hotelName: { type: String, required: true },
-    hotelType: { type: String, required: true },
-    starRating: { type: Number },
-
-    description: { type: String, required: true },
-    contactNumber: { type: String, required: true },
+const HotelSchema = new mongoose.Schema({
+  ownerDetails: {
+    name: { type: String, required: true },
     email: { type: String, required: true },
-    website: { type: String },
-    ownerName: { type: String, required: true },
+    phone: { type: String, required: true },
+    alternateContact: { type: String },
+    aadharCard: { type: String },
+    managerName: { type: String },
+    managerContact: { type: String },
+  },
 
-    address: {
-      addressLine1: { type: String, required: true },
-      addressLine2: { type: String },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      country: { type: String, required: true },
-      pincode: { type: String, required: true },
-      latitude: { type: Number },
-      longitude: { type: Number },
-    },
-
-    coverImage: { type: String, required: true },
-    galleryImages: [{ type: String }],
-    videoUrl: { type: String },
-
+  propertyDetails: {
+    propertyName: { type: String, required: true },
     numberOfRooms: { type: Number, required: true },
-
     roomTypes: [
       {
         type: { type: String, required: true },
-        pricePerNight: { type: Number, required: true },
-        maxOccupancy: { type: Number, required: true },
-        amenities: [{ type: String, required: true }],
-        refundable: { type: Boolean, required: true },
-        extraBedPrice: { type: Number },
-        images: [{ type: String }],
-      },
+        quantity: { type: Number, required: true },
+      }
     ],
-
-    amenities: [{ type: String, required: true }],
-    checkInTime: { type: String, required: true },
-    checkOutTime: { type: String, required: true },
-    paymentOptions: [{ type: String }],
-    languagesSpoken: [{ type: String }],
-    petFriendly: { type: Boolean },
-
-    cancellationPolicy: { type: String, required: true },
-    houseRules: { type: String, required: true },
-    ageRestriction: { type: Number },
-    acceptsForeignGuests: { type: Boolean },
-
-    // listedByUserId: { type: mongoose.Types.ObjectId, required: true, ref: "Users" },
-    isVerified: { type: Boolean, default: false },
-    isLive: { type: Boolean, default: false },
+    starRating: { type: Number, min: 1, max: 5 },
+    amenities: [{ type: String }],
+    propertyPhotos: [{ type: String }],
+    coverPhotos: [{ type: String }],
+    location: {
+      address: { type: String },
+      city: { type: String },
+      state: { type: String },
+      country: { type: String },
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
+    checkInTime: { type: String },
+    checkOutTime: { type: String },
+    operatingSince: { type: Date },
+    isAvailable: { type: Boolean, default: true },
+    description: { type: String },
   },
-  {
-    timestamps: true,
-  }
-)
 
-export default mongoose.models.Hotel || mongoose.model<IHotel>("Hotel", HotelSchema)
+  roomDetails: [
+    {
+      roomType: { type: String, required: true },
+      bedType: { type: String },
+      maxOccupancy: { type: Number, required: true },
+      pricePerNight: { type: Number, required: true },
+      roomPhotos: [{ type: String }],
+      isAvailable: { type: Boolean, default: true },
+    }
+  ],
+
+  pricing: {
+    basePrice: { type: Number },
+    seasonalPricing: [
+      {
+        season: { type: String },
+        pricePerNight: { type: Number },
+      }
+    ],
+    weekendPriceModifier: { type: Number }, 
+  },
+
+  policies: {
+    cancellationPolicy: { type: String },
+    houseRules: { type: String },
+    allowPets: { type: Boolean, default: false },
+    allowSmoking: { type: Boolean, default: false },
+  },
+
+  meta: {
+    slug: { type: String },
+    metaTitle: { type: String },
+    metaDescription: { type: String },
+  },
+
+  adminFlags: {
+    isFeatured: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
+    listedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  },
+
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+
+export default mongoose.model("Hotel", HotelSchema);
