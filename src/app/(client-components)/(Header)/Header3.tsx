@@ -173,7 +173,7 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
             <div className="hidden md:flex relative z-10 flex-1 justify-end text-neutral-700 dark:text-neutral-100">
               <div className="flex space-x-1 items-center gap-2">
                 <Link
-                  href="/add-listing/1"
+                  href="/listing-type"
                   className="self-center hidden xl:inline-flex px-4 py-3 border border-neutral-300 hover:border-neutral-400 dark:border-neutral-700 rounded-full items-center text-sm text-gray-700 dark:text-neutral-300 font-medium"
                 >
                   List your property

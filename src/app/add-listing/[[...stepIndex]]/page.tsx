@@ -55,7 +55,7 @@ const Page = ({
       break;
   }
 
-  // return <ContentComponent />;
+
   return <ContentComponent />;
 };
 
