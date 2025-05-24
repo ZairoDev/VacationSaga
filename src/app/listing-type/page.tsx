@@ -40,7 +40,7 @@ const ListingSelectionPage = () => {
           title="Hotel"
           description="Perfect for listing hotels, resorts, guesthouses and commercial stays."
           buttonText="Start Hotel Listing"
-          href={{ pathname: "/add-hotel" }}
+          href={{ pathname: "/add-hotel/1" }}
           delay={0.3}
         />
 

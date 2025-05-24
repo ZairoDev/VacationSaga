@@ -21,7 +21,7 @@ const PageAddListing1 = () => {
 
   const onSubmit = (data: any) => {
     setFormData({ ...formData, ownerDetails: data })
-    router.push("/add-listing/1")
+    router.push("/add-hotel/2")
   }
 
   return (
