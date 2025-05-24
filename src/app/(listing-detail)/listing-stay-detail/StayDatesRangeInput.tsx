@@ -18,6 +18,7 @@ export interface StayDatesRangeInputProps {
   prices?: number[][];
   bookedDates?: Date[];
   externalBookedDates?: Date[];
+  hidePrices?: boolean;
 }
 
 interface DateState {
@@ -34,6 +35,7 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   prices,
   bookedDates = [],
   externalBookedDates = [],
+  hidePrices = false,
 }) => {
   const dt = new Date();
   const edt = new Date(dt);
@@ -222,7 +224,7 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
                         }}
                       >
                         <DatePickerCustomDay dayOfMonth={day} date={date} />
-                        {price && (
+                        {!hidePrices &&price && (
                           <div style={{ fontSize: "0.8rem", color: "green" }}>
                             €{price}
                           </div>

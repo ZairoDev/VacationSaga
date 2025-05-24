@@ -1118,8 +1118,11 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {bookedState && (
             <StayDatesRangeInput
               onDatesChange={handleDatesChange}
-              minNights={minNights}
+              minNights={
+                particularProperty?.rentalType === "Long Term" ? 90 : minNights
+              }
               prices={particularProperty?.pricePerDay}
+              hidePrices={particularProperty?.rentalType === "Long Term"}
               externalBookedDates={alreadyBookedDates}
               className="flex-1 z-[11]"
             />
@@ -1132,7 +1135,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           />
         </form>
 
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 ">
           <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
             <span className=" flex gap-x-1">
               € {basePrice} *{" "}
@@ -1153,9 +1156,18 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
           <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
             <span>Service charge</span>
-            <span>€ 6</span>
+            {particularProperty?.rentalType === "Long Term" ? (
+              <span
+                className="text-blue-500 cursor-pointer"
+                title="Service charge details: This includes platform, support, and admin costs."
+              >
+                Know more
+              </span>
+            ) : (
+              <span>€ 6</span>
+            )}
           </div>
-          {nights >= 7 && (
+          {particularProperty?.rentalType === "Short Term" && nights >= 7 && (
             <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
               <span>Weekly Discount</span>
               <span>- €{particularProperty?.weeklyDiscount}</span>
@@ -1164,11 +1176,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
           <div className="border-b border-neutral-200 dark:border-neutral-700"></div>
 
-          <div className="flex justify-between font-semibold">
+          {particularProperty?.rentalType === "Short Term"  && (
+            <div className="flex justify-between font-semibold">
             <span>Total</span>
             {/* <span>€ {totalPrice + 6} </span> */}
             <span>€ {bookingPrice + 6} </span>
           </div>
+          )}  
         </div>
 
         <Link
@@ -1489,7 +1503,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {renderSection2()}
           {renderSection3()}
           {renderSection4()}
-          {bookedState && (
+          {bookedState && particularProperty?.rentalType === "Short Term" && (
             <SectionDateRange
               prices={particularProperty?.pricePerDay}
               externalBookedDates={alreadyBookedDates}
