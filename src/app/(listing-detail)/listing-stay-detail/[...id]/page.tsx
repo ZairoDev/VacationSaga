@@ -1158,6 +1158,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
             <span>Service charge</span>
             {particularProperty?.rentalType === "Long Term" ? (
               <span
+              onClick={() => window.open("https://wa.me/918960980806", "_blank")}
                 className="text-blue-500 cursor-pointer"
                 title="Service charge details: This includes platform, support, and admin costs."
               >
