@@ -69,12 +69,12 @@ interface DateRange {
   endDate: Date | null;
 }
 
-interface nearbyLocationInterface {
-  nearbyLocationName: string[];
-  nearbyLocationDistance: number[];
-  nearbyLocationTag: string[];
-  nearbyLocationUrl: string[];
-}
+// interface nearbyLocationInterface {
+//   nearbyLocationName: string[];
+//   nearbyLocationDistance: number[];
+//   nearbyLocationTag: string[];
+//   nearbyLocationUrl: string[];
+// }
 
 interface CenterDataType {
   lat: number;
@@ -82,9 +82,9 @@ interface CenterDataType {
 }
 
 const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
-  const { user } = useAuth();
-  const router = useRouter();
-  const thisPathname = usePathname();
+  // const { user } = useAuth();
+  // const router = useRouter();
+  // const thisPathname = usePathname();
   const searchParams = useSearchParams();
 
   const param: string = params.id[0];
@@ -350,7 +350,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     if (savedDates[0] && savedDates[1]) {
       const calculatedNights = Math.ceil(
         (savedDates[1].getTime() - savedDates[0].getTime()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       );
       setNumberOfNights(Math.max(calculatedNights, newMinNights));
     } else {
@@ -400,7 +400,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
   const renderSection1 = () => {
     return (
-      <div className="  lg:border lg:border-neutral-700 rounded-xl lg:p-2">
+      <div className=" lg:border lg:dark:border-neutral-600 rounded-xl lg:p-2">
         <div className="flex justify-between items-center lg:mt-2">
           <Badge name={particularProperty?.propertyType} />
           <Badge name={particularProperty?.VSID} />
@@ -872,7 +872,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
           <div className=" w-full md:w-1/2 md:ml-3">
             {particularProperty?.rentalType === "Short Term" &&
-            particularProperty?.nearbyLocations?.nearbyLocationName?.length >
+              particularProperty?.nearbyLocations?.nearbyLocationName?.length >
               0 ? (
               <>
                 {" "}
@@ -913,8 +913,8 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                           particularProperty?.nearbyLocations?.nearbyLocationName?.map(
                             (innerItem, index) =>
                               item ===
-                                particularProperty?.nearbyLocations
-                                  ?.nearbyLocationTag[index] && (
+                              particularProperty?.nearbyLocations
+                                ?.nearbyLocationTag[index] && (
                                 <div
                                   key={index}
                                   className=" flex justify-between text-sm text-neutral-500 px-2 font-medium"
@@ -923,13 +923,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                                     {particularProperty?.nearbyLocations
                                       ?.nearbyLocationUrl?.[index] !=
                                       undefined &&
-                                    particularProperty?.nearbyLocations
-                                      ?.nearbyLocationUrl?.[index] != "" ? (
+                                      particularProperty?.nearbyLocations
+                                        ?.nearbyLocationUrl?.[index] != "" ? (
                                       <Link
                                         href={
                                           new URL(
                                             particularProperty?.nearbyLocations?.nearbyLocationUrl?.[
-                                              index
+                                            index
                                             ]
                                           )
                                         }
@@ -954,13 +954,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                                     {particularProperty?.nearbyLocations
                                       ?.nearbyLocationDistance[index] >= 1000
                                       ? (
-                                          particularProperty?.nearbyLocations
-                                            ?.nearbyLocationDistance[index] /
-                                          1000
-                                        ).toFixed(1) + " km"
+                                        particularProperty?.nearbyLocations
+                                          ?.nearbyLocationDistance[index] /
+                                        1000
+                                      ).toFixed(1) + " km"
                                       : particularProperty?.nearbyLocations
-                                          ?.nearbyLocationDistance[index] +
-                                        " m"}
+                                        ?.nearbyLocationDistance[index] +
+                                      " m"}
                                   </div>
                                 </div>
                               )

@@ -1,27 +1,35 @@
 "use client";
-import React, { FC, useEffect, useState } from "react";
-import GallerySlider from "@/components/GallerySlider";
-import { DEMO_STAY_LISTINGS } from "@/data/listings";
-import { StayDataType, PropertyDataType } from "@/data/types";
-import StartRating from "@/components/StartRating";
-import BtnLikeIcon from "@/components/BtnLikeIcon";
-import SaleOffBadge from "@/components/SaleOffBadge";
-import Badge from "@/shared/Badge";
-import Link from "next/link";
-import axios from "axios";
-import CustomGallerySlider from "@/components/CustomGallerySlider";
-import PropertyGallerySlider from "@/components/PropertyGallerySlider";
-import { Properties } from "@/app/page";
-import { useRouter } from "next/navigation";
-import { Route } from "next";
 
-const DEMO_DATA = DEMO_STAY_LISTINGS[0];
+import Link from "next/link";
+import { Route } from "next";
+import React, { FC } from "react";
+
+import { PropertyDataType } from "@/data/types";
+import BtnLikeIcon from "@/components/BtnLikeIcon";
+import PropertyGallerySlider from "@/components/PropertyGallerySlider";
+
+// import axios from "axios";
+// import Badge from "@/shared/Badge";
+// import { Properties } from "@/app/page";
+// import { useRouter } from "next/navigation";
+// import StartRating from "@/components/StartRating";
+// import SaleOffBadge from "@/components/SaleOffBadge";
+// import { DEMO_STAY_LISTINGS } from "@/data/listings";
+// import GallerySlider from "@/components/GallerySlider";
+// import CustomGallerySlider from "@/components/CustomGallerySlider";
+
+// const DEMO_DATA = DEMO_STAY_LISTINGS[0];
+
+export interface extendedPropertyCard extends PropertyDataType {
+  basePriceLongTerm?: number
+}
 
 interface propertiesCardProps {
   key?: string | number;
   size?: string;
   className?: string;
-  data?: PropertyDataType;
+  // data?: PropertyDataType;
+  data?: extendedPropertyCard;
   index?: number;
 }
 
@@ -33,31 +41,19 @@ const PropertyCard: FC<propertiesCardProps> = ({
 }) => {
   const {
     _id,
-    userId,
     VSID,
     propertyType,
-    placeName,
-    rentalForm,
-    numberOfPortions,
-    portionName,
-    portionSize,
     city,
     postalCode,
-    state,
     country,
     propertyCoverFileUrl,
-    portionPictureUrls,
-    portionCoverFileUrls,
     propertyPictureUrls,
     propertyImages,
-    monthlyDiscount,
-    bedrooms,
     beds,
-    night,
-    time,
-    datesPerPortion,
     basePrice,
-  } = data as PropertyDataType;
+    rentalType,
+    basePriceLongTerm
+  } = data as extendedPropertyCard;
 
   const cardImages: string[] = [
     ...(propertyCoverFileUrl ? [propertyCoverFileUrl] : []),
@@ -127,9 +123,8 @@ const PropertyCard: FC<propertiesCardProps> = ({
             <div className="flex items-center space-x-2">
               {/*               {isAds && <Badge name="ADS" color="green" />} */}
               <h2
-                className={`font-semibold capitalize text-neutral-900 dark:text-white ${
-                  size === "default" ? "text-base" : "text-base"
-                }`}
+                className={`font-semibold capitalize text-neutral-900 dark:text-white ${size === "default" ? "text-base" : "text-base"
+                  }`}
               >
                 {/* <span className="line-clamp-1">{title}</span> */}
                 <span className="line-clamp-1">
@@ -169,13 +164,8 @@ const PropertyCard: FC<propertiesCardProps> = ({
           <div className="w-14 border-b border-neutral-100 dark:border-neutral-800"></div>
           <div className="flex justify-between items-center">
             <span className="text-base font-semibold">
-              {/* {price} */}€{(basePrice?.length && basePrice[0]) || basePrice}
-              {` `}
-              {size === "default" && (
-                <span className="text-sm text-neutral-500 dark:text-neutral-400 font-normal">
-                  /night
-                </span>
-              )}
+              {/* {price}€{(basePrice?.length && basePrice[0]) || basePrice} */}
+              € {rentalType === "Long Term" ? `${basePriceLongTerm}/month` : `${basePrice}/night`}
             </span>
             {/* {!!reviewStart && (
               <StartRating reviewCount={reviewCount} point={reviewStart} />

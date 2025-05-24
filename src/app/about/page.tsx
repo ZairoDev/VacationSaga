@@ -40,19 +40,26 @@
 
 // export default PageAbout;
 
-import rightImg from "@/images/vs-about-us.png";
+import { Metadata } from "next";
 import React, { FC } from "react";
-import SectionFounder from "./SectionFounder";
-import SectionStatistic from "./SectionStatistic";
-import SectionHero from "./SectionHero";
-import BackgroundSection from "@/components/BackgroundSection";
+
+import rightImg from "@/images/vs-about-us.png";
 import SectionClientSay from "@/components/SectionClientSay";
 import SectionSubscribe2 from "@/components/SectionSubscribe2";
-import AdvertComponent from "./AdvertComponent";
-import Ourfeature from "./Ourfeature";
-export interface PageAboutProps {}
+import BackgroundSection from "@/components/BackgroundSection";
 
-const PageAbout: FC<PageAboutProps> = ({}) => {
+import Ourfeature from "./Ourfeature";
+import SectionHero from "./SectionHero";
+import AdvertComponent from "./AdvertComponent";
+import SectionStatistic from "./SectionStatistic";
+
+export interface PageAboutProps { }
+
+export const metadata: Metadata = {
+  title: "About Us",
+};
+
+const PageAbout: FC<PageAboutProps> = ({ }) => {
   return (
     <div className={`nc-PageAbout overflow-hidden relative `}>
       <div className="container space-y-16 lg:space-y-28 ">

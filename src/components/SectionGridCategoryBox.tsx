@@ -1,7 +1,8 @@
-import CardCategoryBox1 from "@/components/CardCategoryBox1";
+import React from "react";
+
 import Heading from "@/shared/Heading";
 import { TaxonomyType } from "@/data/types";
-import React from "react";
+import CardCategoryBox1 from "@/components/CardCategoryBox1";
 
 export interface SectionGridCategoryBoxProps {
   categories?: TaxonomyType[];
@@ -14,35 +15,35 @@ export interface SectionGridCategoryBoxProps {
 const DEMO_CATS: TaxonomyType[] = [
   {
     id: "1",
-    href: "/listing-stay-map",
-    name: "Acropolis",
+    href: "/listing-stay?place=athens",
+    name: "Athens",
     taxonomy: "category",
-    count: 1882,
+    count: 240,
     thumbnail:
       "https://images.pexels.com/photos/772689/pexels-photo-772689.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   {
     id: "2",
-    href: "/listing-stay-map",
-    name: "Exarcheia",
+    href: "/listing-stay?place=thessaloniki",
+    name: "Thessaloniki",
     taxonomy: "category",
-    count: 8288,
+    count: 288,
     thumbnail:
-      "https://images.unsplash.com/photo-1536512060368-013a40c3f1c7?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/White_Tower_and_Beach_front.jpg/330px-White_Tower_and_Beach_front.jpg",
   },
   {
     id: "3",
-    href: "/listing-stay-map",
-    name: "Kolonaki",
+    href: "/listing-stay?place=chania",
+    name: "Chania",
     taxonomy: "category",
-    count: 1288,
+    count: 128,
     thumbnail:
       "https://mi4realestate.com/wp-content/uploads/2021/10/Blog-Featured-Image-3.png",
   },
   {
     id: "4",
-    href: "/listing-stay-map",
-    name: "Piraeus",
+    href: "/listing-stay?place=corfu",
+    name: "Corfu",
     taxonomy: "category",
     count: 112,
     thumbnail:
@@ -50,8 +51,8 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "5",
-    href: "/listing-stay-map",
-    name: "Glyfada",
+    href: "/listing-stay?place=iraklio",
+    name: "Iraklio",
     taxonomy: "category",
     count: 323,
     thumbnail:
@@ -59,8 +60,8 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "6",
-    href: "/listing-stay-map",
-    name: "Marousi",
+    href: "/listing-stay?place=nikiti",
+    name: "Nikiti",
     taxonomy: "category",
     count: 2223,
     thumbnail:
@@ -68,8 +69,8 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "7",
-    href: "/listing-stay-map",
-    name: "Chalandri",
+    href: "/listing-stay?place=cinisi",
+    name: "Cinisi",
     taxonomy: "category",
     count: 1775,
     thumbnail:
@@ -77,8 +78,8 @@ const DEMO_CATS: TaxonomyType[] = [
   },
   {
     id: "8",
-    href: "/listing-stay-map",
-    name: "Pangrati",
+    href: "/listing-stay?place=piraeus",
+    name: "Piraeus",
     taxonomy: "category",
     count: 1288,
     thumbnail:

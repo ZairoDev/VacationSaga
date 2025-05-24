@@ -47,6 +47,11 @@ import SectionMagazine5 from "./SectionMagazine5";
 import SectionLatestPosts from "./SectionLatestPosts";
 import BgGlassmorphism from "@/components/BgGlassmorphism";
 import axios from "axios";
+import { Metadata } from "next";
+
+// export const metadata: Metadata = {
+//   title: "Blogs",
+// };
 
 const BlogPage = () => {
   const [posts, setPosts] = useState([]);
@@ -68,7 +73,7 @@ const BlogPage = () => {
     fetchBlogs();
   }, []);
 
-  console.log(posts, "Post will render here");
+  // console.log(posts, "Post will render here");
 
   if (loading) {
     return (
@@ -85,6 +90,8 @@ const BlogPage = () => {
 
   return (
     <div className="nc-BlogPage overflow-hidden relative">
+      <title>Blogs - Vacation Saga</title>
+      <meta name="description" content="This is a React page description" />
       <BgGlassmorphism />
       <div className="container relative">
         <div className="pt-12 pb-4 lg:pb-28">

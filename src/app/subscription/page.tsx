@@ -1,4 +1,3 @@
-
 import React, { FC } from "react";
 import PricingCard from "./PricingCard";
 import BecomeAhost from "./BecomeAHost";
@@ -6,6 +5,11 @@ import OurFeaturehost from "./OurFeatureHost";
 import FactsSubscription from "./FactsSubscription";
 import ProfessionalListing from "./ProfessionalListing";
 import HowItwork from "./PaymentMethod";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Become a Host",
+};
 
 const MainPage: FC = () => {
   return (
@@ -13,10 +17,10 @@ const MainPage: FC = () => {
       <div className="flex flex-col justify-center items-center ml-11 mr-11 space-y-12">
         <BecomeAhost />
         <OurFeaturehost />
-        <ProfessionalListing/>
-        <HowItwork/>
+        <ProfessionalListing />
+        <HowItwork />
         <PricingCard />
-        <FactsSubscription/>
+        <FactsSubscription />
       </div>
     </div>
   );

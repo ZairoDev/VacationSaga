@@ -1,12 +1,14 @@
 "use client";
-import React, { FC, useState, useEffect } from "react";
+
 import axios from "axios";
-import { StayDataType } from "@/data/types";
 import { useSearchParams } from "next/navigation";
-import TabFilters from "../(stay-listings)/TabFiltersTwo";
-import PropertyCard from "@/components/PropertyCard";
-import { Properties } from "../page";
+import React, { FC, useState, useEffect } from "react";
+
 import Loader from "@/helper/loader";
+import { StayDataType } from "@/data/types";
+import PropertyCard, { extendedPropertyCard } from "@/components/PropertyCard";
+
+import TabFilters from "../(stay-listings)/TabFiltersTwo";
 
 // Random Comments
 
@@ -18,12 +20,12 @@ export interface SectionGridFeaturePlacesProps {
 }
 
 const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
-  stayListings,
-  value,
+  // stayListings,
+  // value,
   gridClass = "",
-  cardType = "card2",
+  // cardType = "card2",
 }) => {
-  const [fetchedData, setFetchedData] = useState<Properties[]>([]);
+  const [fetchedData, setFetchedData] = useState<extendedPropertyCard[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -74,7 +76,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
             page: currentPage,
           },
         });
-        console.log("response: ", page,  response);
+        console.log("response: ", page, response);
         console.log(fetchedData.length);
         if (page === 1) {
           setFetchedData(response.data);
@@ -126,6 +128,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
         rentalType,
         houserool,
       });
+      // console.log("response of filters: ", response.data)
       setFetchedData(response.data);
       setHasMore(response.data.length === recordPerPage);
     } catch (error) {
@@ -183,21 +186,19 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
                 <div className="flex">
                   <button
                     onClick={() => handleRentalType("Long Term")}
-                    className={`px-4 text-sm py-2 rounded-l-full ${
-                      rentalType === "Long Term"
-                        ? "bg-primary-6000 text-white"
-                        : "border"
-                    }`}
+                    className={`px-4 text-sm py-2 rounded-l-full ${rentalType === "Long Term"
+                      ? "bg-primary-6000 text-white"
+                      : "border"
+                      }`}
                   >
                     Long Term
                   </button>
                   <button
                     onClick={() => handleRentalType("Short Term")}
-                    className={`px-4 text-sm py-2 rounded-r-full ${
-                      rentalType === "Short Term"
-                        ? "bg-primary-6000 text-white"
-                        : "border"
-                    }`}
+                    className={`px-4 text-sm py-2 rounded-r-full ${rentalType === "Short Term"
+                      ? "bg-primary-6000 text-white"
+                      : "border"
+                      }`}
                   >
                     Short Term
                   </button>

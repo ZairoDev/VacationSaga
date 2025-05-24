@@ -1,11 +1,13 @@
 "use client";
-import React, { FC, Fragment, useEffect, useState } from "react";
-import { Dialog, Popover, Transition } from "@headlessui/react";
-import NcInputNumber from "@/components/NcInputNumber";
-import ButtonClose from "@/shared/ButtonClose";
-import Checkbox from "@/shared/CheckboxTwo";
+
 import Slider from "rc-slider";
+import React, { FC, Fragment, useEffect, useState } from "react";
+
+import Checkbox from "@/shared/CheckboxTwo";
+import ButtonClose from "@/shared/ButtonClose";
+import NcInputNumber from "@/components/NcInputNumber";
 import convertNumbThousand from "@/utils/convertNumbThousand";
+import { Dialog, Popover, Transition } from "@headlessui/react";
 
 const typeOfPaces = [
   {
@@ -76,7 +78,7 @@ const TabFilters: FC<RentalType> = ({
 }) => {
   const [isOpenMoreFilter, setisOpenMoreFilter] = useState(false);
   const [isOpenMoreFilterMobile, setisOpenMoreFilterMobile] = useState(false);
-  const [rangePrices, setRangePrices] = useState([0, 1000]);
+  const [rangePrices, setRangePrices] = useState([0, 5000]);
   const [selectedValue, setSelectedValue] = useState<string>("");
 
   const handleRadioChange = (value: string) => {
@@ -120,9 +122,8 @@ const TabFilters: FC<RentalType> = ({
         {({ open, close }) => (
           <>
             <Popover.Button
-              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000 focus:outline-none ${
-                open ? "!border-primary-500 " : ""
-              }`}
+              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000 focus:outline-none ${open ? "!border-primary-500 " : ""
+                }`}
             >
               <span>Type of place</span>
               <i className="las la-angle-down ml-2"></i>
@@ -178,9 +179,8 @@ const TabFilters: FC<RentalType> = ({
         {({ open, close }) => (
           <>
             <Popover.Button
-              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000 focus:outline-none ${
-                open ? "!border-primary-500 " : ""
-              }`}
+              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000 focus:outline-none ${open ? "!border-primary-500 " : ""
+                }`}
             >
               <span>Rooms of Beds</span>
               <i className="las la-angle-down ml-2"></i>
@@ -255,7 +255,7 @@ const TabFilters: FC<RentalType> = ({
                         range
                         className="text-red-400"
                         min={0}
-                        max={2000}
+                        max={5000}
                         defaultValue={[rangePrices[0], rangePrices[1]]}
                         allowCross={false}
                         onChange={(e) => setRangePrices(e as number[])}
@@ -347,7 +347,7 @@ const TabFilters: FC<RentalType> = ({
               key={item.name}
               name={data[0].name}
               label={item.name}
-              // defaultChecked={!!item.defaultChecked}
+            // defaultChecked={!!item.defaultChecked}
             />
           ))}
         </div>

@@ -1,57 +1,50 @@
-import { connectDb } from "../../../helper/db";
 import { NextResponse } from "next/server";
-import { Property } from "@/models/listing";
+
+import { Properties } from "@/models/property";
+
+import { connectDb } from "../../../helper/db";
 
 connectDb();
 
 export async function POST(request) {
   try {
-    const filterCriteria = await request.json();
+    const filters = await request.json();
 
-    console.log("filterCriteria: ", filterCriteria);
+    // console.log("filterCriteria: ", filters);
 
-    const {
-      rentalForm,
-      propertyType,
-      minPrice,
-      maxPrice,
-      bedrooms,
-      bathrooms,
-      beds,
-      country,
-      rentalType,
-    } = filterCriteria;
+    const query = { isLive: true };
 
-    // const filter = {};
-    const filter = { isLive: true };
-    // Add criteria to the filter only if they are provided
-    if (country) filter.country = country;
-    if (rentalType) filter.rentalType = rentalType;
-    if (rentalForm) filter.rentalForm = rentalForm;
-    if (propertyType) filter.propertyType = propertyType;
-
-    // if (minPrice && maxPrice) {
-    //   filter.basePrice = {};
-    //   if (minPrice) filter.basePrice.$gte = minPrice;
-    //   if (maxPrice) filter.basePrice.$lte = maxPrice;
-    // }
-    if (minPrice && maxPrice) {
-      filter["basePrice.0"] = {
-        $gte: minPrice,
-        $lte: maxPrice,
-      };
+    if (filters.beds) query["beds"] = { $gte: filters.beds };
+    if (filters.rentalForm) query["rentalForm"] = filters.rentalForm;
+    if (filters.bedrooms) query["bedrooms"] = { $gte: filters.bedrooms };
+    if (filters.bathroom) query["bathroom"] = { $gte: filters.bathroom };
+    if (filters.propertyType) query["propertyType"] = filters.propertyType;
+    if (filters.country.trim()) {
+      query["$or"] = [
+        { city: new RegExp(filters.country, "i") },
+        { state: new RegExp(filters.country, "i") },
+        { country: new RegExp(filters.country, "i") },
+      ];
     }
 
-    if (bedrooms) filter.bedrooms = { $gte: bedrooms };
-    if (bathrooms) filter.bathroom = { $gte: bathrooms };
-    if (beds) filter.beds = { $gte: beds };
+    if (filters.rentalType === "Long Term") {
+      query["rentalType"] = "Long Term";
+    } else query["rentalType"] = "Short Term";
 
-    console.log("Applied filter:", filter);
-    console.log(Object.keys(filter).length);
+    if (filters.rentalType === "Long Term") {
+      if (filters.minPrice) query["basePriceLongTerm"] = { $gte: filters.minPrice };
+      if (filters.maxPrice) query["basePriceLongTerm"] = { $lte: filters.maxPrice };
+    } else {
+      if (filters.minPrice) query["basePrice"] = { $gte: filters.minPrice };
+      if (filters.maxPrice) query["basePrice"] = { $lte: filters.maxPrice };
+    }
+
+    console.log("Applied filter:", query);
+    console.log(Object.keys(query).length);
     const results =
-      Object.keys(filter).length > 0
-        ? await Property.find(filter)
-        : await Property.find();
+      Object.keys(query).length > 0
+        ? await Properties.find(query)
+        : await Properties.find();
 
     console.log("results: ", results.length);
     return NextResponse.json(results);
