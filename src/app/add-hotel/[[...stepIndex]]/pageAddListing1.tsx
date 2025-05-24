@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form"
 import { useFormData } from "../formItem"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { User, Mail, Phone, ArrowRight, FileText, UserCircle, Home, ClipboardList } from "lucide-react"
+import { User, Mail, Phone, ArrowRight, FileText, UserCircle, Home, ClipboardList, ShieldAlert } from "lucide-react"
 
 const PageAddListing1 = () => {
   const { formData, setFormData } = useFormData()
@@ -61,13 +61,13 @@ const PageAddListing1 = () => {
               />
               <ProgressItem
                 icon={<ClipboardList className="w-4 h-4" />}
-                label="Amenities"
+                label="Room details"
                 isActive={false}
                 isCompleted={false}
               />
               <ProgressItem
-                icon={<FileText className="w-4 h-4" />}
-                label="Photos & Documents"
+                icon={<ShieldAlert className="w-4 h-4" />}
+                label="Policies"
                 isActive={false}
                 isCompleted={false}
               />
@@ -253,10 +253,12 @@ interface ProgressItemProps {
 
 const ProgressItem = ({ icon, label, isActive, isCompleted }: ProgressItemProps) => {
   return (
-    <div className={`flex items-center gap-3 ${isActive ? "text-orange-500" : "text-gray-500"}`}>
+    <div
+      className={`flex items-center gap-3 ${isActive ? "text-orange-500" : isCompleted ? "text-green-500" : "text-gray-500"}`}
+    >
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          isCompleted ? "bg-orange-500 text-white" : isActive ? "bg-orange-100 text-orange-500" : "bg-gray-100"
+          isCompleted ? "bg-green-100 text-green-500" : isActive ? "bg-orange-100 text-orange-500" : "bg-gray-100"
         }`}
       >
         {icon}
@@ -265,5 +267,4 @@ const ProgressItem = ({ icon, label, isActive, isCompleted }: ProgressItemProps)
     </div>
   )
 }
-
 export default PageAddListing1
