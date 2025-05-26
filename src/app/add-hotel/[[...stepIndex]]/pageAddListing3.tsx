@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useFormData } from "../formItem"
 import { useRouter } from "next/navigation"
+import {useListingStore} from "@/app/Store/hotelListingStore"
 import { motion } from "framer-motion"
 import {
   User,
@@ -75,13 +76,13 @@ interface RoomTypeData {
 const PageAddListing3 = () => {
   const { formData, setFormData } = useFormData()
   const router = useRouter()
-
+  const { propertyDetails, setPropertyDetails } = useListingStore()
   // Initialize with existing room types or empty array
   const [roomTypes, setRoomTypes] = useState<RoomTypeData[]>(formData.roomTypes || [])
   const [currentStep, setCurrentStep] = useState<"overview" | "roomTypeSelection" | "roomDetails">("overview")
   const [editingRoomId, setEditingRoomId] = useState<string | null>(null)
 
-  // Form states for current room being edited
+ 
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
   const [customAmenities, setCustomAmenities] = useState<string[]>([])
   const [newAmenity, setNewAmenity] = useState("")
@@ -108,7 +109,7 @@ const PageAddListing3 = () => {
 
   const selectedRoomType = watch("roomType")
 
-  // Get available room types (not already added)
+
   const availableRoomTypes = roomTypeOptions.filter((type) => !roomTypes.some((room) => room.roomType === type))
 
   const toggleAmenity = (amenity: string) => {
@@ -257,7 +258,7 @@ const PageAddListing3 = () => {
         {/* Header */}
         <header className="border-b border-gray-100 py-6 px-8">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
+            <h1 className="text-2xl font-light text-gray-900">{propertyDetails.propertyName}</h1>
           </div>
         </header>
 
@@ -287,8 +288,8 @@ const PageAddListing3 = () => {
                   isCompleted={false}
                 />
                 <ProgressItem
-                  icon={<FileText className="w-4 h-4" />}
-                  label="Photos & Documents"
+                  icon={<ShieldAlert className="w-4 h-4" />}
+                  label="Policies"
                   isActive={false}
                   isCompleted={false}
                 />

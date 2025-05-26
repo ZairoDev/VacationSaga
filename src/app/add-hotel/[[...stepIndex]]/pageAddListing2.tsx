@@ -6,17 +6,14 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { useFormData } from "../formItem"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { User, Home, ClipboardList, FileText, MapPin, Star, Bed, Clock, Calendar, Plus, Trash2, ArrowRight, ArrowLeft, CheckCircle, ShieldAlert } from 'lucide-react'
+import { useListingStore } from "@/app/Store/hotelListingStore"
+import { User, Home, ClipboardList, MapPin, Star, Bed, Clock, Calendar, Plus, Trash2, ArrowRight, ArrowLeft, CheckCircle, ShieldAlert } from 'lucide-react'
+
 
 const roomTypeOptions = [
-  // "Single Room",
-  // "Double Room",
   "Classic Room",
-  "Deluxe Room",
-  // "Suite",
+  "Deluxe Room", 
   "Presidential Suite",
-  // "Family Room",
-  // "Connecting Room",
 ]
 
 const amenityOptions = [
@@ -37,6 +34,7 @@ const amenityOptions = [
 ]
 
 const PageAddListing2 = () => {
+  const { propertyDetails, setPropertyDetails } = useListingStore()
   const { formData, setFormData } = useFormData()
   const router = useRouter()
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(formData.propertyDetails?.amenities || [])
@@ -48,24 +46,7 @@ const PageAddListing2 = () => {
     control,
     formState: { errors },
   } = useForm({
-    defaultValues: formData.propertyDetails || {
-      propertyName: "",
-      numberOfRooms: 0,
-      roomTypes: [{ type: "", quantity: 1 }],
-      starRating: 3,
-      amenities: [],
-      location: {
-        address: "",
-        city: "",
-        state: "",
-        country: "",
-      },
-      checkInTime: "14:00",
-      checkOutTime: "11:00",
-      operatingSince: "",
-      isAvailable: true,
-      description: "",
-    },
+    defaultValues: propertyDetails,
   })
 
   const { fields, append, remove } = useFieldArray({
@@ -83,7 +64,7 @@ const PageAddListing2 = () => {
 
   const onSubmit = (data: any) => {
     data.amenities = selectedAmenities
-    setFormData({ ...formData, propertyDetails: data })
+    setPropertyDetails( data)
     router.push("/add-hotel/3")
   }
 
@@ -155,7 +136,7 @@ const PageAddListing2 = () => {
             </motion.div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-              {/* Basic Property Information */}
+    
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -170,7 +151,7 @@ const PageAddListing2 = () => {
                     icon={<Home className="w-5 h-5 text-gray-400" />}
                     register={register("propertyName", { required: "Property name is required" })}
                     placeholder="Property Name"
-                    // error={errors.propertyName?.message}
+                   
                     delay={0.3}
                     className="md:col-span-2"
                   />
@@ -197,14 +178,13 @@ const PageAddListing2 = () => {
                       min: { value: 1, message: "Must have at least 1 room" },
                     })}
                     placeholder="Total Number of Rooms"
-                    // error={errors.numberOfRooms?.message}
                     delay={0.4}
                     type="number"
                   />
                 </div>
               </div>
 
-              {/* Room Types */}
+      
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -234,9 +214,7 @@ const PageAddListing2 = () => {
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <Bed className="w-5 h-5 text-gray-400" />
                           </div>
-                          {/* {errors.roomTypes?.[index]?.type && (
-                            <p className="text-red-500 text-xs mt-1 ml-1">{errors.roomTypes[index]?.type?.message}</p>
-                          )} */}
+                          
                         </div>
 
                         <div className="relative">
@@ -250,11 +228,7 @@ const PageAddListing2 = () => {
                             className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                             min="1"
                           />
-                          {/* {errors.roomTypes?.[index]?.quantity && (
-                            <p className="text-red-500 text-xs mt-1 ml-1">
-                              {errors.roomTypes[index]?.quantity?.message}
-                            </p>
-                          )} */}
+                          
                         </div>
                       </div>
 
@@ -281,7 +255,7 @@ const PageAddListing2 = () => {
                 </div>
               </div>
 
-              {/* Location */}
+     
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -297,7 +271,7 @@ const PageAddListing2 = () => {
                     icon={<MapPin className="w-5 h-5 text-gray-400" />}
                     register={register("location.address", { required: "Address is required" })}
                     placeholder="Street Address"
-                    // error={errors.location?.address?.message}
+                    
                     delay={0.7}
                     className="md:col-span-2"
                   />
@@ -305,27 +279,25 @@ const PageAddListing2 = () => {
                   <FormField
                     register={register("location.city", { required: "City is required" })}
                     placeholder="City"
-                    // error={errors.location?.city?.message}
                     delay={0.8}
                   />
 
                   <FormField
                     register={register("location.state", { required: "State is required" })}
                     placeholder="State/Province"
-                    // error={errors.location?.state?.message}
+                    
                     delay={0.9}
                   />
 
                   <FormField
                     register={register("location.country", { required: "Country is required" })}
                     placeholder="Country"
-                    // error={errors.location?.country?.message}
                     delay={1.0}
                   />
                 </div>
               </div>
 
-              {/* Amenities */}
+              
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -358,7 +330,7 @@ const PageAddListing2 = () => {
                 </div>
               </div>
 
-              {/* Check-in/Check-out Times */}
+            
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -398,15 +370,13 @@ const PageAddListing2 = () => {
                         {...register("checkOutTime", { required: "Check-out time is required" })}
                         className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                       />
-                      {/* {errors.checkOutTime && (
-                        <p className="text-red-500 text-xs mt-1 ml-1">{errors.checkOutTime.message}</p>
-                      )} */}
+                      
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Operating Since & Availability */}
+             
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -435,7 +405,7 @@ const PageAddListing2 = () => {
                 </div>
               </div>
 
-              {/* Description */}
+             
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -452,11 +422,11 @@ const PageAddListing2 = () => {
                     placeholder="Describe your property, its unique features, and what makes it special..."
                     className="w-full p-4 border border-gray-200 rounded-lg min-h-[150px] focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                   ></textarea>
-                  {/* {errors.description && <p className="text-red-500 text-xs mt-1 ml-1">{errors.description.message}</p>} */}
+                 
                 </div>
               </div>
 
-              {/* Navigation Buttons */}
+           
               <div className="flex justify-between pt-6 border-t border-gray-100">
                 <motion.button
                   initial={{ opacity: 0 }}

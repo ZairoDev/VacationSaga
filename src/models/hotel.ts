@@ -43,21 +43,12 @@ const HotelSchema = new mongoose.Schema({
       bedType: { type: String },
       maxOccupancy: { type: Number, required: true },
       pricePerNight: { type: Number, required: true },
+      roomAmenities: [{ type: String }],
       roomPhotos: [{ type: String }],
+      roomDescription: { type: String },
       isAvailable: { type: Boolean, default: true },
     }
   ],
-
-  pricing: {
-    basePrice: { type: Number },
-    seasonalPricing: [
-      {
-        season: { type: String },
-        pricePerNight: { type: Number },
-      }
-    ],
-    weekendPriceModifier: { type: Number }, 
-  },
 
   policies: {
     cancellationPolicy: { type: String },
@@ -83,3 +74,4 @@ const HotelSchema = new mongoose.Schema({
 });
 
 export default mongoose.model("Hotel", HotelSchema);
+ 

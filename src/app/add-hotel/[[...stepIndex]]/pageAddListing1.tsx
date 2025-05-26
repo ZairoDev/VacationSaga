@@ -1,47 +1,42 @@
 "use client"
-
 import type React from "react"
-
 import { useForm } from "react-hook-form"
 import { useFormData } from "../formItem"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { useListingStore } from "@/app/Store/hotelListingStore"
 import { User, Mail, Phone, ArrowRight, FileText, UserCircle, Home, ClipboardList, ShieldAlert } from "lucide-react"
 
 const PageAddListing1 = () => {
-  const { formData, setFormData } = useFormData()
+  // const { formData, setFormData } = useFormData()
+  const { propertyDetails, setPropertyDetails } = useListingStore()
+  const {ownerDetails, setOwnerDetails} = useListingStore()
   const router = useRouter()
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: formData.ownerDetails,
+    defaultValues: ownerDetails,
   })
 
   const onSubmit = (data: any) => {
-    setFormData({ ...formData, ownerDetails: data })
+    setOwnerDetails( data)
     router.push("/add-hotel/2")
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
+    
       <header className="border-b border-gray-100 py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
-          {/* <div className="flex items-center gap-2">
-            <button className="text-sm text-gray-500 hover:text-gray-700">Save Draft</button>
-            <button className="text-sm bg-orange-50 text-orange-600 px-4 py-2 rounded-lg hover:bg-orange-100 transition-colors">
-              Help
-            </button>
-          </div> */}
+          
         </div>
       </header>
 
-      {/* Main Content */}
+      
       <main className="flex-1 flex">
-        {/* Left Sidebar - Progress */}
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
             <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
@@ -72,16 +67,6 @@ const PageAddListing1 = () => {
                 isCompleted={false}
               />
             </div>
-
-            {/* <div className="pt-6 border-t border-gray-100">
-              <div className="bg-orange-50 p-4 rounded-lg">
-                <h4 className="text-sm font-medium text-orange-700 mb-2">Need Help?</h4>
-                <p className="text-xs text-orange-600">
-                  Our support team is available 24/7 to assist you with your listing.
-                </p>
-                <button className="text-xs text-orange-700 font-medium mt-2 hover:underline">Contact Support</button>
-              </div>
-            </div> */}
           </div>
         </div>
 
@@ -117,7 +102,6 @@ const PageAddListing1 = () => {
                       icon={<User className="w-5 h-5 text-gray-400" />}
                       register={register("name", { required: "Name is required" })}
                       placeholder="Owner Name"
-                    //   error={errors.name?.message}
                       delay={0.3}
                     />
 
@@ -131,7 +115,6 @@ const PageAddListing1 = () => {
                         },
                       })}
                       placeholder="Email Address"
-                    //   error={errors.email?.message}
                       delay={0.4}
                     />
 
@@ -139,7 +122,6 @@ const PageAddListing1 = () => {
                       icon={<Phone className="w-5 h-5 text-gray-400" />}
                       register={register("phone", { required: "Phone number is required" })}
                       placeholder="Phone Number"
-                    //   error={errors.phone?.message}
                       delay={0.5}
                     />
 
@@ -147,16 +129,13 @@ const PageAddListing1 = () => {
                       icon={<Phone className="w-5 h-5 text-gray-400" />}
                       register={register("alternateContact")}
                       placeholder="Alternate Contact Number"
-                    //   error={errors.alternateContact?.message}
                       delay={0.6}
                     />
 
                     <FormField
                       icon={<FileText className="w-5 h-5 text-gray-400" />}
                       register={register("aadharCard", { required: "Aadhar Card number is required" })}
-                      placeholder="Aadhar Card Number"
-                    //   error={errors.aadharCard?.message}
-                      delay={0.7}
+                      placeholder="Aadhar Card Number"                     delay={0.7}
                       className="md:col-span-2"
                     />
                   </div>
@@ -176,7 +155,6 @@ const PageAddListing1 = () => {
                       icon={<UserCircle className="w-5 h-5 text-gray-400" />}
                       register={register("managerName")}
                       placeholder="Manager Name (if different from owner)"
-                    //   error={errors.managerName?.message}
                       delay={0.9}
                     />
 
@@ -184,7 +162,6 @@ const PageAddListing1 = () => {
                       icon={<Phone className="w-5 h-5 text-gray-400" />}
                       register={register("managerContact")}
                       placeholder="Manager Contact Number"
-                    //   error={errors.managerContact?.message}
                       delay={1.0}
                     />
                   </div>
