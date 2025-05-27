@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useForm } from "react-hook-form"
 import { useFormData } from "../formItem"
 import { useRouter } from "next/navigation"
@@ -18,9 +17,11 @@ import {
   Plus,
   X,
 } from "lucide-react"
+import { useListingStore } from "@/app/Store/hotelListingStore"
 
 const PageAddListing4 = () => {
   const { formData, setFormData } = useFormData()
+  const { policies, setPolicies } = useListingStore()
   const router = useRouter()
 
   const {
@@ -30,42 +31,39 @@ const PageAddListing4 = () => {
     watch,
     setValue,
   } = useForm({
-    defaultValues: formData.policies || {
-      cancellationPolicy: "",
-      houseRulesList: [""],
-      allowPets: false,
-      allowSmoking: false,
-    },
-  })
+  defaultValues: {
+    ...policies,
+    houseRulesList: policies.houseRules.length ? policies.houseRules : [""]
+  }
+})
 
   const allowPets = watch("allowPets")
   const allowSmoking = watch("allowSmoking")
 
   const onSubmit = (data: any) => {
-    // Convert bullet points to paragraph format for storage
-    if (data.houseRulesList) {
-      data.houseRules = data.houseRulesList
-        .filter((rule: string) => rule.trim() !== "")
-        .map((rule: string) => `• ${rule}`)
-        .join("\n")
-    }
-
-    setFormData({ ...formData, policies: data })
-    router.push("/add-hotel/5")
+  const updatedPolicies = {
+    cancellationPolicy: data.cancellationPolicy,
+    houseRules: data.houseRulesList,    // map it here
+    allowPets: data.allowPets,
+    allowSmoking: data.allowSmoking
   }
+
+  setPolicies(updatedPolicies)
+  router.push("/add-hotel/5")
+}
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
+      
       <header className="border-b border-gray-100 py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
         </div>
       </header>
 
-      {/* Main Content */}
+
       <main className="flex-1 flex">
-        {/* Left Sidebar - Progress */}
+       
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
             <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
@@ -95,6 +93,12 @@ const PageAddListing4 = () => {
                 isActive={true}
                 isCompleted={false}
               />
+              <ProgressItem
+                icon={<ArrowRight className="w-4 h-4" />}
+                label="Review & Submit"
+                isActive={false}
+                isCompleted={false}
+              />
             </div>
           </div>
         </div>
@@ -110,7 +114,7 @@ const PageAddListing4 = () => {
             >
               <h2 className="text-3xl font-light mb-3 text-gray-900">Property Policies</h2>
               <p className="text-gray-500">
-                Please provide information about your property's policies. Clear policies help set guest expectations
+                Please provide information about your property&apos;s policies. Clear policies help set guest expectations
                 and reduce misunderstandings.
               </p>
             </motion.div>
@@ -214,14 +218,10 @@ const PageAddListing4 = () => {
                         Add another rule
                       </button>
                     </div>
-                    {errors.houseRulesList && (
-                      <p className="text-red-500 text-xs mt-1 ml-1">Please add at least one house rule</p>
-                    )}
                   </motion.div>
                 </div>
 
                 <div>
-
                   <motion.h3
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

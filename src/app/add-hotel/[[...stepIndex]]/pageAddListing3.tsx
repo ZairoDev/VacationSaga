@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { useFormData } from "../formItem"
-import { useRouter } from "next/navigation"
-import {useListingStore} from "@/app/Store/hotelListingStore"
-import { motion } from "framer-motion"
+import type React from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useFormData } from "../formItem";
+import { useRouter } from "next/navigation";
+import { useListingStore } from "@/app/Store/hotelListingStore";
+import { motion } from "framer-motion";
 import {
   User,
   Home,
@@ -25,14 +25,9 @@ import {
   Edit,
   Trash2,
   ShieldAlert,
-} from "lucide-react"
+} from "lucide-react";
 
-const roomTypeOptions = [
-  "Classic Room",
-  "Deluxe Room",
-  "Presidential Suite",
-
-]
+const roomTypeOptions = ["Classic Room", "Deluxe Room", "Presidential Suite"];
 
 const bedTypeOptions = [
   "Single Bed",
@@ -43,7 +38,7 @@ const bedTypeOptions = [
   "Bunk Bed",
   "Sofa Bed",
   "No Bed",
-]
+];
 
 const roomAmenityOptions = [
   "Air Conditioning",
@@ -58,37 +53,41 @@ const roomAmenityOptions = [
   "Hairdryer",
   "Iron",
   "Wardrobe",
-]
+];
 
 interface RoomTypeData {
-  id: string
-  roomType: string
-  bedType: string
-  maxOccupancy: number
-  pricePerNight: string
-  description: string
-  amenities: string[]
-  customAmenities: string[]
-  photos: File[]
-  photoPreviews: string[]
+  id: string;
+  roomType: string;
+  bedType: string;
+  maxOccupancy: number;
+  pricePerNight: string;
+  description: string;
+  amenities: string[];
+  customAmenities: string[];
+  photos: File[];
+  photoPreviews: string[];
 }
 
 const PageAddListing3 = () => {
-  const { formData, setFormData } = useFormData()
-  const router = useRouter()
-  const { propertyDetails, setPropertyDetails } = useListingStore()
+  const { formData, setFormData } = useFormData();
+  const router = useRouter();
+  const { propertyDetails, setPropertyDetails } = useListingStore();
   // Initialize with existing room types or empty array
-  const [roomTypes, setRoomTypes] = useState<RoomTypeData[]>(formData.roomTypes || [])
-  const [currentStep, setCurrentStep] = useState<"overview" | "roomTypeSelection" | "roomDetails">("overview")
-  const [editingRoomId, setEditingRoomId] = useState<string | null>(null)
+  // const [roomTypes, setRoomTypes] = useState<RoomTypeData[]>(formData.roomTypes || [])
+  const { roomDetails, addRoomDetail, updateRoomDetail, removeRoomDetail } =
+    useListingStore();
 
- 
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
-  const [customAmenities, setCustomAmenities] = useState<string[]>([])
-  const [newAmenity, setNewAmenity] = useState("")
-  const [showAddAmenity, setShowAddAmenity] = useState(false)
-  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([])
-  const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
+  const [currentStep, setCurrentStep] = useState<
+    "overview" | "roomTypeSelection" | "roomDetails"
+  >("overview");
+  const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
+
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [customAmenities, setCustomAmenities] = useState<string[]>([]);
+  const [newAmenity, setNewAmenity] = useState("");
+  const [showAddAmenity, setShowAddAmenity] = useState(false);
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const {
     register,
@@ -105,104 +104,105 @@ const PageAddListing3 = () => {
       pricePerNight: "",
       description: "",
     },
-  })
+  });
 
-  const selectedRoomType = watch("roomType")
+  const selectedRoomType = watch("roomType");
 
-
-  const availableRoomTypes = roomTypeOptions.filter((type) => !roomTypes.some((room) => room.roomType === type))
+  const availableRoomTypes = roomTypeOptions.filter(
+    (type) => !roomDetails.some((room) => room.roomType === type)
+  );
 
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
-      setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity))
+      setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
     } else {
-      setSelectedAmenities([...selectedAmenities, amenity])
+      setSelectedAmenities([...selectedAmenities, amenity]);
     }
-  }
+  };
 
   const addCustomAmenity = () => {
     if (newAmenity.trim() && !customAmenities.includes(newAmenity.trim())) {
-      const updatedCustomAmenities = [...customAmenities, newAmenity.trim()]
-      setCustomAmenities(updatedCustomAmenities)
-      setSelectedAmenities([...selectedAmenities, newAmenity.trim()])
-      setNewAmenity("")
-      setShowAddAmenity(false)
+      const updatedCustomAmenities = [...customAmenities, newAmenity.trim()];
+      setCustomAmenities(updatedCustomAmenities);
+      setSelectedAmenities([...selectedAmenities, newAmenity.trim()]);
+      setNewAmenity("");
+      setShowAddAmenity(false);
     }
-  }
+  };
 
   const removeCustomAmenity = (amenity: string) => {
-    setCustomAmenities(customAmenities.filter((a) => a !== amenity))
-    setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity))
-  }
+    setCustomAmenities(customAmenities.filter((a) => a !== amenity));
+    setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
+  };
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
+    const files = event.target.files;
     if (files) {
-      const newFiles = Array.from(files)
-      setUploadedPhotos([...uploadedPhotos, ...newFiles])
+      const newFiles = Array.from(files);
+      setUploadedPhotos([...uploadedPhotos, ...newFiles]);
 
       // Create preview URLs
       newFiles.forEach((file) => {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = (e) => {
           if (e.target?.result) {
-            setPhotoPreviews((prev) => [...prev, e.target!.result as string])
+            setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
           }
-        }
-        reader.readAsDataURL(file)
-      })
+        };
+        reader.readAsDataURL(file);
+      });
     }
-  }
+  };
 
   const removePhoto = (index: number) => {
-    const newPhotos = uploadedPhotos.filter((_, i) => i !== index)
-    const newPreviews = photoPreviews.filter((_, i) => i !== index)
-    setUploadedPhotos(newPhotos)
-    setPhotoPreviews(newPreviews)
-  }
+    const newPhotos = uploadedPhotos.filter((_, i) => i !== index);
+    const newPreviews = photoPreviews.filter((_, i) => i !== index);
+    setUploadedPhotos(newPhotos);
+    setPhotoPreviews(newPreviews);
+  };
 
   const handleRoomTypeSelection = (roomType: string) => {
-    setValue("roomType", roomType)
-    setCurrentStep("roomDetails")
-  }
+    setValue("roomType", roomType);
+    setCurrentStep("roomDetails");
+  };
 
   const resetFormStates = () => {
-    setSelectedAmenities([])
-    setCustomAmenities([])
-    setUploadedPhotos([])
-    setPhotoPreviews([])
-    setNewAmenity("")
-    setShowAddAmenity(false)
-    reset()
-  }
+    setSelectedAmenities([]);
+    setCustomAmenities([]);
+    setUploadedPhotos([]);
+    setPhotoPreviews([]);
+    setNewAmenity("");
+    setShowAddAmenity(false);
+    reset();
+  };
 
   const startAddingNewRoom = () => {
-    resetFormStates()
-    setEditingRoomId(null)
-    setCurrentStep("roomTypeSelection")
-  }
+    resetFormStates();
+    setEditingRoomId(null);
+    setCurrentStep("roomTypeSelection");
+  };
 
   const editRoomType = (roomId: string) => {
-    const room = roomTypes.find((r) => r.id === roomId)
+    const room = roomDetails.find((r) => r.id === roomId);
     if (room) {
       // Populate form with existing data
-      setValue("roomType", room.roomType)
-      setValue("bedType", room.bedType)
-      setValue("maxOccupancy", room.maxOccupancy)
-      setValue("pricePerNight", room.pricePerNight)
-      setValue("description", room.description)
-      setSelectedAmenities(room.amenities)
-      setCustomAmenities(room.customAmenities)
-      setUploadedPhotos(room.photos)
-      setPhotoPreviews(room.photoPreviews)
-      setEditingRoomId(roomId)
-      setCurrentStep("roomDetails")
+      setValue("roomType", room.roomType);
+      setValue("bedType", room.bedType);
+      setValue("maxOccupancy", room.maxOccupancy);
+      setValue("pricePerNight", room.pricePerNight);
+      setValue("description", room.description);
+      setSelectedAmenities(room.amenities);
+      setCustomAmenities(room.customAmenities);
+      setUploadedPhotos(room.photos);
+      setPhotoPreviews(room.photoPreviews);
+      setEditingRoomId(roomId);
+      setCurrentStep("roomDetails");
     }
-  }
+  };
 
   const deleteRoomType = (roomId: string) => {
-    setRoomTypes(roomTypes.filter((room) => room.id !== roomId))
-  }
+    removeRoomDetail(roomId);
+  };
 
   const onSubmitRoomDetails = (data: any) => {
     const roomData: RoomTypeData = {
@@ -216,40 +216,38 @@ const PageAddListing3 = () => {
       customAmenities: customAmenities,
       photos: uploadedPhotos,
       photoPreviews: photoPreviews,
-    }
+    };
 
     if (editingRoomId) {
-      // Update existing room
-      setRoomTypes(roomTypes.map((room) => (room.id === editingRoomId ? roomData : room)))
+      updateRoomDetail(editingRoomId, roomData);
     } else {
-      // Add new room
-      setRoomTypes([...roomTypes, roomData])
+      addRoomDetail(roomData);
     }
 
-    resetFormStates()
-    setEditingRoomId(null)
-    setCurrentStep("overview")
-  }
+    resetFormStates();
+    setEditingRoomId(null);
+    setCurrentStep("overview");
+  };
 
   const proceedToNextStep = () => {
     // Save all room types to form data
-    setFormData({ ...formData, roomTypes: roomTypes })
-    router.push("/add-hotel/4")
-  }
+    // setFormData({ ...formData, roomTypes: roomTypes })
+    router.push("/add-hotel/4");
+  };
 
   const goBack = () => {
     if (currentStep === "roomDetails") {
       if (editingRoomId) {
-        setCurrentStep("overview")
+        setCurrentStep("overview");
       } else {
-        setCurrentStep("roomTypeSelection")
+        setCurrentStep("roomTypeSelection");
       }
     } else if (currentStep === "roomTypeSelection") {
-      setCurrentStep("overview")
+      setCurrentStep("overview");
     } else {
-      router.push("/add-hotel/2")
+      router.push("/add-hotel/2");
     }
-  }
+  };
 
   // Overview Step - Show all added room types
   if (currentStep === "overview") {
@@ -258,7 +256,9 @@ const PageAddListing3 = () => {
         {/* Header */}
         <header className="border-b border-gray-100 py-6 px-8">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-light text-gray-900">{propertyDetails.propertyName}</h1>
+            <h1 className="text-2xl font-light text-gray-900">
+              {propertyDetails.propertyName}
+            </h1>
           </div>
         </header>
 
@@ -267,7 +267,9 @@ const PageAddListing3 = () => {
           {/* Left Sidebar - Progress */}
           <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
             <div className="space-y-6">
-              <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
+              <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
+                Listing Progress
+              </h3>
               <div className="space-y-3">
                 <ProgressItem
                   icon={<User className="w-4 h-4" />}
@@ -293,6 +295,12 @@ const PageAddListing3 = () => {
                   isActive={false}
                   isCompleted={false}
                 />
+                <ProgressItem
+                  icon={<ArrowRight className="w-4 h-4" />}
+                  label="Review & Submit"
+                  isActive={false}
+                  isCompleted={false}
+                />
               </div>
             </div>
           </div>
@@ -306,18 +314,25 @@ const PageAddListing3 = () => {
                 transition={{ duration: 0.5 }}
                 className="mb-8"
               >
-                <h2 className="text-3xl font-light mb-3 text-gray-900">Room Types Overview</h2>
+                <h2 className="text-3xl font-light mb-3 text-gray-900">
+                  Room Types Overview
+                </h2>
                 <p className="text-gray-500">
-                  Add all the different room types available in your property. You can add multiple room types with
-                  different pricing and amenities.
+                  Add all the different room types available in your property.
+                  You can add multiple room types with different pricing and
+                  amenities.
                 </p>
               </motion.div>
 
-              {roomTypes.length === 0 ? (
+              {roomDetails.length === 0 ? (
                 <div className="text-center py-12">
                   <Bed className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Room Types Added Yet</h3>
-                  <p className="text-gray-500 mb-6">Start by adding your first room type to continue.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No Room Types Added Yet
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    Start by adding your first room type to continue.
+                  </p>
                   <button
                     onClick={startAddingNewRoom}
                     className="py-3 px-6 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors flex items-center gap-2 mx-auto"
@@ -330,7 +345,7 @@ const PageAddListing3 = () => {
                 <div className="space-y-6">
                   {/* Added Room Types */}
                   <div className="grid gap-4">
-                    {roomTypes.map((room) => (
+                    {roomDetails.map((room) => (
                       <motion.div
                         key={room.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -341,30 +356,43 @@ const PageAddListing3 = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-3">
                               <Bed className="w-5 h-5 text-orange-500" />
-                              <h3 className="text-lg font-medium text-gray-900">{room.roomType}</h3>
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {room.roomType}
+                              </h3>
                               <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
                                 Configured
                               </span>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                               <div>
-                                <span className="font-medium">Bed Type:</span> {room.bedType}
+                                <span className="font-medium">Bed Type:</span>{" "}
+                                {room.bedType}
                               </div>
                               <div>
-                                <span className="font-medium">Max Occupancy:</span> {room.maxOccupancy} guests
+                                <span className="font-medium">
+                                  Max Occupancy:
+                                </span>{" "}
+                                {room.maxOccupancy} guests
                               </div>
                               <div>
-                                <span className="font-medium">Price:</span> ₹{room.pricePerNight}/night
+                                <span className="font-medium">Price:</span> ₹
+                                {room.pricePerNight}/night
                               </div>
                               <div>
-                                <span className="font-medium">Photos:</span> {room.photos.length} uploaded
+                                <span className="font-medium">Photos:</span>{" "}
+                                {room.photos.length} uploaded
                               </div>
                             </div>
                             <div className="mt-2">
-                              <span className="font-medium text-sm text-gray-600">Amenities:</span>
+                              <span className="font-medium text-sm text-gray-600">
+                                Amenities:
+                              </span>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {room.amenities.slice(0, 3).map((amenity) => (
-                                  <span key={amenity} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                  <span
+                                    key={amenity}
+                                    className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
+                                  >
                                     {amenity}
                                   </span>
                                 ))}
@@ -401,7 +429,9 @@ const PageAddListing3 = () => {
                   {availableRoomTypes.length > 0 && (
                     <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center">
                       <Plus className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500 mb-4">Add another room type to your property</p>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Add another room type to your property
+                      </p>
                       <button
                         onClick={startAddingNewRoom}
                         className="py-2 px-4 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
@@ -429,7 +459,7 @@ const PageAddListing3 = () => {
                   Back
                 </motion.button>
 
-                {roomTypes.length > 0 && (
+                {roomDetails.length > 0 && (
                   <motion.button
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -448,7 +478,7 @@ const PageAddListing3 = () => {
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   // Room Type Selection Step
@@ -458,7 +488,9 @@ const PageAddListing3 = () => {
         {/* Header */}
         <header className="border-b border-gray-100 py-6 px-8">
           <div className="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
+            <h1 className="text-2xl font-light text-gray-900">
+              Add New Listing
+            </h1>
           </div>
         </header>
 
@@ -467,7 +499,9 @@ const PageAddListing3 = () => {
           {/* Left Sidebar - Progress */}
           <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
             <div className="space-y-6">
-              <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
+              <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
+                Listing Progress
+              </h3>
               <div className="space-y-3">
                 <ProgressItem
                   icon={<User className="w-4 h-4" />}
@@ -506,13 +540,19 @@ const PageAddListing3 = () => {
                 transition={{ duration: 0.5 }}
                 className="mb-8"
               >
-                <h2 className="text-3xl font-light mb-3 text-gray-900">Select Room Type</h2>
-                <p className="text-gray-500">Choose the type of room you want to add to your property listing.</p>
-                {roomTypes.length > 0 && (
+                <h2 className="text-3xl font-light mb-3 text-gray-900">
+                  Select Room Type
+                </h2>
+                <p className="text-gray-500">
+                  Choose the type of room you want to add to your property
+                  listing.
+                </p>
+                {roomDetails.length > 0 && (
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
-                      You have already added {roomTypes.length} room type{roomTypes.length > 1 ? "s" : ""}. You can add
-                      more room types with different configurations.
+                      You have already added {roomDetails.length} room type
+                      {roomDetails.length > 1 ? "s" : ""}. You can add more room
+                      types with different configurations.
                     </p>
                   </div>
                 )}
@@ -530,7 +570,9 @@ const PageAddListing3 = () => {
                   >
                     <div className="flex items-center gap-3">
                       <Bed className="w-6 h-6 text-gray-400 group-hover:text-orange-500" />
-                      <span className="text-lg font-medium text-gray-900 group-hover:text-orange-600">{roomType}</span>
+                      <span className="text-lg font-medium text-gray-900 group-hover:text-orange-600">
+                        {roomType}
+                      </span>
                     </div>
                   </motion.div>
                 ))}
@@ -539,9 +581,12 @@ const PageAddListing3 = () => {
               {availableRoomTypes.length === 0 && (
                 <div className="text-center py-12">
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">All Room Types Added</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    All Room Types Added
+                  </h3>
                   <p className="text-gray-500">
-                    You have added all available room types. You can go back to review or continue to the next step.
+                    You have added all available room types. You can go back to
+                    review or continue to the next step.
                   </p>
                 </div>
               )}
@@ -566,7 +611,7 @@ const PageAddListing3 = () => {
           </div>
         </main>
       </div>
-    )
+    );
   }
 
   // Room Details Step (same as before but with save functionality)
@@ -584,7 +629,9 @@ const PageAddListing3 = () => {
         {/* Left Sidebar - Progress */}
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
-            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
+            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
+              Listing Progress
+            </h3>
 
             <div className="space-y-3">
               <ProgressItem
@@ -628,7 +675,8 @@ const PageAddListing3 = () => {
                 {editingRoomId ? "Edit" : "Add"} {selectedRoomType} Details
               </h2>
               <p className="text-gray-500">
-                Please provide detailed information about your {selectedRoomType.toLowerCase()}.
+                Please provide detailed information about your{" "}
+                {selectedRoomType.toLowerCase()}.
               </p>
             </motion.div>
 
@@ -638,13 +686,18 @@ const PageAddListing3 = () => {
               </div>
               <div>
                 <p className="text-sm text-orange-700">
-                  {editingRoomId ? "Editing" : "Adding"} Room Type: <strong>{selectedRoomType}</strong>.
-                  {!editingRoomId && " You can add more room types after saving this one."}
+                  {editingRoomId ? "Editing" : "Adding"} Room Type:{" "}
+                  <strong>{selectedRoomType}</strong>.
+                  {!editingRoomId &&
+                    " You can add more room types after saving this one."}
                 </p>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit(onSubmitRoomDetails)} className="space-y-10">
+            <form
+              onSubmit={handleSubmit(onSubmitRoomDetails)}
+              className="space-y-10"
+            >
               {/* Basic Room Information */}
               <div>
                 <motion.h3
@@ -662,7 +715,9 @@ const PageAddListing3 = () => {
                     <label className="text-sm text-gray-600">Bed Type</label>
                     <div className="relative">
                       <select
-                        {...register("bedType", { required: "Bed type is required" })}
+                        {...register("bedType", {
+                          required: "Bed type is required",
+                        })}
                         className="w-full p-3 pr-10 border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                       >
                         <option value="">Select Bed Type</option>
@@ -676,12 +731,18 @@ const PageAddListing3 = () => {
                         <Bed className="w-5 h-5 text-gray-400" />
                       </div>
                     </div>
-                    {errors.bedType && <p className="text-red-500 text-xs mt-1">{errors.bedType.message}</p>}
+                    {errors.bedType && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.bedType.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Max Occupancy */}
                   <div className="space-y-2">
-                    <label className="text-sm text-gray-600">Maximum Occupancy*</label>
+                    <label className="text-sm text-gray-600">
+                      Maximum Occupancy*
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Users className="w-5 h-5 text-gray-400" />
@@ -697,12 +758,18 @@ const PageAddListing3 = () => {
                         min="1"
                       />
                     </div>
-                    {errors.maxOccupancy && <p className="text-red-500 text-xs mt-1">{errors.maxOccupancy.message}</p>}
+                    {errors.maxOccupancy && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.maxOccupancy.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Price Per Night */}
                   <div className="space-y-2">
-                    <label className="text-sm text-gray-600">Price Per Night*</label>
+                    <label className="text-sm text-gray-600">
+                      Price Per Night*
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <IndianRupee className="w-5 h-5 text-gray-400" />
@@ -711,7 +778,10 @@ const PageAddListing3 = () => {
                         type="number"
                         {...register("pricePerNight", {
                           required: "Price is required",
-                          min: { value: 0, message: "Price cannot be negative" },
+                          min: {
+                            value: 0,
+                            message: "Price cannot be negative",
+                          },
                         })}
                         placeholder="Price"
                         className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
@@ -720,7 +790,9 @@ const PageAddListing3 = () => {
                       />
                     </div>
                     {errors.pricePerNight && (
-                      <p className="text-red-500 text-xs mt-1">{errors.pricePerNight.message}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.pricePerNight.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -738,13 +810,21 @@ const PageAddListing3 = () => {
                 </motion.h3>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-600">Room Description</label>
+                  <label className="text-sm text-gray-600">
+                    Room Description
+                  </label>
                   <textarea
-                    {...register("description", { required: "Description is required" })}
+                    {...register("description", {
+                      required: "Description is required",
+                    })}
                     placeholder="Describe the features and amenities of this room..."
                     className="w-full p-4 border text-gray-600 border-gray-200 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                   ></textarea>
-                  {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
+                  {errors.description && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.description.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -799,8 +879,8 @@ const PageAddListing3 = () => {
                       <button
                         type="button"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          removeCustomAmenity(amenity)
+                          e.stopPropagation();
+                          removeCustomAmenity(amenity);
                         }}
                         className="ml-auto text-red-500 hover:text-red-700"
                       >
@@ -829,7 +909,9 @@ const PageAddListing3 = () => {
                         onChange={(e) => setNewAmenity(e.target.value)}
                         placeholder="Enter custom amenity"
                         className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
-                        onKeyPress={(e) => e.key === "Enter" && addCustomAmenity()}
+                        onKeyPress={(e) =>
+                          e.key === "Enter" && addCustomAmenity()
+                        }
                       />
                       <button
                         type="button"
@@ -841,8 +923,8 @@ const PageAddListing3 = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          setShowAddAmenity(false)
-                          setNewAmenity("")
+                          setShowAddAmenity(false);
+                          setNewAmenity("");
                         }}
                         className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300"
                       >
@@ -869,11 +951,19 @@ const PageAddListing3 = () => {
                   <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
                     <div className="flex flex-col items-center">
                       <Upload className="w-10 h-10 text-gray-300 mb-2" />
-                      <p className="text-sm text-gray-500 mb-2">Drag and drop room photos here</p>
+                      <p className="text-sm text-gray-500 mb-2">
+                        Drag and drop room photos here
+                      </p>
                       <p className="text-xs text-gray-400 mb-4">or</p>
                       <label className="py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
                         Browse Files
-                        <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
                       </label>
                     </div>
                   </div>
@@ -901,7 +991,8 @@ const PageAddListing3 = () => {
                   )}
 
                   <p className="text-xs text-gray-500">
-                    Upload high-quality images that showcase this room type. Recommended: at least 3-5 photos.
+                    Upload high-quality images that showcase this room type.
+                    Recommended: at least 3-5 photos.
                   </p>
                 </div>
               </div>
@@ -940,31 +1031,48 @@ const PageAddListing3 = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
 
 interface ProgressItemProps {
-  icon: React.ReactNode
-  label: string
-  isActive: boolean
-  isCompleted: boolean
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  isCompleted: boolean;
 }
 
-const ProgressItem = ({ icon, label, isActive, isCompleted }: ProgressItemProps) => {
+const ProgressItem = ({
+  icon,
+  label,
+  isActive,
+  isCompleted,
+}: ProgressItemProps) => {
   return (
     <div
-      className={`flex items-center gap-3 ${isActive ? "text-orange-500" : isCompleted ? "text-green-500" : "text-gray-500"}`}
+      className={`flex items-center gap-3 ${
+        isActive
+          ? "text-orange-500"
+          : isCompleted
+          ? "text-green-500"
+          : "text-gray-500"
+      }`}
     >
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          isCompleted ? "bg-green-100 text-green-500" : isActive ? "bg-orange-100 text-orange-500" : "bg-gray-100"
+          isCompleted
+            ? "bg-green-100 text-green-500"
+            : isActive
+            ? "bg-orange-100 text-orange-500"
+            : "bg-gray-100"
         }`}
       >
         {icon}
       </div>
-      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>{label}</span>
+      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>
+        {label}
+      </span>
     </div>
-  )
-}
+  );
+};
 
-export default PageAddListing3
+export default PageAddListing3;

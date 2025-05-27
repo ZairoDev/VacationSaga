@@ -1,45 +1,54 @@
-"use client"
-import type React from "react"
-import { useForm } from "react-hook-form"
-import { useFormData } from "../formItem"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { useListingStore } from "@/app/Store/hotelListingStore"
-import { User, Mail, Phone, ArrowRight, FileText, UserCircle, Home, ClipboardList, ShieldAlert } from "lucide-react"
+"use client";
+import type React from "react";
+import { useForm } from "react-hook-form";
+import { useFormData } from "../formItem";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useListingStore } from "@/app/Store/hotelListingStore";
+import {
+  User,
+  Mail,
+  Phone,
+  ArrowRight,
+  FileText,
+  UserCircle,
+  Home,
+  ClipboardList,
+  ShieldAlert,
+} from "lucide-react";
 
 const PageAddListing1 = () => {
   // const { formData, setFormData } = useFormData()
-  const { propertyDetails, setPropertyDetails } = useListingStore()
-  const {ownerDetails, setOwnerDetails} = useListingStore()
-  const router = useRouter()
+  const { propertyDetails, setPropertyDetails } = useListingStore();
+  const { ownerDetails, setOwnerDetails } = useListingStore();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
     defaultValues: ownerDetails,
-  })
+  });
 
   const onSubmit = (data: any) => {
-    setOwnerDetails( data)
-    router.push("/add-hotel/2")
-  }
+    setOwnerDetails(data);
+    router.push("/add-hotel/2");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-    
       <header className="border-b border-gray-100 py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
-          
         </div>
       </header>
 
-      
       <main className="flex-1 flex">
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
-            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
+            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
+              Listing Progress
+            </h3>
 
             <div className="space-y-3">
               <ProgressItem
@@ -66,11 +75,16 @@ const PageAddListing1 = () => {
                 isActive={false}
                 isCompleted={false}
               />
+              <ProgressItem
+                icon={<ArrowRight className="w-4 h-4" />}
+                label="Review & Submit"
+                isActive={false}
+                isCompleted={false}
+              />
             </div>
           </div>
         </div>
 
-     
         <div className="flex-1 p-8">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -79,10 +93,13 @@ const PageAddListing1 = () => {
               transition={{ duration: 0.5 }}
               className="mb-8"
             >
-              <h2 className="text-3xl font-light mb-3 text-gray-900">Owner Details</h2>
+              <h2 className="text-3xl font-light mb-3 text-gray-900">
+                Owner Details
+              </h2>
               <p className="text-gray-500">
-                Please provide your contact information for this listing. This information will be used for verification
-                and communication purposes.
+                Please provide your contact information for this listing. This
+                information will be used for verification and communication
+                purposes.
               </p>
             </motion.div>
 
@@ -100,7 +117,9 @@ const PageAddListing1 = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       icon={<User className="w-5 h-5 text-gray-400" />}
-                      register={register("name", { required: "Name is required" })}
+                      register={register("name", {
+                        required: "Name is required",
+                      })}
                       placeholder="Owner Name"
                       delay={0.3}
                     />
@@ -120,7 +139,9 @@ const PageAddListing1 = () => {
 
                     <FormField
                       icon={<Phone className="w-5 h-5 text-gray-400" />}
-                      register={register("phone", { required: "Phone number is required" })}
+                      register={register("phone", {
+                        required: "Phone number is required",
+                      })}
                       placeholder="Phone Number"
                       delay={0.5}
                     />
@@ -134,8 +155,11 @@ const PageAddListing1 = () => {
 
                     <FormField
                       icon={<FileText className="w-5 h-5 text-gray-400" />}
-                      register={register("aadharCard", { required: "Aadhar Card number is required" })}
-                      placeholder="Aadhar Card Number"                     delay={0.7}
+                      register={register("aadharCard", {
+                        required: "Aadhar Card number is required",
+                      })}
+                      placeholder="Aadhar Card Number"
+                      delay={0.7}
                       className="md:col-span-2"
                     />
                   </div>
@@ -188,19 +212,26 @@ const PageAddListing1 = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
 
 interface FormFieldProps {
-  icon: React.ReactNode
-  register: any
-  placeholder: string
-  error?: string
-  delay: number
-  className?: string
+  icon: React.ReactNode;
+  register: any;
+  placeholder: string;
+  error?: string;
+  delay: number;
+  className?: string;
 }
 
-const FormField = ({ icon, register, placeholder, error, delay, className = "" }: FormFieldProps) => {
+const FormField = ({
+  icon,
+  register,
+  placeholder,
+  error,
+  delay,
+  className = "",
+}: FormFieldProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -218,30 +249,47 @@ const FormField = ({ icon, register, placeholder, error, delay, className = "" }
       </div>
       {error && <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>}
     </motion.div>
-  )
-}
+  );
+};
 
 interface ProgressItemProps {
-  icon: React.ReactNode
-  label: string
-  isActive: boolean
-  isCompleted: boolean
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  isCompleted: boolean;
 }
 
-const ProgressItem = ({ icon, label, isActive, isCompleted }: ProgressItemProps) => {
+const ProgressItem = ({
+  icon,
+  label,
+  isActive,
+  isCompleted,
+}: ProgressItemProps) => {
   return (
     <div
-      className={`flex items-center gap-3 ${isActive ? "text-orange-500" : isCompleted ? "text-green-500" : "text-gray-500"}`}
+      className={`flex items-center gap-3 ${
+        isActive
+          ? "text-orange-500"
+          : isCompleted
+          ? "text-green-500"
+          : "text-gray-500"
+      }`}
     >
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          isCompleted ? "bg-green-100 text-green-500" : isActive ? "bg-orange-100 text-orange-500" : "bg-gray-100"
+          isCompleted
+            ? "bg-green-100 text-green-500"
+            : isActive
+            ? "bg-orange-100 text-orange-500"
+            : "bg-gray-100"
         }`}
       >
         {icon}
       </div>
-      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>{label}</span>
+      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>
+        {label}
+      </span>
     </div>
-  )
-}
-export default PageAddListing1
+  );
+};
+export default PageAddListing1;

@@ -1,20 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { useForm, useFieldArray } from "react-hook-form"
-import { useFormData } from "../formItem"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { useListingStore } from "@/app/Store/hotelListingStore"
-import { User, Home, ClipboardList, MapPin, Star, Bed, Clock, Calendar, Plus, Trash2, ArrowRight, ArrowLeft, CheckCircle, ShieldAlert } from 'lucide-react'
+import type React from "react";
+import { useState } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { useFormData } from "../formItem";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { useListingStore } from "@/app/Store/hotelListingStore";
+import {
+  User,
+  Home,
+  ClipboardList,
+  MapPin,
+  Star,
+  Bed,
+  Clock,
+  Calendar,
+  Plus,
+  Trash2,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle,
+  ShieldAlert,
+} from "lucide-react";
 
-
-const roomTypeOptions = [
-  "Classic Room",
-  "Deluxe Room", 
-  "Presidential Suite",
-]
+const roomTypeOptions = ["Classic Room", "Deluxe Room", "Presidential Suite"];
 
 const amenityOptions = [
   "Wi-Fi",
@@ -31,14 +41,18 @@ const amenityOptions = [
   "Laundry Service",
   "Conference Room",
   "Business Center",
-]
+];
 
 const PageAddListing2 = () => {
-  const { propertyDetails, setPropertyDetails } = useListingStore()
-  const { formData, setFormData } = useFormData()
-  const router = useRouter()
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(formData.propertyDetails?.amenities || [])
-  const [starRating, setStarRating] = useState<number>(formData.propertyDetails?.starRating || 0)
+  const { propertyDetails, setPropertyDetails } = useListingStore();
+  const { formData, setFormData } = useFormData();
+  const router = useRouter();
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
+    propertyDetails?.amenities || []
+  );
+  const [starRating, setStarRating] = useState<number>(
+    propertyDetails.starRating
+  );
 
   const {
     register,
@@ -47,47 +61,46 @@ const PageAddListing2 = () => {
     formState: { errors },
   } = useForm({
     defaultValues: propertyDetails,
-  })
+  });
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "roomTypes",
-  })
+  });
 
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
-      setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity))
+      setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
     } else {
-      setSelectedAmenities([...selectedAmenities, amenity])
+      setSelectedAmenities([...selectedAmenities, amenity]);
     }
-  }
+  };
 
   const onSubmit = (data: any) => {
-    data.amenities = selectedAmenities
-    setPropertyDetails( data)
-    router.push("/add-hotel/3")
-  }
+    data.amenities = selectedAmenities;
+    data.starRating = starRating;
+    setPropertyDetails(data);
+    router.push("/add-hotel/3");
+  };
 
   const goBack = () => {
-    router.push("/add-hotel/1")
-  }
+    router.push("/add-hotel/1");
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-
       <header className="border-b border-gray-100 py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
-          
         </div>
       </header>
 
-  
       <main className="flex-1 flex">
-
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
-            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">Listing Progress</h3>
+            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
+              Listing Progress
+            </h3>
 
             <div className="space-y-3">
               <ProgressItem
@@ -114,9 +127,13 @@ const PageAddListing2 = () => {
                 isActive={false}
                 isCompleted={false}
               />
+              <ProgressItem
+                icon={<ArrowRight className="w-4 h-4" />}
+                label="Review & Submit"
+                isActive={false}
+                isCompleted={false}
+              />
             </div>
-
-            
           </div>
         </div>
 
@@ -129,14 +146,16 @@ const PageAddListing2 = () => {
               transition={{ duration: 0.5 }}
               className="mb-8"
             >
-              <h2 className="text-3xl font-light mb-3 text-gray-900">Property Details</h2>
+              <h2 className="text-3xl font-light mb-3 text-gray-900">
+                Property Details
+              </h2>
               <p className="text-gray-500">
-                Please provide information about your property. This will help guests find and book your property.
+                Please provide information about your property. This will help
+                guests find and book your property.
               </p>
             </motion.div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-    
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -149,15 +168,18 @@ const PageAddListing2 = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     icon={<Home className="w-5 h-5 text-gray-400" />}
-                    register={register("propertyName", { required: "Property name is required" })}
+                    register={register("propertyName", {
+                      required: "Property name is required",
+                    })}
                     placeholder="Property Name"
-                   
                     delay={0.3}
                     className="md:col-span-2"
                   />
 
                   <div className="space-y-1">
-                    <label className="text-sm text-gray-600">Property Star Rating</label>
+                    <label className="text-sm text-gray-600">
+                      Property Star Rating
+                    </label>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <StarRating
@@ -184,7 +206,6 @@ const PageAddListing2 = () => {
                 </div>
               </div>
 
-      
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -201,7 +222,9 @@ const PageAddListing2 = () => {
                       <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="relative">
                           <select
-                            {...register(`roomTypes.${index}.type` as const, { required: "Room type is required" })}
+                            {...register(`roomTypes.${index}.type` as const, {
+                              required: "Room type is required",
+                            })}
                             className="w-full p-3 pr-10 border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                           >
                             <option value="">Select Room Type</option>
@@ -214,21 +237,25 @@ const PageAddListing2 = () => {
                           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <Bed className="w-5 h-5 text-gray-400" />
                           </div>
-                          
                         </div>
 
                         <div className="relative">
                           <input
                             type="number"
-                            {...register(`roomTypes.${index}.quantity` as const, {
-                              required: "Quantity is required",
-                              min: { value: 1, message: "Minimum quantity is 1" },
-                            })}
+                            {...register(
+                              `roomTypes.${index}.quantity` as const,
+                              {
+                                required: "Quantity is required",
+                                min: {
+                                  value: 1,
+                                  message: "Minimum quantity is 1",
+                                },
+                              }
+                            )}
                             placeholder="Quantity"
                             className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                             min="1"
                           />
-                          
                         </div>
                       </div>
 
@@ -255,7 +282,6 @@ const PageAddListing2 = () => {
                 </div>
               </div>
 
-     
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -269,35 +295,40 @@ const PageAddListing2 = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField
                     icon={<MapPin className="w-5 h-5 text-gray-400" />}
-                    register={register("location.address", { required: "Address is required" })}
+                    register={register("location.address", {
+                      required: "Address is required",
+                    })}
                     placeholder="Street Address"
-                    
                     delay={0.7}
                     className="md:col-span-2"
                   />
 
                   <FormField
-                    register={register("location.city", { required: "City is required" })}
+                    register={register("location.city", {
+                      required: "City is required",
+                    })}
                     placeholder="City"
                     delay={0.8}
                   />
 
                   <FormField
-                    register={register("location.state", { required: "State is required" })}
+                    register={register("location.state", {
+                      required: "State is required",
+                    })}
                     placeholder="State/Province"
-                    
                     delay={0.9}
                   />
 
                   <FormField
-                    register={register("location.country", { required: "Country is required" })}
+                    register={register("location.country", {
+                      required: "Country is required",
+                    })}
                     placeholder="Country"
                     delay={1.0}
                   />
                 </div>
               </div>
 
-              
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -330,7 +361,6 @@ const PageAddListing2 = () => {
                 </div>
               </div>
 
-            
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -343,14 +373,18 @@ const PageAddListing2 = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm text-gray-600">Check-in Time</label>
+                    <label className="text-sm text-gray-600">
+                      Check-in Time
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Clock className="w-5 h-5 text-gray-400" />
                       </div>
                       <input
                         type="time"
-                        {...register("checkInTime", { required: "Check-in time is required" })}
+                        {...register("checkInTime", {
+                          required: "Check-in time is required",
+                        })}
                         className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                       />
                       {/* {errors.checkInTime && (
@@ -360,23 +394,25 @@ const PageAddListing2 = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm text-gray-600">Check-out Time</label>
+                    <label className="text-sm text-gray-600">
+                      Check-out Time
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Clock className="w-5 h-5 text-gray-400" />
                       </div>
                       <input
                         type="time"
-                        {...register("checkOutTime", { required: "Check-out time is required" })}
+                        {...register("checkOutTime", {
+                          required: "Check-out time is required",
+                        })}
                         className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                       />
-                      
                     </div>
                   </div>
                 </div>
               </div>
 
-             
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -389,7 +425,9 @@ const PageAddListing2 = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm text-gray-600">Operating Since</label>
+                    <label className="text-sm text-gray-600">
+                      Operating Since
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <Calendar className="w-5 h-5 text-gray-400" />
@@ -401,11 +439,9 @@ const PageAddListing2 = () => {
                       />
                     </div>
                   </div>
-
                 </div>
               </div>
 
-             
               <div>
                 <motion.h3
                   initial={{ opacity: 0 }}
@@ -418,15 +454,15 @@ const PageAddListing2 = () => {
 
                 <div className="relative">
                   <textarea
-                    {...register("description", { required: "Description is required" })}
+                    {...register("description", {
+                      required: "Description is required",
+                    })}
                     placeholder="Describe your property, its unique features, and what makes it special..."
                     className="w-full p-4 border border-gray-200 rounded-lg min-h-[150px] focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                   ></textarea>
-                 
                 </div>
               </div>
 
-           
               <div className="flex justify-between pt-6 border-t border-gray-100">
                 <motion.button
                   initial={{ opacity: 0 }}
@@ -461,17 +497,17 @@ const PageAddListing2 = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
 
 interface FormFieldProps {
-  icon?: React.ReactNode
-  register: any
-  placeholder: string
-  error?: string
-  delay?: number
-  className?: string
-  type?: string
+  icon?: React.ReactNode;
+  register: any;
+  placeholder: string;
+  error?: string;
+  delay?: number;
+  className?: string;
+  type?: string;
 }
 
 const FormField = ({
@@ -501,59 +537,81 @@ const FormField = ({
       </div>
       {error && <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>}
     </motion.div>
-  )
-}
+  );
+};
 
 interface StarRatingProps {
-  rating: number
-  register: any
-  currentRating: number
-  onRatingChange: (rating: number) => void
+  rating: number;
+  register: any;
+  currentRating: number;
+  onRatingChange: (rating: number) => void;
 }
 
-const StarRating = ({ rating, register, currentRating, onRatingChange }: StarRatingProps) => {
+const StarRating = ({
+  rating,
+  register,
+  currentRating,
+  onRatingChange,
+}: StarRatingProps) => {
   return (
     <label className="cursor-pointer">
-      <input 
-        type="radio" 
-        value={rating} 
-        {...register} 
-        className="hidden" 
+      <input
+        type="radio"
+        value={rating}
+        {...register}
+        className="hidden"
         onChange={() => onRatingChange(rating)}
       />
-      <Star 
+      <Star
         className={`w-8 h-8 transition-colors ${
-          rating <= currentRating 
-            ? "text-orange-400 fill-orange-400" 
+          rating <= currentRating
+            ? "text-orange-400 fill-orange-400"
             : "text-gray-300 hover:text-orange-300"
-        }`} 
+        }`}
       />
     </label>
-  )
-}
+  );
+};
 
 interface ProgressItemProps {
-  icon: React.ReactNode
-  label: string
-  isActive: boolean
-  isCompleted: boolean
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  isCompleted: boolean;
 }
 
-const ProgressItem = ({ icon, label, isActive, isCompleted }: ProgressItemProps) => {
+const ProgressItem = ({
+  icon,
+  label,
+  isActive,
+  isCompleted,
+}: ProgressItemProps) => {
   return (
     <div
-      className={`flex items-center gap-3 ${isActive ? "text-orange-500" : isCompleted ? "text-green-500" : "text-gray-500"}`}
+      className={`flex items-center gap-3 ${
+        isActive
+          ? "text-orange-500"
+          : isCompleted
+          ? "text-green-500"
+          : "text-gray-500"
+      }`}
     >
       <div
         className={`w-6 h-6 rounded-full flex items-center justify-center ${
-          isCompleted ? "bg-green-100 text-green-500" : isActive ? "bg-orange-100 text-orange-500" : "bg-gray-100"
+          isCompleted
+            ? "bg-green-100 text-green-500"
+            : isActive
+            ? "bg-orange-100 text-orange-500"
+            : "bg-gray-100"
         }`}
       >
         {icon}
       </div>
-      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>{label}</span>
+      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>
+        {label}
+      </span>
     </div>
-  )
-}
+  );
+};
 
-export default PageAddListing2
+export default PageAddListing2;
