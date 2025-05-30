@@ -1,46 +1,47 @@
 "use client";
-
 import type React from "react";
 import { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { motion } from "framer-motion";
 import { useFormData } from "../formItem";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { useForm, useFieldArray } from "react-hook-form";
 import { useListingStore } from "@/app/Store/hotelListingStore";
 import {
-  User,
-  Home,
-  ClipboardList,
-  MapPin,
-  Star,
+  X,
   Bed,
-  Clock,
-  Calendar,
   Plus,
+  Home,
+  User,
+  Star,
+  Clock,
   Trash2,
-  ArrowRight,
+  Upload,
+  MapPin,
+  Calendar,
   ArrowLeft,
-  CheckCircle,
+  ArrowRight,
   ShieldAlert,
+  CheckCircle,
+  ClipboardList,
 } from "lucide-react";
 
 const roomTypeOptions = ["Classic Room", "Deluxe Room", "Presidential Suite"];
 
 const amenityOptions = [
-  "Wi-Fi",
-  "Swimming Pool",
   "Gym",
-  "Restaurant",
   "Bar",
   "Spa",
-  "Room Service",
-  "Parking",
-  "Air Conditioning",
-  "Minibar",
   "Safe",
+  "Wi-Fi",
+  "Parking",
+  "Minibar",
+  "Restaurant",
+  "Room Service",
+  "Swimming Pool",
   "Laundry Service",
   "Conference Room",
   "Business Center",
+  "Air Conditioning",
 ];
 
 const PageAddListing2 = () => {
@@ -53,6 +54,9 @@ const PageAddListing2 = () => {
   const [starRating, setStarRating] = useState<number>(
     propertyDetails.starRating
   );
+
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
   const {
     register,
@@ -67,6 +71,32 @@ const PageAddListing2 = () => {
     control,
     name: "roomTypes",
   });
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files = event.target.files;
+      if (files) {
+        const newFiles = Array.from(files);
+        setUploadedPhotos([...uploadedPhotos, ...newFiles]);
+  
+        // Create preview URLs
+        newFiles.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    };
+  
+    const removePhoto = (index: number) => {
+      const newPhotos = uploadedPhotos.filter((_, i) => i !== index);
+      const newPreviews = photoPreviews.filter((_, i) => i !== index);
+      setUploadedPhotos(newPhotos);
+      setPhotoPreviews(newPreviews);
+    };
 
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
@@ -198,7 +228,9 @@ const PageAddListing2 = () => {
                     register={register("numberOfRooms", {
                       required: "Number of rooms is required",
                       min: { value: 1, message: "Must have at least 1 room" },
+                      max: { value: 100, message: "Cannot have more than 100 rooms" },
                     })}
+                    
                     placeholder="Total Number of Rooms"
                     delay={0.4}
                     type="number"
@@ -460,6 +492,67 @@ const PageAddListing2 = () => {
                     placeholder="Describe your property, its unique features, and what makes it special..."
                     className="w-full p-4 border border-gray-200 rounded-lg min-h-[150px] focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                   ></textarea>
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Property Photos
+                </motion.h3>
+
+                <div className="space-y-4">
+                  {/* Upload Area */}
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
+                    <div className="flex flex-col items-center">
+                      <Upload className="w-10 h-10 text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-500 mb-2">
+                        Drag and drop property photos here
+                      </p>
+                      <p className="text-xs text-gray-400 mb-4">or</p>
+                      <label className="py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        Browse Files
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Photo Previews */}
+                  {photoPreviews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {photoPreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview || "/placeholder.svg"}
+                            alt={`Room photo ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Upload high-quality images that showcase this property.
+                    Recommended: at least 3-5 photos.
+                  </p>
                 </div>
               </div>
 

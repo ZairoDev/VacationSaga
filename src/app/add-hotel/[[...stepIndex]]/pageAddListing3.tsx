@@ -753,6 +753,7 @@ const PageAddListing3 = () => {
                           required: "Maximum occupancy is required",
                           min: { value: 1, message: "Minimum occupancy is 1" },
                         })}
+                        max={100}
                         placeholder="Max Guests"
                         className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                         min="1"
