@@ -136,7 +136,7 @@ const PageAddListing4 = () => {
                     transition={{ duration: 0.4, delay: 0.3 }}
                     className="relative"
                   >
-                    <div className="flex border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all">
+                    <div className="flex border border-gray-200 overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all">
                       <div className="pl-4 pr-2 pt-3">
                         <FileText2 className="w-5 h-5 text-gray-400" />
                       </div>
@@ -173,7 +173,7 @@ const PageAddListing4 = () => {
                     <div className="space-y-3">
                       {(watch("houseRulesList") || [""]).map((rule: string, index: number) => (
                         <div key={index} className="flex items-start gap-2">
-                          <div className="flex border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all flex-1">
+                          <div className="flex border border-gray-200  overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all flex-1">
                             <div className="pl-4 pr-2 pt-3">
                               <div className="w-2 h-2 bg-gray-400 rounded-full mt-1"></div>
                             </div>

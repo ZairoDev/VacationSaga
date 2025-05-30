@@ -9,6 +9,8 @@ interface OwnerDetails {
   aadharCard: string
   managerName?: string
   managerContact?: string
+  countryCode?: string
+  isEmailVerified?: boolean
 }
 
 interface Location {

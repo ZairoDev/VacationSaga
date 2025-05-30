@@ -4,6 +4,7 @@ import type React from "react";
 import { useFormData } from "../formItem";
 import { useRouter } from "next/navigation";
 import { useListingStore } from "@/app/Store/hotelListingStore";
+import axios from "axios";
 import { motion } from "framer-motion";
 import {
   User,
@@ -29,17 +30,32 @@ import {
 
 const PageAddListing5 = () => {
   const { formData } = useFormData();
-  const { propertyDetails, ownerDetails, roomDetails, policies } =
+  const { propertyDetails, ownerDetails, roomDetails, policies,resetForm } =
     useListingStore();
 
   const router = useRouter();
 
-  const handleSubmit = () => {
-    // Here you would typically submit the data to your backend
-    console.log("Submitting listing data:", formData);
-    // For now, just show an alert
-    alert("Listing submitted successfully!");
-    router.push("/"); // Redirect to home or success page
+  const handleSubmit = async() => {
+    try{
+      const res=await axios.post("/api/hotels/addHotel",{
+        ownerDetails,
+        propertyDetails,
+        roomDetails,
+        policies,
+      });
+       if (res.status === 201) {
+      alert("Listing submitted successfully!");
+      resetForm(); // Reset the form data in the store
+      localStorage.removeItem("listing-form-storage"); // Clear local storage
+      router.push("/"); // Or your success page route
+    } else {
+      console.error("Failed to submit listing:", res.data.message);
+      alert(res.data.message || "Something went wrong while submitting.");
+    }
+
+    } catch (error) {
+      console.error("Error submitting listing:", error);
+    }
   };
 
   const goBack = () => {

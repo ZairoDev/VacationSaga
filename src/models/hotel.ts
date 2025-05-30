@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
+
 const HotelSchema = new mongoose.Schema({
   ownerDetails: {
     name: { type: String, required: true },
     email: { type: String, required: true },
+    isEmailVerified:{type: Boolean,default: false},
     phone: { type: String, required: true },
     alternateContact: { type: String },
     aadharCard: { type: String },
@@ -52,7 +55,7 @@ const HotelSchema = new mongoose.Schema({
 
   policies: {
     cancellationPolicy: { type: String },
-    houseRules: { type: String },
+    houseRules: [{ type: String }],
     allowPets: { type: Boolean, default: false },
     allowSmoking: { type: Boolean, default: false },
   },
@@ -72,6 +75,6 @@ const HotelSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
-
-export default mongoose.model("Hotel", HotelSchema);
+const Hotel = mongoose.models.Hotel || mongoose.model("Hotel", HotelSchema);
+export default Hotel;
  

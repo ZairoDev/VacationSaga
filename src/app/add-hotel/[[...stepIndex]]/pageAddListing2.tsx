@@ -137,7 +137,7 @@ const PageAddListing2 = () => {
           </div>
         </div>
 
-        {/* Main Form Area */}
+        
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -225,7 +225,7 @@ const PageAddListing2 = () => {
                             {...register(`roomTypes.${index}.type` as const, {
                               required: "Room type is required",
                             })}
-                            className="w-full p-3 pr-10 border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                            className="w-full p-3 pr-10 border border-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
                           >
                             <option value="">Select Room Type</option>
                             {roomTypeOptions.map((type) => (
@@ -526,7 +526,7 @@ const FormField = ({
       transition={{ duration: 0.4, delay }}
       className={`relative ${className}`}
     >
-      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all">
+      <div className="flex items-center border border-gray-200  overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all">
         {icon && <div className="pl-4 pr-2">{icon}</div>}
         <input
           type={type}
