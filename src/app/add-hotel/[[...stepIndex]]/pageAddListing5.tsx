@@ -45,9 +45,9 @@ const PageAddListing5 = () => {
       });
        if (res.status === 201) {
       alert("Listing submitted successfully!");
-      resetForm(); // Reset the form data in the store
-      localStorage.removeItem("listing-form-storage"); // Clear local storage
-      router.push("/"); // Or your success page route
+      resetForm(); 
+      localStorage.removeItem("listing-form-storage");
+      router.push("/"); 
     } else {
       console.error("Failed to submit listing:", res.data.message);
       alert(res.data.message || "Something went wrong while submitting.");
@@ -369,7 +369,7 @@ const PageAddListing5 = () => {
                             {room.roomType}
                           </h4>
                           <span className="text-lg font-semibold text-orange-600">
-                            ${room.pricePerNight}/night
+                            ${room.basePricePerNight}/night
                           </span>
                         </div>
 
@@ -389,7 +389,7 @@ const PageAddListing5 = () => {
                               <DollarSign className="w-4 h-4 text-gray-400" />
                             }
                             label="Price Per Night"
-                            value={`$${room.pricePerNight}`}
+                            value={`$${room.basePricePerNight}`}
                           />
                         </div>
 

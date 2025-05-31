@@ -42,16 +42,26 @@ interface PropertyDetails {
 }
 
 interface RoomDetail {
-  id: string
-  roomType: string
-  bedType: string
-  maxOccupancy: number
-  pricePerNight: string
-  description: string
-  amenities: string[]
-  customAmenities: string[]
-  photos: File[]
-  photoPreviews: string[]
+  id: string;
+  roomType: string;
+  bedType: string;
+  maxOccupancy: number;
+  basePricePerNight: number;
+  weeklyPricing?: {
+    monday?: number;
+    tuesday?: number;
+    wednesday?: number;
+    thursday?: number;
+    friday?: number;
+    saturday?: number;
+    sunday?: number;
+  };
+  pricePerExtraGuest: number;
+  description: string;
+  amenities: string[];
+  customAmenities: string[];
+  photos: File[];
+  photoPreviews: string[];
 }
 
 interface Policies {

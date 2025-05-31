@@ -41,17 +41,30 @@ const HotelSchema = new mongoose.Schema({
   },
 
   roomDetails: [
-    {
-      roomType: { type: String, required: true },
-      bedType: { type: String },
-      maxOccupancy: { type: Number, required: true },
-      pricePerNight: { type: Number, required: true },
-      roomAmenities: [{ type: String }],
-      roomPhotos: [{ type: String }],
-      roomDescription: { type: String },
-      isAvailable: { type: Boolean, default: true },
-    }
-  ],
+  {
+    roomType: { type: String, required: true },
+    bedType: { type: String },
+    maxOccupancy: { type: Number, required: true },
+    basePricePerNight: { type: Number, required: true },
+    
+    weeklyPricing: {
+      monday: { type: Number },
+      tuesday: { type: Number },
+      wednesday: { type: Number },
+      thursday: { type: Number },
+      friday: { type: Number },
+      saturday: { type: Number },
+      sunday: { type: Number },
+    },
+
+    pricePerExtraGuest: { type: Number, default: 0 },
+
+    roomAmenities: [{ type: String }],
+    roomPhotos: [{ type: String }],
+    roomDescription: { type: String },
+    isAvailable: { type: Boolean, default: true },
+  }
+],
 
   policies: {
     cancellationPolicy: { type: String },

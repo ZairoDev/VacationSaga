@@ -7,25 +7,7 @@ import { useFormData } from "../formItem";
 import { useRouter } from "next/navigation";
 import { useListingStore } from "@/app/Store/hotelListingStore";
 import { motion } from "framer-motion";
-import {
-  User,
-  Home,
-  ClipboardList,
-  FileText,
-  Bed,
-  IndianRupee,
-  Users,
-  ArrowRight,
-  ArrowLeft,
-  Info,
-  CheckCircle,
-  Plus,
-  X,
-  Upload,
-  Edit,
-  Trash2,
-  ShieldAlert,
-} from "lucide-react";
+import { User, Home, ClipboardList, FileText, Bed, IndianRupee, Users, ArrowRight, ArrowLeft, Info, CheckCircle, Plus, X, Upload, Edit, Trash2, ShieldAlert } from 'lucide-react';
 
 const roomTypeOptions = ["Classic Room", "Deluxe Room", "Presidential Suite"];
 
@@ -60,7 +42,17 @@ interface RoomTypeData {
   roomType: string;
   bedType: string;
   maxOccupancy: number;
-  pricePerNight: string;
+  basePricePerNight: number;
+  pricePerExtraGuest: number;
+  weeklyPricing: {
+    monday: number;
+    tuesday: number;
+    wednesday: number;
+    thursday: number;
+    friday: number;
+    saturday: number;
+    sunday: number;
+  };
   description: string;
   amenities: string[];
   customAmenities: string[];
@@ -101,7 +93,15 @@ const PageAddListing3 = () => {
       roomType: "",
       bedType: "",
       maxOccupancy: 2,
-      pricePerNight: "",
+      basePricePerNight: 0,
+      pricePerExtraGuest: 0,
+      mondayPrice: 0,
+      tuesdayPrice: 0,
+      wednesdayPrice: 0,
+      thursdayPrice: 0,
+      fridayPrice: 0,
+      saturdayPrice: 0,
+      sundayPrice: 0,
       description: "",
     },
   });
@@ -141,7 +141,7 @@ const PageAddListing3 = () => {
       const newFiles = Array.from(files);
       setUploadedPhotos([...uploadedPhotos, ...newFiles]);
 
-      // Create preview URLs
+      
       newFiles.forEach((file) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -189,7 +189,18 @@ const PageAddListing3 = () => {
       setValue("roomType", room.roomType);
       setValue("bedType", room.bedType);
       setValue("maxOccupancy", room.maxOccupancy);
-      setValue("pricePerNight", room.pricePerNight);
+      setValue("basePricePerNight", room.basePricePerNight);
+
+      setValue("pricePerExtraGuest", room.pricePerExtraGuest);
+
+      setValue("mondayPrice", room.weeklyPricing?.monday || 0);
+      setValue("tuesdayPrice", room.weeklyPricing?.tuesday || 0);
+      setValue("wednesdayPrice", room.weeklyPricing?.wednesday || 0);
+      setValue("thursdayPrice", room.weeklyPricing?.thursday || 0);
+      setValue("fridayPrice", room.weeklyPricing?.friday || 0);
+      setValue("saturdayPrice", room.weeklyPricing?.saturday || 0);
+      setValue("sundayPrice", room.weeklyPricing?.sunday || 0);
+
       setValue("description", room.description);
       setSelectedAmenities(room.amenities);
       setCustomAmenities(room.customAmenities);
@@ -210,7 +221,17 @@ const PageAddListing3 = () => {
       roomType: data.roomType,
       bedType: data.bedType,
       maxOccupancy: data.maxOccupancy,
-      pricePerNight: data.pricePerNight,
+      basePricePerNight: data.basePricePerNight,
+      pricePerExtraGuest: data.pricePerExtraGuest,
+      weeklyPricing: {
+        monday: data.mondayPrice,
+        tuesday: data.tuesdayPrice,
+        wednesday: data.wednesdayPrice,
+        thursday: data.thursdayPrice,
+        friday: data.fridayPrice,
+        saturday: data.saturdayPrice,
+        sunday: data.sundayPrice,
+      },
       description: data.description,
       amenities: selectedAmenities,
       customAmenities: customAmenities,
@@ -376,7 +397,7 @@ const PageAddListing3 = () => {
                               </div>
                               <div>
                                 <span className="font-medium">Price:</span> ₹
-                                {room.pricePerNight}/night
+                                {room.basePricePerNight || 0}/night
                               </div>
                               <div>
                                 <span className="font-medium">Photos:</span>{" "}
@@ -777,7 +798,7 @@ const PageAddListing3 = () => {
                       </div>
                       <input
                         type="number"
-                        {...register("pricePerNight", {
+                        {...register("basePricePerNight", {
                           required: "Price is required",
                           min: {
                             value: 0,
@@ -790,12 +811,97 @@ const PageAddListing3 = () => {
                         step="1"
                       />
                     </div>
-                    {errors.pricePerNight && (
+                    {errors.basePricePerNight && (
                       <p className="text-red-500 text-xs mt-1">
-                        {errors.pricePerNight.message}
+                        {errors.basePricePerNight.message}
                       </p>
                     )}
                   </div>
+
+                  {/* Price Per Extra Guest */}
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-600">
+                      Price Per Extra Guest
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <IndianRupee className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        {...register("pricePerExtraGuest", {
+                          min: {
+                            value: 0,
+                            message: "Price cannot be negative",
+                          },
+                        })}
+                        placeholder="Extra Guest Price"
+                        className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                        min="0"
+                        step="1"
+                      />
+                    </div>
+                    {errors.pricePerExtraGuest && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.pricePerExtraGuest.message}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Additional charge per guest beyond base occupancy (optional)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Weekly Pricing */}
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.25 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Weekly Pricing (Optional)
+                </motion.h3>
+  
+                <p className="text-sm text-gray-500 mb-4">
+                  Set different prices for each day of the week. Leave blank to use the base price per night.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { name: "mondayPrice", label: "Monday", day: "Mon" },
+                    { name: "tuesdayPrice", label: "Tuesday", day: "Tue" },
+                    { name: "wednesdayPrice", label: "Wednesday", day: "Wed" },
+                    { name: "thursdayPrice", label: "Thursday", day: "Thu" },
+                    { name: "fridayPrice", label: "Friday", day: "Fri" },
+                    { name: "saturdayPrice", label: "Saturday", day: "Sat" },
+                    { name: "sundayPrice", label: "Sunday", day: "Sun" },
+                  ].map((dayField) => (
+                    <div key={dayField.name} className="space-y-2">
+                      <label className="text-sm text-gray-600">
+                        {dayField.label}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <IndianRupee className="w-4 h-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="number"
+                          {...register(dayField.name as any, {
+                            min: {
+                              value: 0,
+                              message: "Price cannot be negative",
+                            },
+                          })}
+                          placeholder={`${dayField.day} Price`}
+                          className="w-full p-3 pl-9 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400 text-sm"
+                          min="0"
+                          step="1"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
