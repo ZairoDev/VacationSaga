@@ -26,6 +26,7 @@ import {
   ShieldAlert,
   Cigarette,
   PawPrint,
+  IndianRupee,
 } from "lucide-react";
 
 const PageAddListing5 = () => {
@@ -68,16 +69,16 @@ const PageAddListing5 = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      {/* Header */}
+     
       <header className="border-b border-gray-100 py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
         </div>
       </header>
 
-      {/* Main Content */}
+
       <main className="flex-1 flex">
-        {/* Left Sidebar - Progress */}
+        
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
             <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
@@ -119,7 +120,7 @@ const PageAddListing5 = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
+      
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -150,13 +151,13 @@ const PageAddListing5 = () => {
                     <User className="w-5 h-5 text-orange-500" />
                     Owner Details
                   </h3>
-                  <button
+                  {/* <button
                     onClick={() => editSection("owner")}
                     className="text-orange-500 hover:text-orange-600 flex items-center gap-1 text-sm"
                   >
                     <Edit3 className="w-4 h-4" />
                     Edit
-                  </button>
+                  </button> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -207,13 +208,13 @@ const PageAddListing5 = () => {
                     <Building2 className="w-5 h-5 text-orange-500" />
                     Property Details
                   </h3>
-                  <button
+                  {/* <button
                     onClick={() => editSection("1")}
                     className="text-orange-500 hover:text-orange-600 flex items-center gap-1 text-sm"
                   >
                     <Edit3 className="w-4 h-4" />
                     Edit
-                  </button>
+                  </button> */}
                 </div>
 
                 <div className="space-y-6">
@@ -303,9 +304,8 @@ const PageAddListing5 = () => {
                           )}
                         </div>
                       </div>
-                    )}
+                  )}
 
-                  {/* Check-in/Check-out Times */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InfoItem
                       icon={<Clock className="w-4 h-4 text-gray-400" />}
@@ -348,13 +348,13 @@ const PageAddListing5 = () => {
                     Room Details ({roomDetails.length}{" "}
                     {roomDetails.length === 1 ? "Room" : "Rooms"})
                   </h3>
-                  <button
+                  {/* <button
                     onClick={() => editSection("2")}
                     className="text-orange-500 hover:text-orange-600 flex items-center gap-1 text-sm"
                   >
                     <Edit3 className="w-4 h-4" />
                     Edit
-                  </button>
+                  </button> */}
                 </div>
 
                 <div className="space-y-6">
@@ -369,7 +369,7 @@ const PageAddListing5 = () => {
                             {room.roomType}
                           </h4>
                           <span className="text-lg font-semibold text-orange-600">
-                            ${room.basePricePerNight}/night
+                            ₹{room.basePricePerNight}/night
                           </span>
                         </div>
 
@@ -386,10 +386,10 @@ const PageAddListing5 = () => {
                           />
                           <InfoItem
                             icon={
-                              <DollarSign className="w-4 h-4 text-gray-400" />
+                              <IndianRupee className="w-4 h-4 text-gray-400" />
                             }
                             label="Price Per Night"
-                            value={`$${room.basePricePerNight}`}
+                            value={`₹${room.basePricePerNight}`}
                           />
                         </div>
 
@@ -407,7 +407,7 @@ const PageAddListing5 = () => {
                           </div>
                         )}
 
-                        {/* Room Amenities */}
+                  
                         {room.amenities && room.amenities.length > 0 && (
                           <div className="mb-4">
                             <h5 className="text-sm font-medium text-gray-700 mb-2">
@@ -428,7 +428,7 @@ const PageAddListing5 = () => {
                           </div>
                         )}
 
-                        {/* Custom Amenities */}
+                        
                         {room.customAmenities &&
                           room.customAmenities.length > 0 && (
                             <div className="mb-4">
@@ -450,7 +450,7 @@ const PageAddListing5 = () => {
                             </div>
                           )}
 
-                        {/* Room Photos */}
+                        
                         {room.photoPreviews &&
                           room.photoPreviews.length > 0 && (
                             <div>
@@ -490,7 +490,7 @@ const PageAddListing5 = () => {
                 </div>
               </motion.div>
 
-              {/* Policies Section */}
+              
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -502,13 +502,13 @@ const PageAddListing5 = () => {
                     <ShieldAlert className="w-5 h-5 text-orange-500" />
                     Policies
                   </h3>
-                  <button
+                  {/* <button
                     onClick={() => editSection("4")}
                     className="text-orange-500 hover:text-orange-600 flex items-center gap-1 text-sm"
                   >
                     <Edit3 className="w-4 h-4" />
                     Edit
-                  </button>
+                  </button> */}
                 </div>
 
                 <div className="space-y-6">
@@ -544,7 +544,7 @@ const PageAddListing5 = () => {
                 </div>
               </motion.div>
 
-              {/* Submit Section */}
+              
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

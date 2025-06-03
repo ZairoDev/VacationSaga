@@ -212,3 +212,6 @@ export const useListingStore = create<ListingFormState>()(
     }
   )
 )
+
+This is my zustand store and it is how i am accessing all this data from this store to make post call to make a property listing and now what i want to do is i want to store photos, property photos  in my bunny cdn and the url that i'll get as an output to mongo db that is the url how can i do this.
+

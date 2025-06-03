@@ -67,7 +67,7 @@ const PageAddListing2 = () => {
     defaultValues: propertyDetails,
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const {fields, append, remove } = useFieldArray({
     control,
     name: "roomTypes",
   });
@@ -109,6 +109,7 @@ const PageAddListing2 = () => {
   const onSubmit = (data: any) => {
     data.amenities = selectedAmenities;
     data.starRating = starRating;
+    data.propertyPhotos = uploadedPhotos;
     setPropertyDetails(data);
     router.push("/add-hotel/3");
   };
