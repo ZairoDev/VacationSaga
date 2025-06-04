@@ -1,48 +1,48 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface OwnerDetails {
-  name: string
-  email: string
-  phone: string
-  alternateContact?: string
-  aadharCard: string
-  managerName?: string
-  managerContact?: string
-  countryCode?: string
-  isEmailVerified?: boolean
+  name: string;
+  email: string;
+  phone: string;
+  alternateContact?: string;
+  aadharCard: string;
+  managerName?: string;
+  managerContact?: string;
+  countryCode?: string;
+  isEmailVerified?: boolean;
 }
 
 interface Location {
-  address: string
-  city: string
-  state: string
-  country: string
-  latitude?: number
-  longitude?: number
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface RoomType {
-  type: string
-  quantity: number
+  type: string;
+  quantity: number;
 }
 
-interface PropertyDetails {
-  propertyName: string
-  numberOfRooms: number
-  roomTypes: RoomType[]
-  starRating: number
-  amenities: string[],
-  propertyPhotos: File[],
-  location: Location
-  checkInTime: string
-  checkOutTime: string
-  operatingSince: string
-  description: string
-  isAvailable?: boolean
+export interface PropertyDetails {
+  propertyName: string;
+  numberOfRooms: number;
+  roomTypes: RoomType[];
+  starRating: number;
+  amenities: string[];
+  propertyPhotos: File[];
+  location: Location;
+  checkInTime: string;
+  checkOutTime: string;
+  operatingSince: string;
+  description: string;
+  isAvailable?: boolean;
 }
 
-interface RoomDetail {
+export interface RoomDetail {
   id: string;
   roomType: string;
   bedType: string;
@@ -66,67 +66,66 @@ interface RoomDetail {
 }
 
 interface Policies {
-  cancellationPolicy: string
-  houseRules: string[]
-  allowPets:boolean 
-  allowSmoking:boolean
+  cancellationPolicy: string;
+  houseRules: string[];
+  allowPets: boolean;
+  allowSmoking: boolean;
 }
 
 interface ListingFormState {
-  ownerDetails: OwnerDetails
-  propertyDetails: PropertyDetails
-  roomDetails: RoomDetail[]
-  policies: Policies
+  ownerDetails: OwnerDetails;
+  propertyDetails: PropertyDetails;
+  roomDetails: RoomDetail[];
+  policies: Policies;
 
-  setOwnerDetails: (details: OwnerDetails) => void
-  setPropertyDetails: (details: PropertyDetails) => void
-  setPolicies:(details:Policies) => void
+  setOwnerDetails: (details: OwnerDetails) => void;
+  setPropertyDetails: (details: PropertyDetails) => void;
+  setPolicies: (details: Policies) => void;
 
-  addRoomDetail: (room: RoomDetail) => void
-  updateRoomDetail: (id: string, room: RoomDetail) => void
-  removeRoomDetail: (id: string) => void
+  addRoomDetail: (room: RoomDetail) => void;
+  updateRoomDetail: (id: string, room: RoomDetail) => void;
+  removeRoomDetail: (id: string) => void;
 
-
-  resetForm: () => void
+  resetForm: () => void;
 }
 
 export const useListingStore = create<ListingFormState>()(
   persist(
     (set) => ({
       ownerDetails: {
-        name: '',
-        email: '',
-        phone: '',
-        alternateContact: '',
-        aadharCard: '',
-        managerName: '',
-        managerContact: '',
+        name: "",
+        email: "",
+        phone: "",
+        alternateContact: "",
+        aadharCard: "",
+        managerName: "",
+        managerContact: "",
       },
 
       propertyDetails: {
-        propertyName: '',
+        propertyName: "",
         numberOfRooms: 0,
         roomTypes: [],
         starRating: 0,
         amenities: [],
         propertyPhotos: [],
         location: {
-          address: '',
-          city: '',
-          state: '',
-          country: '',
+          address: "",
+          city: "",
+          state: "",
+          country: "",
         },
-        checkInTime: '',
-        checkOutTime: '',
-        operatingSince: '',
+        checkInTime: "",
+        checkOutTime: "",
+        operatingSince: "",
         isAvailable: true,
-        description: '',
+        description: "",
       },
 
       roomDetails: [],
 
       policies: {
-        cancellationPolicy: '',
+        cancellationPolicy: "",
         houseRules: [],
         allowPets: false,
         allowSmoking: false,
@@ -138,22 +137,35 @@ export const useListingStore = create<ListingFormState>()(
           ownerDetails: details,
         })),
 
-      setPropertyDetails: (details) =>
+      // setPropertyDetails: (details) =>
+      //   set((state) => ({
+      //     ...state,
+      //     propertyDetails: details,
+      //   })),
+
+      setPropertyDetails: (details) => {
+        console.log("property details in store: ", details);
+        set((state) => ({ ...state, propertyDetails: details }));
+      },
+
+      setPolicies: (details) =>
         set((state) => ({
           ...state,
-          propertyDetails: details,
+          policies: details,
         })),
 
-        setPolicies:(details) =>
-          set((state) => ({
-            ...state,
-            policies:details, 
-          }) ),
+      // addRoomDetail: (room) =>
+      //   set((state) => ({
+      //     ...state,
+      //     roomDetails: [...state.roomDetails, room],
+      //   })),
 
-      addRoomDetail: (room) =>
+      addRoomDetail: (room) => {
+        console.log("Adding room detail: ", room);
         set((state) => ({
           roomDetails: [...state.roomDetails, room],
-        })),
+        }));
+      },
 
       updateRoomDetail: (id, updatedRoom) =>
         set((state) => ({
@@ -170,45 +182,45 @@ export const useListingStore = create<ListingFormState>()(
       resetForm: () =>
         set(() => ({
           ownerDetails: {
-            name: '',
-            email: '',
-            phone: '',
-            alternateContact: '',
-            aadharCard: '',
-            managerName: '',
-            managerContact: '',
+            name: "",
+            email: "",
+            phone: "",
+            alternateContact: "",
+            aadharCard: "",
+            managerName: "",
+            managerContact: "",
           },
           propertyDetails: {
-            propertyName: '',
+            propertyName: "",
             numberOfRooms: 0,
             roomTypes: [],
             starRating: 0,
             amenities: [],
             propertyPhotos: [],
             location: {
-              address: '',
-              city: '',
-              state: '',
-              country: '',
+              address: "",
+              city: "",
+              state: "",
+              country: "",
             },
-            checkInTime: '',
-            checkOutTime: '',
-            operatingSince: '',
+            checkInTime: "",
+            checkOutTime: "",
+            operatingSince: "",
             isAvailable: true,
-            description: '',
+            description: "",
           },
           roomDetails: [],
 
-          policies :{
-            cancellationPolicy: '',
+          policies: {
+            cancellationPolicy: "",
             houseRules: [],
-            allowPets:false,
-            allowSmoking:false,
-          }
+            allowPets: false,
+            allowSmoking: false,
+          },
         })),
     }),
     {
-      name: 'listing-form-storage',
+      name: "listing-form-storage",
     }
   )
-)
+);

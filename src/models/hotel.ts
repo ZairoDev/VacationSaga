@@ -60,7 +60,7 @@ const HotelSchema = new mongoose.Schema({
     pricePerExtraGuest: { type: Number, default: 0 },
 
     roomAmenities: [{ type: String }],
-    roomPhotos: [{ type: String }],
+    photos: [{ type: String }],
     roomDescription: { type: String },
     isAvailable: { type: Boolean, default: true },
   }

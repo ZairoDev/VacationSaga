@@ -7,7 +7,25 @@ import { useFormData } from "../formItem";
 import { useRouter } from "next/navigation";
 import { useListingStore } from "@/app/Store/hotelListingStore";
 import { motion } from "framer-motion";
-import { User, Home, ClipboardList, FileText, Bed, IndianRupee, Users, ArrowRight, ArrowLeft, Info, CheckCircle, Plus, X, Upload, Edit, Trash2, ShieldAlert } from 'lucide-react';
+import {
+  User,
+  Home,
+  ClipboardList,
+  FileText,
+  Bed,
+  IndianRupee,
+  Users,
+  ArrowRight,
+  ArrowLeft,
+  Info,
+  CheckCircle,
+  Plus,
+  X,
+  Upload,
+  Edit,
+  Trash2,
+  ShieldAlert,
+} from "lucide-react";
 
 const roomTypeOptions = ["Classic Room", "Deluxe Room", "Presidential Suite"];
 
@@ -37,7 +55,7 @@ const roomAmenityOptions = [
   "Wardrobe",
 ];
 
-interface RoomTypeData {
+export interface RoomDetails {
   id: string;
   roomType: string;
   bedType: string;
@@ -64,8 +82,7 @@ const PageAddListing3 = () => {
   const { formData, setFormData } = useFormData();
   const router = useRouter();
   const { propertyDetails, setPropertyDetails } = useListingStore();
-  // Initialize with existing room types or empty array
-  // const [roomTypes, setRoomTypes] = useState<RoomTypeData[]>(formData.roomTypes || [])
+  console.log("property details on page 3", propertyDetails);
   const { roomDetails, addRoomDetail, updateRoomDetail, removeRoomDetail } =
     useListingStore();
 
@@ -80,6 +97,9 @@ const PageAddListing3 = () => {
   const [showAddAmenity, setShowAddAmenity] = useState(false);
   const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [roomTypeImages, setRoomTypeImages] = useState<{
+    [key: string]: File[];
+  }>();
 
   const {
     register,
@@ -135,22 +155,34 @@ const PageAddListing3 = () => {
     setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
   };
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = (
+    roomType: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = event.target.files;
     if (files) {
       const newFiles = Array.from(files);
-      setUploadedPhotos([...uploadedPhotos, ...newFiles]);
-
-      
-      newFiles.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
-          }
-        };
-        reader.readAsDataURL(file);
+      console.log("room photos: ", newFiles, roomType);
+      setUploadedPhotos((prev) => [...prev, ...newFiles]);
+      console.log("room details on page 3: ", roomDetails);
+      roomDetails.forEach((room) => {
+        if (room.roomType === roomType) {
+          room.photos = newFiles;
+        }
       });
+      setRoomTypeImages((prev) => ({ ...prev, [roomType]: newFiles }));
+
+      console.log("room details after upload: ", roomDetails);
+
+      // roomDetails.newFiles.forEach((file) => {
+      //   const reader = new FileReader();
+      //   reader.onload = (e) => {
+      //     if (e.target?.result) {
+      //       setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
+      //     }
+      //   };
+      //   reader.readAsDataURL(file);
+      // });
     }
   };
 
@@ -216,7 +248,7 @@ const PageAddListing3 = () => {
   };
 
   const onSubmitRoomDetails = (data: any) => {
-    const roomData: RoomTypeData = {
+    const roomData: RoomDetails = {
       id: editingRoomId || Date.now().toString(),
       roomType: data.roomType,
       bedType: data.bedType,
@@ -235,7 +267,7 @@ const PageAddListing3 = () => {
       description: data.description,
       amenities: selectedAmenities,
       customAmenities: customAmenities,
-      photos: uploadedPhotos,
+      photos: roomTypeImages?.[data.roomType] || [],
       photoPreviews: photoPreviews,
     };
 
@@ -847,7 +879,8 @@ const PageAddListing3 = () => {
                       </p>
                     )}
                     <p className="text-xs text-gray-500">
-                      Additional charge per guest beyond base occupancy (optional)
+                      Additional charge per guest beyond base occupancy
+                      (optional)
                     </p>
                   </div>
                 </div>
@@ -863,9 +896,10 @@ const PageAddListing3 = () => {
                 >
                   Weekly Pricing (Optional)
                 </motion.h3>
-  
+
                 <p className="text-sm text-gray-500 mb-4">
-                  Set different prices for each day of the week. Leave blank to use the base price per night.
+                  Set different prices for each day of the week. Leave blank to
+                  use the base price per night.
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1068,7 +1102,9 @@ const PageAddListing3 = () => {
                           type="file"
                           multiple
                           accept="image/*"
-                          onChange={handlePhotoUpload}
+                          onChange={(e) =>
+                            handlePhotoUpload(selectedRoomType, e)
+                          }
                           className="hidden"
                         />
                       </label>

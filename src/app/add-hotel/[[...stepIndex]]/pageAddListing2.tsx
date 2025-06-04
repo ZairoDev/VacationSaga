@@ -67,36 +67,37 @@ const PageAddListing2 = () => {
     defaultValues: propertyDetails,
   });
 
-  const {fields, append, remove } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "roomTypes",
   });
 
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      if (files) {
-        const newFiles = Array.from(files);
-        setUploadedPhotos([...uploadedPhotos, ...newFiles]);
-  
-        // Create preview URLs
-        newFiles.forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
-            }
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-    };
-  
-    const removePhoto = (index: number) => {
-      const newPhotos = uploadedPhotos.filter((_, i) => i !== index);
-      const newPreviews = photoPreviews.filter((_, i) => i !== index);
-      setUploadedPhotos(newPhotos);
-      setPhotoPreviews(newPreviews);
-    };
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setUploadedPhotos([...uploadedPhotos, ...newFiles]);
+
+      // Create preview URLs
+      newFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    console.log("uploaded property details: ", propertyDetails);
+  };
+
+  const removePhoto = (index: number) => {
+    const newPhotos = uploadedPhotos.filter((_, i) => i !== index);
+    const newPreviews = photoPreviews.filter((_, i) => i !== index);
+    setUploadedPhotos(newPhotos);
+    setPhotoPreviews(newPreviews);
+  };
 
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
@@ -110,6 +111,7 @@ const PageAddListing2 = () => {
     data.amenities = selectedAmenities;
     data.starRating = starRating;
     data.propertyPhotos = uploadedPhotos;
+    console.log("submitted data", data);
     setPropertyDetails(data);
     router.push("/add-hotel/3");
   };
@@ -168,7 +170,6 @@ const PageAddListing2 = () => {
           </div>
         </div>
 
-        
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -229,9 +230,11 @@ const PageAddListing2 = () => {
                     register={register("numberOfRooms", {
                       required: "Number of rooms is required",
                       min: { value: 1, message: "Must have at least 1 room" },
-                      max: { value: 100, message: "Cannot have more than 100 rooms" },
+                      max: {
+                        value: 100,
+                        message: "Cannot have more than 100 rooms",
+                      },
                     })}
-                    
                     placeholder="Total Number of Rooms"
                     delay={0.4}
                     type="number"

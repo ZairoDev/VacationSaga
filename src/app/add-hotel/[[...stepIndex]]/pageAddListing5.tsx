@@ -3,7 +3,11 @@
 import type React from "react";
 import { useFormData } from "../formItem";
 import { useRouter } from "next/navigation";
-import { useListingStore } from "@/app/Store/hotelListingStore";
+import {
+  PropertyDetails,
+  RoomDetail,
+  useListingStore,
+} from "@/app/Store/hotelListingStore";
 import axios from "axios";
 import { motion } from "framer-motion";
 import {
@@ -28,34 +32,76 @@ import {
   PawPrint,
   IndianRupee,
 } from "lucide-react";
+import { useBunnyUpload } from "@/utils/bunnyStorage";
 
 const PageAddListing5 = () => {
   const { formData } = useFormData();
-  const { propertyDetails, ownerDetails, roomDetails, policies,resetForm } =
+  const { propertyDetails, ownerDetails, roomDetails, policies, resetForm } =
     useListingStore();
+
+  console.log("room detils on page 5: ", roomDetails);
 
   const router = useRouter();
 
-  const handleSubmit = async() => {
-    try{
-      const res=await axios.post("/api/hotels/addHotel",{
+  const { uploadFiles } = useBunnyUpload();
+
+  const handleSubmit = async () => {
+    console.log("clicked");
+    try {
+      const propertyImagesResponse = await uploadFiles(
+        propertyDetails.propertyPhotos as File[],
+        "HotelPhotos"
+      );
+
+      // const roomImagesResponse = await Promise.all(
+      //   roomDetails.map(async (room: RoomDetail) => {
+      //     const roomImageUpload = await uploadFiles(
+      //       room.photos as File[],
+      //       `HotelPhotos/${room.roomType}`
+      //     );
+      //     return {
+      //       roomType: room.roomType,
+      //       imageUrls: roomImageUpload.imageUrls,
+      //     };
+      //   })
+      // );
+
+      const newRoomDetails = await Promise.all(
+        roomDetails.map(async (room: RoomDetail) => {
+          const imageUrls = await uploadFiles(
+            room.photos as File[],
+            `HotelPhotos/${room.roomType}`
+          );
+          return { ...room, photos: imageUrls.imageUrls };
+        })
+      );
+
+      console.log("new Room Details: ", newRoomDetails);
+
+      console.log("here at the api hitpoint ");
+      const res = await axios.post("/api/hotels/addHotel", {
         ownerDetails,
-        propertyDetails,
-        roomDetails,
+        propertyDetails: {
+          ...propertyDetails,
+          propertyPhotos: propertyImagesResponse.imageUrls,
+        },
+        roomDetails: newRoomDetails,
         policies,
       });
-       if (res.status === 201) {
-      alert("Listing submitted successfully!");
-      resetForm(); 
-      localStorage.removeItem("listing-form-storage");
-      router.push("/"); 
-    } else {
-      console.error("Failed to submit listing:", res.data.message);
-      alert(res.data.message || "Something went wrong while submitting.");
-    }
 
+      console.log("Response from API: ", res.data);
+      if (res.status === 201) {
+        alert("Listing submitted successfully!");
+        resetForm();
+        localStorage.removeItem("listing-form-storage");
+        router.push("/");
+      } else {
+        console.error("Failed to submit listing:", res.data.message);
+        alert(res.data.message || "Something went wrong while submitting.");
+      }
     } catch (error) {
-      console.error("Error submitting listing:", error);
+      console.error("Error uploading images:", error);
+      alert("Failed to upload images. Please try again.");
     }
   };
 
@@ -63,22 +109,19 @@ const PageAddListing5 = () => {
     router.push("/add-listing/2");
   };
 
-  const editSection = (step: string) => {
-    router.push("/");
-  };
+  // const editSection = (step: string) => {
+  //   router.push("/");
+  // };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-     
       <header className="border-b border-gray-100 py-6 px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
         </div>
       </header>
 
-
       <main className="flex-1 flex">
-        
         <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
           <div className="space-y-6">
             <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
@@ -120,7 +163,6 @@ const PageAddListing5 = () => {
           </div>
         </div>
 
-      
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             <motion.div
@@ -304,7 +346,7 @@ const PageAddListing5 = () => {
                           )}
                         </div>
                       </div>
-                  )}
+                    )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <InfoItem
@@ -407,7 +449,6 @@ const PageAddListing5 = () => {
                           </div>
                         )}
 
-                  
                         {room.amenities && room.amenities.length > 0 && (
                           <div className="mb-4">
                             <h5 className="text-sm font-medium text-gray-700 mb-2">
@@ -428,7 +469,6 @@ const PageAddListing5 = () => {
                           </div>
                         )}
 
-                        
                         {room.customAmenities &&
                           room.customAmenities.length > 0 && (
                             <div className="mb-4">
@@ -450,7 +490,6 @@ const PageAddListing5 = () => {
                             </div>
                           )}
 
-                        
                         {room.photoPreviews &&
                           room.photoPreviews.length > 0 && (
                             <div>
@@ -490,7 +529,6 @@ const PageAddListing5 = () => {
                 </div>
               </motion.div>
 
-              
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -544,7 +582,6 @@ const PageAddListing5 = () => {
                 </div>
               </motion.div>
 
-              
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
