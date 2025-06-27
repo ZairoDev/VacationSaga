@@ -1,24 +1,18 @@
 import { useEffect } from "react";
 import { createGlobalState } from "react-hooks-global-state";
-
 const initialState = { isDarkmode: false };
 const { useGlobalState } = createGlobalState(initialState);
 
 export const useThemeMode = () => {
   const [isDarkMode, setIsDarkMode] = useGlobalState("isDarkmode");
-
   useEffect(() => {
-    // Enbale this if you want use the dark-mode for default mode.
-    // if (!localStorage.theme) {
-    //   localStorage.theme = "dark";
-    // }
-    //
+    
     if (localStorage.theme === "dark") {
       toDark();
     } else {
       toLight();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Check if the system prefers dark mode
   }, []);
 
   const toDark = () => {

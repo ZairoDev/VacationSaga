@@ -33,7 +33,7 @@ export interface AuthorType {
   email?: string;
   count: number;
   desc: string;
-  jobName: string;
+  // jobName: string;
   href: Route<string>;
   starRating?: number;
 }

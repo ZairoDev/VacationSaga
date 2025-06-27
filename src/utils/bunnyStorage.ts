@@ -40,7 +40,7 @@ export const useBunnyUpload = () => {
 
     setLoading(true);
 
-    const imageUrls: string[] = [];
+    const imageUrls: string[] = []; 
     const folderName = name ? name : "HotelImages";
 
     try {
