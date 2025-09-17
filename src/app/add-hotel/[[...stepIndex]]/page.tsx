@@ -1,5 +1,9 @@
 import PageAddListing1 from "./pageAddListing1";
 import PageAddListing2 from "./pageAddListing2";
+import PageAddListing3 from "./pageAddListing3";
+import PageAddListing4 from "./pageAddListing4";
+import PageAddListing5 from "./pageAddListing5";
+
 const Page = ({
   params,
   searchParams,
@@ -15,6 +19,15 @@ const Page = ({
     case 2:
       ContentComponent = PageAddListing2;
       break;
+    case 3:
+      ContentComponent = PageAddListing3;
+      break;
+    case 4:
+      ContentComponent = PageAddListing4;
+      break;
+    case 5:
+      ContentComponent = PageAddListing5;
+      break;
     default:
       ContentComponent = PageAddListing1;
       break;
@@ -23,5 +36,4 @@ const Page = ({
 
   return <ContentComponent />;
 };
-
 export default Page;

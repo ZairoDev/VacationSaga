@@ -1,0 +1,39 @@
+[33m5122485[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m changes in listing-stay-detail page
+[33m00447dc[m[33m ([m[1;31morigin/anix[m[33m, [m[1;32manix[m[33m)[m chages for long term properties
+[33m668259f[m listing pages ui
+[33mce244f7[m added listing type page
+[33mb3a7146[m added google analytics tag
+[33m367eb23[m completed callback form
+[33mc3059e6[m fixed UI of callback form
+[33m3dcb84a[m added video
+[33m925f088[m fixed some errors in landing-page
+[33m7631f06[m setup twilio for OTP
+[33m5ac0aec[m merged anix
+[33m3c6c08d[m pushed landing-page
+[33m42a93ba[m added landing-page
+[33mc606a91[m landing page all features completed
+[33m0044148[m landing page layout error fixed
+[33mb88c36f[m landing page
+[33mcfb0bd4[m Merge branch 'main' of https://github.com/ZairoDev/VacationSaga
+[33m387b6c8[m added editro in editProperty page
+[33m89a1aef[m refactored username on preview page
+[33mc85a8ae[m deleted cookies upon logout
+[33m10d1aee[m used token from store in header for profile/login
+[33mbdf6daf[m added weekly discount, price per day calculation
+[33m5b074a9[m added block dates feature
+[33mb5c88c2[m added seach in start your search apge
+[33ma59bd52[m merged anix
+[33md0bb20c[m conflicts resolved
+[33m0e3fbce[m resolved password reset issue
+[33m7179d73[m[33m ([m[1;31morigin/aviral[m[33m)[m added PUBLIC URL in env to send forgot password mails
+[33mf91e02d[m ui fixed
+[33m49edb18[m changes in traveller-help and privacy-policy page
+[33m81c8d9a[m fixed apos and quot
+[33m5fd9533[m room listing page has been created
+[33m27aacdd[m traveller search qurstion fix
+[33mc06c6ec[m footer links
+[33m42891b4[m check
+[33mfa65455[m privacy policy page is created
+[33mafe4161[m pinterest url fix
+[33m9c50b2a[m Reinitialized VS
+[33me3cf1f7[m created privacy policy page

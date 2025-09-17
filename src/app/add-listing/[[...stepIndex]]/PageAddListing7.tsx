@@ -88,12 +88,6 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
     return savedFlag ? JSON.parse(savedFlag) : booleanArray;
   });
 
-  //TODO: initialising portionCoverFileUrls of partitionSizeLength & each partion has 5 images
-  // const emptyArrayOf5 = emptyStringArrayGenerator(5);
-  // const newArray = Array.from(
-  //     { length: PartitionValueinPage7 },
-  //     () => emptyArrayOf5
-  // );
 
   useEffect(() => {
     localStorage.setItem("propertyCoverFileUrl", propertyCoverFileUrl);
@@ -422,11 +416,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                       onClick={() => setPropertyCoverFileUrl("")}
                     />
                     <div className="flex flex-wrap gap-2">
-                      {/* <img
-                        src={propertyCoverFileUrl}
-                        className="w-48 h-48 rounded-lg"
-                      /> */}
-                      {/* <Image src={propertyCoverFileUrl} alt="" className="w-48 h-48 rounded-lg" width={200} height={200} /> */}
+                     
                       <img
                         src={propertyCoverFileUrl}
                         alt="Cover Image"
@@ -435,19 +425,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                     </div>
                   </div>
                 )}
-                {/* {propertyCoverFileLoading && (
-                  <RotatingLines
-                    visible={true}
-                    // height="96"
-                    width="96"
-                    // color="orange"
-                    strokeWidth="5"
-                    animationDuration="0.75"
-                    ariaLabel="rotating-lines-loading"
-                    // wrapperStyle={{}}
-                    // wrapperClass=""
-                  />
-                )}  */}
+
                 <div className="flex text-sm text-neutral-6000 dark:text-neutral-300">
                   <label
                     htmlFor={`file-upload`}
@@ -460,11 +438,11 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                       type="file"
                       className="sr-only"
                       accept="image/*"
-                      // onClick={(e) => uploadFile(e, index)}
+                      
                       onChange={(e) => uploadPropertyCoverFile(e)}
                     />
                   </label>
-                  {/* <p className="pl-1">or drag and drop</p> */}
+                 
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   PNG, JPG, GIF up to 10MB
@@ -509,13 +487,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                     <div className=" flex gap-2 w-full">
                       {Array.from({ length: 5 }, () => "").map((_, i) => (
                         <div className="flex flex-wrap gap-4 mx-2" key={i}>
-                          {/* <MdCancel className=" text-right ml-auto text-xl cursor-pointer mt-12"/> */}
-                          {/* <img
-                            src={propertyPictureUrls[i]}
-                            alt="No Image"
-                            className="w-28 h-28 object-contain rounded-lg  border border-gray-500"
-                          /> */}
-                          {/* <Image src={propertyPictureUrls[i]} alt="No Image" className="w-28 h-28 object-contain rounded-lg  border border-gray-500" width={200} height={200}/> */}
+                          
                           <img
                             src={propertyPictureUrls[i]}
                             alt="Property Pictures"
@@ -526,21 +498,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                     </div>
                   </div>
                 )}
-                {/* {propertyPicturesLoading && (
-                  <div className=" w-full flex justify-center">
-                    <RotatingLines
-                      visible={true}
-                      // height="96"
-                      width="96"
-                      // color="grey"
-                      strokeWidth="5"
-                      animationDuration="0.75"
-                      ariaLabel="rotating-lines-loading"
-                      // wrapperStyle={{}}
-                      // wrapperClass=""
-                    />
-                  </div>
-                )} */}
+                
                 <div className="flex text-sm text-neutral-6000 dark:text-neutral-300 justify-center">
                   <label
                     htmlFor="file-upload-2"
@@ -557,7 +515,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                       onChange={(e) => uploadPropertyPictures(e)}
                     />
                   </label>
-                  {/* <p className="pl-1">or drag and drop</p> */}
+                  
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   PNG, JPG, GIF up to 10MB
@@ -571,7 +529,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
         <div key={index}>
           <div>
             <h2 className="text-2xl font-semibold">
-              {/* <span>{index}</span>Pictures of the place */}
+              
               <span>Portion {index + 1}</span>
             </h2>
             <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
@@ -581,13 +539,11 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
           </div>
 
           <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
-          {/* FORM */}
+          
           <div className="space-y-8">
             <div>
               <span className="text-lg font-semibold">Cover image</span>
-              {/* <div>
-                <h1>Image Upload</h1>
-              </div> */}
+              
               <div className="mt-5 ">
                 <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-neutral-300 dark:border-neutral-6000 border-dashed rounded-md">
                   <div className="space-y-1 text-center flex flex-col items-center">
@@ -622,14 +578,10 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                               return newCoverFileUrls;
                             });
                           }}
-                          // onClick={handleClickOnCross}
+                          
                         />
                         <div className="flex flex-wrap gap-2">
-                          {/* <img
-                            src={portionCoverFileUrls[index]}
-                            className="w-408 h-48 object-contain rounded-lg"
-                          /> */}
-                          {/* <Image src={portionCoverFileUrls[index]} alt="No-image" className="w-408 h-48 object-contain rounded-lg" width={200} height={200}/> */}
+                          
                           <img
                             src={portionCoverFileUrls[index]}
                             alt="Portion Cover Image"
@@ -638,21 +590,7 @@ const PageAddListing7: FC<PageAddListing7Props> = () => {
                         </div>
                       </div>
                     )}
-                    {/* {portionCoverFileLoading[index] && (
-                      <div className=" w-full flex justify-center">
-                        <RotatingLines
-                          visible={true}
-                          // height="96"
-                          width="96"
-                          // color="grey"
-                          strokeWidth="5"
-                          animationDuration="0.75"
-                          ariaLabel="rotating-lines-loading"
-                          // wrapperStyle={{}}
-                          // wrapperClass=""
-                        />
-                      </div>
-                    )} */}
+                    
                     <div className="flex text-sm text-neutral-6000 dark:text-neutral-300">
                       <label
                         htmlFor={`file-upload-${index}`}

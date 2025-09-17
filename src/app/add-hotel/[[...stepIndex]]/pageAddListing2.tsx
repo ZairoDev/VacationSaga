@@ -1,813 +1,713 @@
 "use client";
-import React, { FC, useState, useEffect } from "react";
+import type React from "react";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useFormData } from "../formItem";
+import { useRouter } from "next/navigation";
+import { useForm, useFieldArray } from "react-hook-form";
+import { useListingStore } from "@/app/Store/hotelListingStore";
+import {
+  X,
+  Bed,
+  Plus,
+  Home,
+  User,
+  Star,
+  Clock,
+  Trash2,
+  Upload,
+  MapPin,
+  Calendar,
+  ArrowLeft,
+  ArrowRight,
+  ShieldAlert,
+  CheckCircle,
+  ClipboardList,
+} from "lucide-react";
 
-// Input component
-const Input: FC<{
-  type?: string;
-  value: string | number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
-  className?: string;
-  min?: number;
-  step?: string;
-}> = ({ type = "text", value, onChange, placeholder, className = "", min, step }) => {
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className={`w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${className}`}
-      min={min}
-      step={step}
-    />
+const roomTypeOptions = ["Classic Room", "Deluxe Room", "Presidential Suite"];
+
+const amenityOptions = [
+  "Gym",
+  "Bar",
+  "Spa",
+  "Safe",
+  "Wi-Fi",
+  "Parking",
+  "Minibar",
+  "Restaurant",
+  "Room Service",
+  "Swimming Pool",
+  "Laundry Service",
+  "Conference Room",
+  "Business Center",
+  "Air Conditioning",
+];
+
+const PageAddListing2 = () => {
+  const { propertyDetails, setPropertyDetails } = useListingStore();
+  const { formData, setFormData } = useFormData();
+  const router = useRouter();
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
+    propertyDetails?.amenities || []
   );
-};
-
-// Select component
-const Select: FC<{
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  children: React.ReactNode;
-}> = ({ value, onChange, children }) => {
-  return (
-    <select
-      value={value}
-      onChange={onChange}
-      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-    >
-      {children}
-    </select>
+  const [starRating, setStarRating] = useState<number>(
+    propertyDetails.starRating
   );
-};
 
-// Textarea component
-const Textarea: FC<{
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  rows?: number;
-  placeholder?: string;
-}> = ({ value, onChange, rows = 3, placeholder }) => {
-  return (
-    <textarea
-      value={value}
-      onChange={onChange}
-      rows={rows}
-      placeholder={placeholder}
-      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-    />
-  );
-};
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
-// FormItem component
-const FormItem: FC<{
-  label: string;
-  desc?: string;
-  children: React.ReactNode;
-}> = ({ label, desc, children }) => {
-  return (
-    <div className="flex flex-col space-y-2 mb-4">
-      <label className="text-sm font-medium text-neutral-700">{label}</label>
-      {desc && <p className="text-xs text-neutral-500">{desc}</p>}
-      {children}
-    </div>
-  );
-};
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    defaultValues: propertyDetails,
+  });
 
-// StarRating component
-const StarRating: FC<{
-  rating: number;
-  onChange: (rating: number) => void;
-}> = ({ rating, onChange }) => {
-  return (
-    <div className="flex space-x-2">
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          onClick={() => onChange(star)}
-          className={`text-2xl ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-        >
-          ★
-        </button>
-      ))}
-    </div>
-  );
-};
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "roomTypes",
+  });
 
-// TimePicker component
-const TimePicker: FC<{
-  value: string;
-  onChange: (time: string) => void;
-}> = ({ value, onChange }) => {
-  return (
-    <input
-      type="time"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-    />
-  );
-};
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setUploadedPhotos([...uploadedPhotos, ...newFiles]);
 
-// DatePicker component
-const DatePicker: FC<{
-  date: Date | null;
-  onChange: (date: Date | null) => void;
-}> = ({ date, onChange }) => {
-  return (
-    <input
-      type="date"
-      value={date ? date.toISOString().split('T')[0] : ''}
-      onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
-      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-    />
-  );
-};
-
-// LocationInput component
-const LocationInput: FC<{
-  defaultValue: string;
-  onChange: (address: string, lat: number | null, lng: number | null) => void;
-}> = ({ defaultValue, onChange }) => {
-  const [address, setAddress] = useState(defaultValue);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real implementation, this would use a geocoding service
-    onChange(address, null, null);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="flex space-x-2">
-      <input
-        type="text"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        placeholder="Enter location"
-        className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-      />
-      <button
-        type="submit"
-        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-      >
-        Find
-      </button>
-    </form>
-  );
-};
-
-// PhotoUploader component
-const PhotoUploader: FC<{
-  photos: string[];
-  onChange: (photos: string[]) => void;
-  maxPhotos: number;
-}> = ({ photos, onChange, maxPhotos }) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length + photos.length > maxPhotos) {
-      alert(`Maximum ${maxPhotos} photos allowed`);
-      return;
+      // Create preview URLs
+      newFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            setPhotoPreviews((prev) => [...prev, e.target!.result as string]);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
-
-    // In a real implementation, this would handle file uploads
-    const newPhotos = files.map(file => URL.createObjectURL(file));
-    onChange([...photos, ...newPhotos]);
+    console.log("uploaded property details: ", propertyDetails);
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-4">
-        {photos.map((photo, index) => (
-          <div key={index} className="relative w-24 h-24">
-            <img src={photo} alt="" className="w-full h-full object-cover rounded-lg" />
-            <button
-              onClick={() => onChange(photos.filter((_, i) => i !== index))}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
-      <input
-        type="file"
-        multiple
-        accept="image/*"
-        onChange={handleFileChange}
-        className="w-full"
-      />
-    </div>
-  );
-};
-
-// AmenitiesSelector component
-const AmenitiesSelector: FC<{
-  selectedAmenities: string[];
-  onChange: (amenities: string[]) => void;
-}> = ({ selectedAmenities, onChange }) => {
-  const amenitiesList = [
-    "WiFi", "Parking", "Pool", "Gym", "Air Conditioning",
-    "Kitchen", "TV", "Washer", "Dryer", "Heating"
-  ];
+  const removePhoto = (index: number) => {
+    const newPhotos = uploadedPhotos.filter((_, i) => i !== index);
+    const newPreviews = photoPreviews.filter((_, i) => i !== index);
+    setUploadedPhotos(newPhotos);
+    setPhotoPreviews(newPreviews);
+  };
 
   const toggleAmenity = (amenity: string) => {
     if (selectedAmenities.includes(amenity)) {
-      onChange(selectedAmenities.filter(a => a !== amenity));
+      setSelectedAmenities(selectedAmenities.filter((a) => a !== amenity));
     } else {
-      onChange([...selectedAmenities, amenity]);
+      setSelectedAmenities([...selectedAmenities, amenity]);
     }
   };
 
+  const onSubmit = (data: any) => {
+    data.amenities = selectedAmenities;
+    data.starRating = starRating;
+    data.propertyPhotos = uploadedPhotos;
+    console.log("submitted data", data);
+    setPropertyDetails(data);
+    router.push("/add-hotel/3");
+  };
+
+  const goBack = () => {
+    router.push("/add-hotel/1");
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {amenitiesList.map(amenity => (
-        <label key={amenity} className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={selectedAmenities.includes(amenity)}
-            onChange={() => toggleAmenity(amenity)}
-            className="rounded border-gray-300"
-          />
-          <span>{amenity}</span>
-        </label>
-      ))}
+    <div className="min-h-screen flex flex-col bg-white">
+      <header className="border-b border-gray-100 py-6 px-8">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-light text-gray-900">Add New Listing</h1>
+        </div>
+      </header>
+
+      <main className="flex-1 flex">
+        <div className="w-64 border-r border-gray-100 p-8 hidden lg:block">
+          <div className="space-y-6">
+            <h3 className="text-sm uppercase text-gray-500 font-medium tracking-wider">
+              Listing Progress
+            </h3>
+
+            <div className="space-y-3">
+              <ProgressItem
+                icon={<User className="w-4 h-4" />}
+                label="Owner Details"
+                isActive={false}
+                isCompleted={true}
+              />
+              <ProgressItem
+                icon={<Home className="w-4 h-4" />}
+                label="Property Details"
+                isActive={true}
+                isCompleted={false}
+              />
+              <ProgressItem
+                icon={<ClipboardList className="w-4 h-4" />}
+                label="Room Details"
+                isActive={false}
+                isCompleted={false}
+              />
+              <ProgressItem
+                icon={<ShieldAlert className="w-4 h-4" />}
+                label="Policies"
+                isActive={false}
+                isCompleted={false}
+              />
+              <ProgressItem
+                icon={<ArrowRight className="w-4 h-4" />}
+                label="Review & Submit"
+                isActive={false}
+                isCompleted={false}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 p-8 overflow-y-auto">
+          <div className="max-w-5xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-8"
+            >
+              <h2 className="text-3xl font-light mb-3 text-gray-900">
+                Property Details
+              </h2>
+              <p className="text-gray-500">
+                Please provide information about your property. This will help
+                guests find and book your property.
+              </p>
+            </motion.div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Basic Information
+                </motion.h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    icon={<Home className="w-5 h-5 text-gray-400" />}
+                    register={register("propertyName", {
+                      required: "Property name is required",
+                    })}
+                    placeholder="Property Name"
+                    delay={0.3}
+                    className="md:col-span-2"
+                  />
+
+                  <div className="space-y-1">
+                    <label className="text-sm text-gray-600">
+                      Property Star Rating
+                    </label>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <StarRating
+                          key={rating}
+                          rating={rating}
+                          register={register("starRating", { required: true })}
+                          currentRating={starRating}
+                          onRatingChange={setStarRating}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <FormField
+                    icon={<Bed className="w-5 h-5 text-gray-400" />}
+                    register={register("numberOfRooms", {
+                      required: "Number of rooms is required",
+                      min: { value: 1, message: "Must have at least 1 room" },
+                      max: {
+                        value: 100,
+                        message: "Cannot have more than 100 rooms",
+                      },
+                    })}
+                    placeholder="Total Number of Rooms"
+                    delay={0.4}
+                    type="number"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Room Types
+                </motion.h3>
+
+                <div className="space-y-4">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-start gap-4">
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="relative">
+                          <select
+                            {...register(`roomTypes.${index}.type` as const, {
+                              required: "Room type is required",
+                            })}
+                            className="w-full p-3 pr-10 border border-gray-200 appearance-none focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                          >
+                            <option value="">Select Room Type</option>
+                            {roomTypeOptions.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <Bed className="w-5 h-5 text-gray-400" />
+                          </div>
+                        </div>
+
+                        <div className="relative">
+                          <input
+                            type="number"
+                            {...register(
+                              `roomTypes.${index}.quantity` as const,
+                              {
+                                required: "Quantity is required",
+                                min: {
+                                  value: 1,
+                                  message: "Minimum quantity is 1",
+                                },
+                              }
+                            )}
+                            placeholder="Quantity"
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                            min="1"
+                          />
+                        </div>
+                      </div>
+
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="mt-2 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => append({ type: "", quantity: 1 })}
+                    className="flex items-center gap-2 text-sm text-orange-500 font-medium hover:text-orange-600 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Another Room Type
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Location
+                </motion.h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    icon={<MapPin className="w-5 h-5 text-gray-400" />}
+                    register={register("location.address", {
+                      required: "Address is required",
+                    })}
+                    placeholder="Street Address"
+                    delay={0.7}
+                    className="md:col-span-2"
+                  />
+
+                  <FormField
+                    register={register("location.city", {
+                      required: "City is required",
+                    })}
+                    placeholder="City"
+                    delay={0.8}
+                  />
+
+                  <FormField
+                    register={register("location.state", {
+                      required: "State is required",
+                    })}
+                    placeholder="State/Province"
+                    delay={0.9}
+                  />
+
+                  <FormField
+                    register={register("location.country", {
+                      required: "Country is required",
+                    })}
+                    placeholder="Country"
+                    delay={1.0}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.1 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Amenities
+                </motion.h3>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {amenityOptions.map((amenity) => (
+                    <div
+                      key={amenity}
+                      onClick={() => toggleAmenity(amenity)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all flex items-center gap-2 ${
+                        selectedAmenities.includes(amenity)
+                          ? "border-orange-400 bg-orange-50 text-orange-600"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      {selectedAmenities.includes(amenity) ? (
+                        <CheckCircle className="w-4 h-4 text-orange-500" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full border border-gray-300"></div>
+                      )}
+                      <span className="text-sm">{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.2 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Check-in & Check-out
+                </motion.h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-600">
+                      Check-in Time
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Clock className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="time"
+                        {...register("checkInTime", {
+                          required: "Check-in time is required",
+                        })}
+                        className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                      />
+                      {/* {errors.checkInTime && (
+                        <p className="text-red-500 text-xs mt-1 ml-1">{errors.checkInTime.message}</p>
+                      )} */}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-600">
+                      Check-out Time
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Clock className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="time"
+                        {...register("checkOutTime", {
+                          required: "Check-out time is required",
+                        })}
+                        className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.3 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Additional Information
+                </motion.h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-600">
+                      Operating Since
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Calendar className="w-5 h-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="date"
+                        {...register("operatingSince")}
+                        className="w-full p-3 pl-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.4 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Property Description
+                </motion.h3>
+
+                <div className="relative">
+                  <textarea
+                    {...register("description", {
+                      required: "Description is required",
+                    })}
+                    placeholder="Describe your property, its unique features, and what makes it special..."
+                    className="w-full p-4 border border-gray-200 rounded-lg min-h-[150px] focus:outline-none focus:ring-2 focus:ring-orange-100 focus:border-orange-400"
+                  ></textarea>
+                </div>
+              </div>
+
+              <div>
+                <motion.h3
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-sm uppercase text-gray-500 font-medium mb-5 tracking-wider"
+                >
+                  Property Photos
+                </motion.h3>
+
+                <div className="space-y-4">
+                  {/* Upload Area */}
+                  <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
+                    <div className="flex flex-col items-center">
+                      <Upload className="w-10 h-10 text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-500 mb-2">
+                        Drag and drop property photos here
+                      </p>
+                      <p className="text-xs text-gray-400 mb-4">or</p>
+                      <label className="py-2 px-4 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        Browse Files
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Photo Previews */}
+                  {photoPreviews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {photoPreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview || "/placeholder.svg"}
+                            alt={`Room photo ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    Upload high-quality images that showcase this property.
+                    Recommended: at least 3-5 photos.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex justify-between pt-6 border-t border-gray-100">
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.5 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={goBack}
+                  className="py-3 px-6 bg-white border border-gray-200 rounded-lg text-gray-800 font-medium hover:bg-gray-50 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-200 flex items-center justify-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </motion.button>
+
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.5 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  onClick={handleSubmit(onSubmit)}
+                  className="py-3 px-8 bg-white border border-gray-200 rounded-lg text-gray-800 font-medium hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-200 flex items-center justify-center gap-2 group"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-// RoomTypeManager component
-const RoomTypeManager: FC<{
-  roomTypes: { type: string; quantity: number }[];
-  onChange: (types: { type: string; quantity: number }[]) => void;
-  roomTypeOptions: string[];
-}> = ({ roomTypes, onChange, roomTypeOptions }) => {
-  const addRoomType = () => {
-    onChange([...roomTypes, { type: roomTypeOptions[0], quantity: 1 }]);
-  };
+interface FormFieldProps {
+  icon?: React.ReactNode;
+  register: any;
+  placeholder: string;
+  error?: string;
+  delay?: number;
+  className?: string;
+  type?: string;
+}
 
-  const updateRoomType = (index: number, field: 'type' | 'quantity', value: string | number) => {
-    const newTypes = [...roomTypes];
-    newTypes[index] = { ...newTypes[index], [field]: value };
-    onChange(newTypes);
-  };
-
-  const removeRoomType = (index: number) => {
-    onChange(roomTypes.filter((_, i) => i !== index));
-  };
-
+const FormField = ({
+  icon,
+  register,
+  placeholder,
+  error,
+  delay = 0,
+  className = "",
+  type = "text",
+}: FormFieldProps) => {
   return (
-    <div className="space-y-4">
-      {roomTypes.map((room, index) => (
-        <div key={index} className="flex space-x-4 items-center">
-          <select
-            value={room.type}
-            onChange={(e) => updateRoomType(index, 'type', e.target.value)}
-            className="flex-1 px-4 py-2 border border-neutral-300 rounded-lg"
-          >
-            {roomTypeOptions.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
-          </select>
-          <input
-            type="number"
-            value={room.quantity}
-            onChange={(e) => updateRoomType(index, 'quantity', parseInt(e.target.value))}
-            min={1}
-            className="w-24 px-4 py-2 border border-neutral-300 rounded-lg"
-          />
-          <button
-            onClick={() => removeRoomType(index)}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg"
-          >
-            Remove
-          </button>
-        </div>
-      ))}
-      <button
-        onClick={addRoomType}
-        className="px-4 py-2 bg-primary-600 text-white rounded-lg"
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay }}
+      className={`relative ${className}`}
+    >
+      <div className="flex items-center border border-gray-200  overflow-hidden focus-within:ring-2 focus-within:ring-orange-100 focus-within:border-orange-400 transition-all">
+        {icon && <div className="pl-4 pr-2">{icon}</div>}
+        <input
+          type={type}
+          {...register}
+          className="p-3 w-full outline-none text-gray-700 placeholder-gray-400"
+          placeholder={placeholder}
+        />
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>}
+    </motion.div>
+  );
+};
+
+interface StarRatingProps {
+  rating: number;
+  register: any;
+  currentRating: number;
+  onRatingChange: (rating: number) => void;
+}
+
+const StarRating = ({
+  rating,
+  register,
+  currentRating,
+  onRatingChange,
+}: StarRatingProps) => {
+  return (
+    <label className="cursor-pointer">
+      <input
+        type="radio"
+        value={rating}
+        {...register}
+        className="hidden"
+        onChange={() => onRatingChange(rating)}
+      />
+      <Star
+        className={`w-8 h-8 transition-colors ${
+          rating <= currentRating
+            ? "text-orange-400 fill-orange-400"
+            : "text-gray-300 hover:text-orange-300"
+        }`}
+      />
+    </label>
+  );
+};
+
+interface ProgressItemProps {
+  icon: React.ReactNode;
+  label: string;
+  isActive: boolean;
+  isCompleted: boolean;
+}
+
+const ProgressItem = ({
+  icon,
+  label,
+  isActive,
+  isCompleted,
+}: ProgressItemProps) => {
+  return (
+    <div
+      className={`flex items-center gap-3 ${
+        isActive
+          ? "text-orange-500"
+          : isCompleted
+          ? "text-green-500"
+          : "text-gray-500"
+      }`}
+    >
+      <div
+        className={`w-6 h-6 rounded-full flex items-center justify-center ${
+          isCompleted
+            ? "bg-green-100 text-green-500"
+            : isActive
+            ? "bg-orange-100 text-orange-500"
+            : "bg-gray-100"
+        }`}
       >
-        Add Room Type
-      </button>
+        {icon}
+      </div>
+      <span className={`text-sm ${isActive ? "font-medium" : ""}`}>
+        {label}
+      </span>
     </div>
-  );
-};
-
-// Main component interfaces
-interface RoomType {
-  type: string;
-  quantity: number;
-}
-
-interface Location {
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  latitude: number | null;
-  longitude: number | null;
-}
-
-interface ListingState {
-  // Basic Property Info
-  propertyType: string;
-  placeName: string;
-  rentalForm: string;
-  numberOfPortions: number;
-  showPortionsInput: boolean;
-  rentalType: string;
-
-  // Detailed Property Info
-  propertyName: string;
-  numberOfRooms: number;
-  roomTypes: RoomType[];
-  starRating: number;
-  amenities: string[];
-  propertyPhotos: string[];
-  coverPhotos: string[];
-  location: Location;
-  checkInTime: string;
-  checkOutTime: string;
-  operatingSince: Date | null;
-  isAvailable: boolean;
-  description: string;
-
-  // Owner Information
-  ownerName: string;
-  ownerEmail: string;
-  ownerPhone: string;
-  alternateContact: string;
-  aadharNumber: string;
-  managerName: string;
-  managerContact: string;
-}
-
-const PageAddListing2 = () => {
-  const [listingDetails, setListingDetails] = useState<ListingState>(() => {
-    const savedData = localStorage.getItem("listingDetails");
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      if (parsedData.operatingSince) {
-        parsedData.operatingSince = new Date(parsedData.operatingSince);
-      }
-      return parsedData;
-    }
-    return {
-      // Basic Property Info
-      propertyType: "Cottage",
-      placeName: "",
-      rentalForm: "Private Room",
-      numberOfPortions: 1,
-      showPortionsInput: false,
-      rentalType: "Short Term",
-
-      // Detailed Property Info
-      propertyName: "",
-      numberOfRooms: 1,
-      roomTypes: [{ type: "Standard", quantity: 1 }],
-      starRating: 3,
-      amenities: [],
-      propertyPhotos: [],
-      coverPhotos: [],
-      location: {
-        address: "",
-        city: "",
-        state: "",
-        country: "",
-        latitude: null,
-        longitude: null,
-      },
-      checkInTime: "14:00",
-      checkOutTime: "11:00",
-      operatingSince: null,
-      isAvailable: true,
-      description: "",
-
-      // Owner Information
-      ownerName: "",
-      ownerEmail: "",
-      ownerPhone: "",
-      alternateContact: "",
-      aadharNumber: "",
-      managerName: "",
-      managerContact: "",
-    };
-  });
-
-  const propertyTypes = [
-    "Cottage", "Villa", "Cabin", "Farm stay", "Houseboat", "Lighthouse",
-    "Studio", "Apartment", "Penthouse", "Detached House", "Loft",
-    "Maisonette", "Farmhouse", "Holiday Homes", "Farmstay", "Resort",
-    "Lodge", "Apart Hotel"
-  ];
-
-  const roomTypeOptions = [
-    "Standard", "Deluxe", "Suite", "Family", "Single", "Double",
-    "Twin", "Studio", "Executive", "Presidential", "Penthouse",
-    "Villa", "Cottage", "Bungalow", "Other"
-  ];
-
-  const updateListingDetails = (field: keyof ListingState, value: any) => {
-    setListingDetails(prev => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleLocationChange = (field: keyof Location, value: string | number | null) => {
-    setListingDetails(prev => ({
-      ...prev,
-      location: {
-        ...prev.location,
-        [field]: value,
-      },
-    }));
-  };
-
-  useEffect(() => {
-    localStorage.setItem("listingDetails", JSON.stringify(listingDetails));
-  }, [listingDetails]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", listingDetails);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto py-8">
-      <h2 className="text-2xl font-semibold">Add New Property Listing</h2>
-      <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-4"></div>
-      <p className="text-neutral-500 dark:text-neutral-400 mb-8">
-        Please provide all the required information about your property.
-      </p>
-
-      <div className="space-y-8">
-        {/* BASIC PROPERTY INFO */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Basic Property Information</h3>
-          
-          <div className="mb-6 flex justify-between">
-            <div>
-              <label htmlFor="Short Term" className="mr-2">Short Term</label>
-              <input
-                type="radio"
-                name="rentalType"
-                id="Short Term"
-                checked={listingDetails.rentalType === "Short Term"}
-                onChange={(e) => updateListingDetails("rentalType", e.target.id)}
-                className="cursor-pointer"
-              />
-            </div>
-            <div>
-              <label htmlFor="Long Term" className="mr-2">Long Term</label>
-              <input
-                type="radio"
-                name="rentalType"
-                id="Long Term"
-                checked={listingDetails.rentalType === "Long Term"}
-                onChange={(e) => updateListingDetails("rentalType", e.target.id)}
-                className="cursor-pointer"
-              />
-            </div>
-            <div>
-              <label htmlFor="Both" className="mr-2">Both</label>
-              <input
-                type="radio"
-                name="rentalType"
-                id="Both"
-                checked={listingDetails.rentalType === "Both"}
-                onChange={(e) => updateListingDetails("rentalType", e.target.id)}
-                className="cursor-pointer"
-              />
-            </div>
-          </div>
-
-          <FormItem label="Property Type">
-            <Select
-              value={listingDetails.propertyType}
-              onChange={(e) => updateListingDetails("propertyType", e.target.value)}
-            >
-              {propertyTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </Select>
-          </FormItem>
-
-          <FormItem
-            label="Place Name"
-            desc="A catchy name usually includes: House name + Room name + Featured property + Tourist destination"
-          >
-            <Input
-              value={listingDetails.placeName}
-              onChange={(e) => updateListingDetails("placeName", e.target.value)}
-              placeholder="Enter place name"
-            />
-          </FormItem>
-
-          <FormItem label="Rental Form">
-            <Select
-              value={listingDetails.rentalForm}
-              onChange={(e) => {
-                const value = e.target.value;
-                updateListingDetails("rentalForm", value);
-                updateListingDetails("showPortionsInput", value === "Private room by portion");
-                updateListingDetails("numberOfPortions", value === "Private room by portion" ? 2 : 1);
-              }}
-            >
-              <option value="Private room">Private Area</option>
-              <option value="Private room by portion">Private Area by portion</option>
-              <option value="Shared Room">Shared Room</option>
-              <option value="Hotel Room">Hotel Room</option>
-            </Select>
-            {listingDetails.showPortionsInput && (
-              <Input
-                type="number"
-                className="mt-4"
-                value={listingDetails.numberOfPortions}
-                onChange={(e) => updateListingDetails("numberOfPortions", parseInt(e.target.value, 10))}
-                min={2}
-                placeholder="Number of portions"
-              />
-            )}
-          </FormItem>
-        </div>
-
-        {/* OWNER INFORMATION */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Owner Information</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormItem label="Owner Name">
-              <Input
-                value={listingDetails.ownerName}
-                onChange={(e) => updateListingDetails("ownerName", e.target.value)}
-                placeholder="Full name"
-              />
-            </FormItem>
-
-            <FormItem label="Email Address">
-              <Input
-                type="email"
-                value={listingDetails.ownerEmail}
-                onChange={(e) => updateListingDetails("ownerEmail", e.target.value)}
-                placeholder="Email address"
-              />
-            </FormItem>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormItem label="Phone Number">
-              <Input
-                value={listingDetails.ownerPhone}
-                onChange={(e) => updateListingDetails("ownerPhone", e.target.value)}
-                placeholder="Contact number"
-              />
-            </FormItem>
-
-            <FormItem label="Alternate Contact">
-              <Input
-                value={listingDetails.alternateContact}
-                onChange={(e) => updateListingDetails("alternateContact", e.target.value)}
-                placeholder="Alternative contact"
-              />
-            </FormItem>
-          </div>
-
-          <FormItem label="Aadhar Card Number">
-            <Input
-              value={listingDetails.aadharNumber}
-              onChange={(e) => updateListingDetails("aadharNumber", e.target.value)}
-              placeholder="Aadhar number"
-            />
-          </FormItem>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormItem label="Manager Name">
-              <Input
-                value={listingDetails.managerName}
-                onChange={(e) => updateListingDetails("managerName", e.target.value)}
-                placeholder="Manager's name (if different from owner)"
-              />
-            </FormItem>
-
-            <FormItem label="Manager Contact">
-              <Input
-                value={listingDetails.managerContact}
-                onChange={(e) => updateListingDetails("managerContact", e.target.value)}
-                placeholder="Manager's contact number"
-              />
-            </FormItem>
-          </div>
-        </div>
-
-        {/* DETAILED PROPERTY INFORMATION */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Detailed Property Information</h3>
-          
-          <FormItem label="Property Name">
-            <Input
-              value={listingDetails.propertyName}
-              onChange={(e) => updateListingDetails("propertyName", e.target.value)}
-              placeholder="Official property name"
-            />
-          </FormItem>
-
-          <FormItem label="Number of Rooms">
-            <Input
-              type="number"
-              value={listingDetails.numberOfRooms}
-              onChange={(e) => updateListingDetails("numberOfRooms", parseInt(e.target.value, 10))}
-              min={1}
-              placeholder="Total number of rooms"
-            />
-          </FormItem>
-
-          <FormItem label="Room Types">
-            <RoomTypeManager
-              roomTypes={listingDetails.roomTypes}
-              onChange={(types) => updateListingDetails("roomTypes", types)}
-              roomTypeOptions={roomTypeOptions}
-            />
-          </FormItem>
-
-          <FormItem label="Star Rating">
-            <StarRating
-              rating={listingDetails.starRating}
-              onChange={(rating) => updateListingDetails("starRating", rating)}
-            />
-          </FormItem>
-
-          <FormItem label="Description">
-            <Textarea
-              value={listingDetails.description}
-              onChange={(e) => updateListingDetails("description", e.target.value)}
-              rows={5}
-              placeholder="Detailed description of your property"
-            />
-          </FormItem>
-
-          <FormItem label="Property Status">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isAvailable"
-                checked={listingDetails.isAvailable}
-                onChange={(e) => updateListingDetails("isAvailable", e.target.checked)}
-                className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-              />
-              <label htmlFor="isAvailable" className="ml-2 text-sm text-neutral-700 dark:text-neutral-300">
-                Property is available for booking
-              </label>
-            </div>
-          </FormItem>
-        </div>
-
-        {/* LOCATION */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Location</h3>
-          
-          <FormItem label="Address">
-            <Input
-              value={listingDetails.location.address}
-              onChange={(e) => handleLocationChange("address", e.target.value)}
-              placeholder="Street address"
-            />
-          </FormItem>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormItem label="City">
-              <Input
-                value={listingDetails.location.city}
-                onChange={(e) => handleLocationChange("city", e.target.value)}
-                placeholder="City"
-              />
-            </FormItem>
-
-            <FormItem label="State/Province">
-              <Input
-                value={listingDetails.location.state}
-                onChange={(e) => handleLocationChange("state", e.target.value)}
-                placeholder="State"
-              />
-            </FormItem>
-          </div>
-
-          <FormItem label="Country">
-            <Input
-              value={listingDetails.location.country}
-              onChange={(e) => handleLocationChange("country", e.target.value)}
-              placeholder="Country"
-            />
-          </FormItem>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormItem label="Latitude">
-              <Input
-                type="number"
-                step="0.000001"
-                value={listingDetails.location.latitude || ""}
-                onChange={(e) => handleLocationChange("latitude", e.target.value ? parseFloat(e.target.value) : null)}
-                placeholder="Latitude"
-              />
-            </FormItem>
-
-            <FormItem label="Longitude">
-              <Input
-                type="number"
-                step="0.000001"
-                value={listingDetails.location.longitude || ""}
-                onChange={(e) => handleLocationChange("longitude", e.target.value ? parseFloat(e.target.value) : null)}
-                placeholder="Longitude"
-              />
-            </FormItem>
-          </div>
-
-          <FormItem label="Location Map">
-            <LocationInput
-              defaultValue=""
-              onChange={(address, lat, lng) => {
-                if (lat && lng) {
-                  handleLocationChange("latitude", lat);
-                  handleLocationChange("longitude", lng);
-                }
-              }}
-            />
-          </FormItem>
-        </div>
-
-        {/* AMENITIES */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Amenities</h3>
-          
-          <FormItem label="Property Amenities">
-            <AmenitiesSelector
-              selectedAmenities={listingDetails.amenities}
-              onChange={(amenities) => updateListingDetails("amenities", amenities)}
-            />
-          </FormItem>
-        </div>
-
-        {/* PHOTOS */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Photos</h3>
-          
-          <FormItem label="Cover Photos" desc="Add up to 5 cover photos">
-            <PhotoUploader
-              photos={listingDetails.coverPhotos}
-              onChange={(photos) => updateListingDetails("coverPhotos", photos)}
-              maxPhotos={5}
-            />
-          </FormItem>
-
-          <FormItem label="Property Photos" desc="Add up to 15 property photos">
-            <PhotoUploader
-              photos={listingDetails.propertyPhotos}
-              onChange={(photos) => updateListingDetails("propertyPhotos", photos)}
-              maxPhotos={15}
-            />
-          </FormItem>
-        </div>
-
-        {/* CHECK-IN/CHECK-OUT */}
-        <div className="bg-white dark:bg-neutral-900 rounded-xl p-5">
-          <h3 className="text-lg font-semibold mb-4">Check-in & Check-out</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormItem label="Check-in Time">
-              <TimePicker
-                value={listingDetails.checkInTime}
-                onChange={(time) => updateListingDetails("checkInTime", time)}
-              />
-            </FormItem>
-
-            <FormItem label="Check-out Time">
-              <TimePicker
-                value={listingDetails.checkOutTime}
-                onChange={(time) => updateListingDetails("checkOutTime", time)}
-              />
-            </FormItem>
-          </div>
-
-          <FormItem label="Operating Since">
-            <DatePicker
-              date={listingDetails.operatingSince}
-              onChange={(date) => updateListingDetails("operatingSince", date)}
-            />
-          </FormItem>
-        </div>
-      </div>
-
-      {/* SUBMIT BUTTON */}
-      <div className="flex justify-end mt-8">
-        <button
-          type="submit"
-          className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-all flex items-center"
-        >
-          Submit Listing
-        </button>
-      </div>
-    </form>
   );
 };
 

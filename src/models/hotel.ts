@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
+
 const HotelSchema = new mongoose.Schema({
   ownerDetails: {
     name: { type: String, required: true },
     email: { type: String, required: true },
+    isEmailVerified:{type: Boolean,default: false},
     phone: { type: String, required: true },
     alternateContact: { type: String },
     aadharCard: { type: String },
@@ -38,30 +41,34 @@ const HotelSchema = new mongoose.Schema({
   },
 
   roomDetails: [
-    {
-      roomType: { type: String, required: true },
-      bedType: { type: String },
-      maxOccupancy: { type: Number, required: true },
-      pricePerNight: { type: Number, required: true },
-      roomPhotos: [{ type: String }],
-      isAvailable: { type: Boolean, default: true },
-    }
-  ],
+  {
+    roomType: { type: String, required: true },
+    bedType: { type: String },
+    maxOccupancy: { type: Number, required: true },
+    basePricePerNight: { type: Number, required: true },
+    
+    weeklyPricing: {
+      monday: { type: Number },
+      tuesday: { type: Number },
+      wednesday: { type: Number },
+      thursday: { type: Number },
+      friday: { type: Number },
+      saturday: { type: Number },
+      sunday: { type: Number },
+    },
 
-  pricing: {
-    basePrice: { type: Number },
-    seasonalPricing: [
-      {
-        season: { type: String },
-        pricePerNight: { type: Number },
-      }
-    ],
-    weekendPriceModifier: { type: Number }, 
-  },
+    pricePerExtraGuest: { type: Number, default: 0 },
+
+    roomAmenities: [{ type: String }],
+    photos: [{ type: String }],
+    roomDescription: { type: String },
+    isAvailable: { type: Boolean, default: true },
+  }
+],
 
   policies: {
     cancellationPolicy: { type: String },
-    houseRules: { type: String },
+    houseRules: [{ type: String }],
     allowPets: { type: Boolean, default: false },
     allowSmoking: { type: Boolean, default: false },
   },
@@ -81,5 +88,6 @@ const HotelSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
-
-export default mongoose.model("Hotel", HotelSchema);
+const Hotel = mongoose.models.Hotel || mongoose.model("Hotel", HotelSchema);
+export default Hotel;
+ 
