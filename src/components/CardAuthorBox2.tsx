@@ -15,7 +15,7 @@ const CardAuthorBox2: FC<CardAuthorBox2Props> = ({
   className = "",
   author,
 }) => {
-  const { displayName, href = "/", avatar, jobName, count, bgImage } = author;
+  const { displayName, href = "/", avatar,  count, bgImage } = author;
   return (
     <Link
       href={href}
@@ -66,7 +66,7 @@ const CardAuthorBox2: FC<CardAuthorBox2Props> = ({
           <span
             className={`block mt-1 text-sm text-neutral-500 dark:text-neutral-400`}
           >
-            @{jobName}
+            {/* @{jobName} */}
           </span>
         </div>
       </div>

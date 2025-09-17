@@ -464,7 +464,7 @@ export default function PageAddListing1() {
                                 </span>
                               </div>
                               <p className="text-sm text-orange-700">
-                                We've sent a 6-digit verification code to your
+                                We&apos;ve sent a 6-digit verification code to your
                                 email. Please enter it below.
                               </p>
                             </div>
@@ -596,7 +596,7 @@ export default function PageAddListing1() {
                                 </span>
                               </div>
                               <p className="text-sm text-orange-700">
-                                We've sent a 6-digit verification code to your
+                                We&apos;ve sent a 6-digit verification code to your
                                 phone. Please enter it below.
                               </p>
                             </div>
