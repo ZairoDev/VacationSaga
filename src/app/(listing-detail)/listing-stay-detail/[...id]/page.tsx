@@ -11,6 +11,7 @@ import {
   IoIosCompass,
   IoIosArrowDropdownCircle,
   IoIosArrowDroprightCircle,
+  IoMdClose,
 } from "react-icons/io";
 import axios from "axios";
 import Link from "next/link";
@@ -28,12 +29,21 @@ import { useSearchParams } from "next/navigation";
 import { SlSizeFullscreen } from "react-icons/sl";
 import { IoLanguageOutline } from "react-icons/io5";
 import { RiMoneyEuroCircleFill } from "react-icons/ri";
-import { BsExclamationCircleFill } from "react-icons/bs";
+import {
+  BsExclamation,
+  BsExclamationCircle,
+  BsExclamationCircleFill,
+} from "react-icons/bs";
 import { usePathname, useRouter } from "next/navigation";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { BiMessageAltDetail, BiSolidArea } from "react-icons/bi";
 import React, { FC, Fragment, useEffect, useState } from "react";
 import { FaHotTub, FaMapMarkerAlt, FaUser } from "react-icons/fa";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Zoom, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/zoom";
 
 import Input from "@/shared/Input";
 import Badge from "@/shared/Badge";
@@ -75,6 +85,11 @@ interface DateRange {
 //   nearbyLocationTag: string[];
 //   nearbyLocationUrl: string[];
 // }
+interface ModalImagesProps {
+  modalIsOpen: boolean;
+  setModalIsOpen: (open: boolean) => void;
+  allImages: string[]; // assuming it's an array of image URLs
+}
 
 interface CenterDataType {
   lat: number;
@@ -350,7 +365,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     if (savedDates[0] && savedDates[1]) {
       const calculatedNights = Math.ceil(
         (savedDates[1].getTime() - savedDates[0].getTime()) /
-        (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24)
       );
       setNumberOfNights(Math.max(calculatedNights, newMinNights));
     } else {
@@ -872,7 +887,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
           <div className=" w-full md:w-1/2 md:ml-3">
             {particularProperty?.rentalType === "Short Term" &&
-              particularProperty?.nearbyLocations?.nearbyLocationName?.length >
+            particularProperty?.nearbyLocations?.nearbyLocationName?.length >
               0 ? (
               <>
                 {" "}
@@ -913,8 +928,8 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                           particularProperty?.nearbyLocations?.nearbyLocationName?.map(
                             (innerItem, index) =>
                               item ===
-                              particularProperty?.nearbyLocations
-                                ?.nearbyLocationTag[index] && (
+                                particularProperty?.nearbyLocations
+                                  ?.nearbyLocationTag[index] && (
                                 <div
                                   key={index}
                                   className=" flex justify-between text-sm text-neutral-500 px-2 font-medium"
@@ -923,13 +938,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                                     {particularProperty?.nearbyLocations
                                       ?.nearbyLocationUrl?.[index] !=
                                       undefined &&
-                                      particularProperty?.nearbyLocations
-                                        ?.nearbyLocationUrl?.[index] != "" ? (
+                                    particularProperty?.nearbyLocations
+                                      ?.nearbyLocationUrl?.[index] != "" ? (
                                       <Link
                                         href={
                                           new URL(
                                             particularProperty?.nearbyLocations?.nearbyLocationUrl?.[
-                                            index
+                                              index
                                             ]
                                           )
                                         }
@@ -954,13 +969,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                                     {particularProperty?.nearbyLocations
                                       ?.nearbyLocationDistance[index] >= 1000
                                       ? (
-                                        particularProperty?.nearbyLocations
-                                          ?.nearbyLocationDistance[index] /
-                                        1000
-                                      ).toFixed(1) + " km"
+                                          particularProperty?.nearbyLocations
+                                            ?.nearbyLocationDistance[index] /
+                                          1000
+                                        ).toFixed(1) + " km"
                                       : particularProperty?.nearbyLocations
-                                        ?.nearbyLocationDistance[index] +
-                                      " m"}
+                                          ?.nearbyLocationDistance[index] +
+                                        " m"}
                                   </div>
                                 </div>
                               )
@@ -1155,19 +1170,20 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           </div>
 
           <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
-            <span>Service charge</span>
+            <span>Service charges </span>
+
             {particularProperty?.rentalType === "Long Term" ? (
               <span
-              onClick={() => window.open("https://wa.me/918960980806", "_blank")}
-                className="text-blue-500 cursor-pointer"
-                title="Service charge details: This includes platform, support, and admin costs."
+                className="flex items-center gap-1 cursor-pointer"
+                title="One month rent"
               >
-                Know more
+                € {particularProperty?.basePriceLongTerm}
               </span>
             ) : (
-              <span>€ 6</span>
+              <span>€ {(totalPrice * 0.15).toFixed(2)}</span>
             )}
           </div>
+
           {particularProperty?.rentalType === "Short Term" && nights >= 7 && (
             <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
               <span>Weekly Discount</span>
@@ -1177,13 +1193,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
           <div className="border-b border-neutral-200 dark:border-neutral-700"></div>
 
-          {particularProperty?.rentalType === "Short Term"  && (
+          {particularProperty?.rentalType === "Short Term" && (
             <div className="flex justify-between font-semibold">
-            <span>Total</span>
-            {/* <span>€ {totalPrice + 6} </span> */}
-            <span>€ {bookingPrice + 6} </span>
-          </div>
-          )}  
+              <span>Total</span>
+              {/* <span>€ {totalPrice + 6} </span> */}
+              <span>€ {totalPrice} </span>
+            </div>
+          )}
         </div>
 
         <Link
@@ -1317,7 +1333,11 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   };
 
   const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
-  const modalImages = () => {
+  const ModalImages: React.FC<ModalImagesProps> = ({
+    modalIsOpen,
+    setModalIsOpen,
+    allImages,
+  }) => {
     return (
       <Transition appear show={modalIsOpen} as={Fragment}>
         <Dialog
@@ -1326,6 +1346,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           onClose={() => setModalIsOpen(false)}
         >
           <div className="min-h-screen px-4 text-center flex items-center justify-center">
+            {/* Background overlay */}
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -1335,15 +1356,9 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-40" />
+              <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-80" />
             </Transition.Child>
 
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -1353,21 +1368,40 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div className="w-3/4 max-w-4xl h-4/5 bg-white dark:bg-neutral-900 dark:border dark:border-neutral-700 dark:text-neutral-100 shadow-xl rounded-2xl overflow-hidden flex flex-col">
-                <div className="relative flex-shrink-0 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 text-center">
-                  <h3
-                    className="text-lg font-medium leading-6 text-gray-900"
-                    id="headlessui-dialog-title-70"
-                  >
-                    Images
-                  </h3>
-                  <span className="absolute left-3 top-3">
-                    <ButtonClose onClick={() => setModalIsOpen(false)} />
-                  </span>
-                </div>
-                <div className="flex-grow overflow-auto px-8 py-4 text-neutral-700 dark:text-neutral-300">
-                  <BentoGridDemo allImages={allImages} />
-                </div>
+              <div className="w-full h-screen flex items-center justify-center relative">
+                {/* Close Button */}
+                <button
+                  className="absolute top-4 right-4 z-50 bg-white rounded-full h-10 w-10 flex items-center justify-center shadow hover:bg-gray-200 transition"
+                  onClick={() => setModalIsOpen(false)}
+                >
+                  <IoMdClose className="text-2xl text-black" />
+                </button>
+
+                {/* Swiper Carousel */}
+                <Swiper
+                  modules={[Navigation, Zoom, Pagination]}
+                  navigation
+                  zoom
+                  pagination={{ clickable: true }}
+                  spaceBetween={30}
+                  centeredSlides
+                  className="w-full h-full max-w-6xl max-h-[90vh]"
+                >
+                  {allImages.map((src: string, idx: number) => (
+                    <SwiperSlide
+                      key={idx}
+                      className="flex items-center justify-center"
+                    >
+                      <div className="swiper-zoom-container flex items-center justify-center w-full h-full">
+                        <img
+                          src={src || "/placeholder.svg"}
+                          alt={`img-${idx}`}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
               </div>
             </Transition.Child>
           </div>
@@ -1494,8 +1528,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
         </div>
       </header>
 
-      {modalIsOpen ? modalImages() : ""}
-
+      {modalIsOpen && (
+        <ModalImages
+          modalIsOpen={modalIsOpen}
+          setModalIsOpen={setModalIsOpen}
+          allImages={allImages}
+        />
+      )}
       {/* MAIN */}
       <main className=" relative z-10 mt-11 flex flex-col lg:flex-row ">
         {/* CONTENT */}

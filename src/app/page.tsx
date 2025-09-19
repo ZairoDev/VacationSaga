@@ -20,7 +20,7 @@ const DEMO_CATS: TaxonomyType[] = [
   {
     id: "1",
     href: "/listing-stay",
-    name: "Greece",
+    name: "Athens",
     taxonomy: "category",
     count: 188288,
     thumbnail:
@@ -29,57 +29,57 @@ const DEMO_CATS: TaxonomyType[] = [
   {
     id: "2",
     href: "/listing-stay",
-    name: "Italy",
+    name: "Chania",
     taxonomy: "category",
     count: 188288,
     thumbnail:
-      "https://images.pexels.com/photos/1701595/pexels-photo-1701595.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      "https://images.pexels.com/photos/31921984/pexels-photo-31921984.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   {
     id: "3",
     href: "/listing-stay",
-    name: "Romania",
+    name: "Thessaloniki",
     taxonomy: "category",
     count: 188288,
     thumbnail:
-      "https://images.pexels.com/photos/10774499/pexels-photo-10774499.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      "https://images.pexels.com/photos/3534080/pexels-photo-3534080.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   {
     id: "4",
     href: "/listing-stay",
-    name: "Spain",
+    name: "Milan",
     taxonomy: "category",
     count: 188288,
     thumbnail:
-      "https://images.pexels.com/photos/17179230/pexels-photo-17179230/free-photo-of-view-of-the-sagrada-familia-barcelona-spain.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      "https://images.pexels.com/photos/28821762/pexels-photo-28821762.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
   },
   {
     id: "5",
     href: "/listing-stay",
-    name: "Croatia",
+    name: "Rome",
     taxonomy: "category",
     count: 188288,
     thumbnail:
-      "https://images.pexels.com/photos/3566139/pexels-photo-3566139.jpeg?auto=compress&cs=tinysrgb&w=600",
+      "https://images.pexels.com/photos/1701595/pexels-photo-1701595.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
-  {
-    id: "6",
-    href: "/listing-stay",
-    name: "Slovenia",
-    taxonomy: "category",
-    count: 188288,
-    thumbnail:
-      "https://images.pexels.com/photos/3214969/pexels-photo-3214969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-  },
-  {
-    id: "7",
-    href: "/listing-stay",
-    name: "Slovakia",
-    taxonomy: "category",
-    count: 188288,
-    thumbnail:
-      "https://images.pexels.com/photos/280173/pexels-photo-280173.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-  },
+  // {
+  //   id: "6",
+  //   href: "/listing-stay",
+  //   name: "Slovenia",
+  //   taxonomy: "category",
+  //   count: 188288,
+  //   thumbnail:
+  //     "https://images.pexels.com/photos/3214969/pexels-photo-3214969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+  // },
+  // {
+  //   id: "7",
+  //   href: "/listing-stay",
+  //   name: "Slovakia",
+  //   taxonomy: "category",
+  //   count: 188288,
+  //   thumbnail:
+  //     "https://images.pexels.com/photos/280173/pexels-photo-280173.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+  // },
 ];
 
 // const DEMO_CATS_2: TaxonomyType[] = [

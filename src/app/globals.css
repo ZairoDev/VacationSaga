@@ -41,3 +41,21 @@
   border-radius: 5px;
   overflow-y: auto;
 }
+
+
+/* Make swiper navigation arrows orange */
+.swiper-button-next,
+.swiper-button-prev {
+  color: orange !important;
+}
+
+/* Make pagination dots visible and orange */
+.swiper-pagination-bullet {
+  background: #fff !important; /* default white */
+  opacity: 0.6;
+}
+
+.swiper-pagination-bullet-active {
+  background: orange !important;
+  opacity: 1;
+}
