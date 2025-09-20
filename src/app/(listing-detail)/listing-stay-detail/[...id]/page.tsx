@@ -1447,57 +1447,49 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     >
       <header className="rounded-md sm:rounded-xl">
         {/* Main Grid Layout for larger screens */}
-        <div className="relative  hidden  w-full h-full md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
-          <div className="col-span-2  row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
-            {particularProperty?.propertyCoverFileUrl ? (
+        <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
+      <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
+        {particularProperty?.propertyCoverFileUrl ? (
+          <img
+            src={particularProperty?.propertyCoverFileUrl || "/placeholder.svg"}
+            alt="Cover Image"
+            className="object-cover h-full w-full"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col justify-center items-center">
+            <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
+            <span className="text-neutral-600 font-medium">Image not found</span>
+          </div>
+        )}
+      </div>
+
+      {/* Thumbnail images for larger screens */}
+      {allImages
+        ?.filter((_, i) => i >= 1 && i < 5)
+        .map((item, index) => (
+          <div className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl" key={index}>
+            {allImages[index + 1] ? (
               <img
-                src={particularProperty?.propertyCoverFileUrl}
-                alt="Cover Image"
-                className="object-cover h-full w-full"
+                src={allImages[index + 1] || "/placeholder.svg"}
+                alt="Property Picture"
+                className="object-cover rounded-xl sm:rounded-xl w-full h-full"
               />
             ) : (
-              <div className="w-full h-full flex flex-col justify-center items-center">
-                <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
-                <span className="text-neutral-600 font-medium">
-                  Image not found
-                </span>
+              <div className="flex flex-col justify-center items-center">
+                <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
+                <p>Image not found!</p>
               </div>
             )}
           </div>
-
-          {/* Thumbnail images for larger screens */}
-          {allImages
-            ?.filter((_, i) => i >= 1 && i < 5)
-            .map((item, index) => (
-              <div
-                className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
-                key={index}
-              >
-                {allImages[index + 1] ? (
-                  <img
-                    src={allImages[index + 1]}
-                    alt="Property Picture"
-                    className="object-cover rounded-xl sm:rounded-xl w-44 h-44"
-                  />
-                ) : (
-                  <div className=" flex flex-col justify-center items-center">
-                    <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
-                    <p>Image not found!</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          <button
-            className="absolute flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
-            onClick={() => setModalIsOpen(true)}
-          >
-            <Squares2X2Icon className="w-5 h-5" />
-            <span className="ml-2 text-neutral-800 text-sm font-medium">
-              Show all photos
-            </span>
-          </button>
-        </div>
-
+        ))}
+      <button
+        className="absolute flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
+        onClick={() => setModalIsOpen(true)}
+      >
+        <Squares2X2Icon className="w-5 h-5" />
+        <span className="ml-2 text-neutral-800 text-sm font-medium">Show all photos</span>
+      </button>
+    </div>
         <div className="block md:hidden  w-full mt-4">
           <Slider {...carouselSettings}>
             {[particularProperty?.propertyCoverFileUrl, ...propertyPicturesTemp]
