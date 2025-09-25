@@ -29,15 +29,11 @@ import { useSearchParams } from "next/navigation";
 import { SlSizeFullscreen } from "react-icons/sl";
 import { IoLanguageOutline } from "react-icons/io5";
 import { RiMoneyEuroCircleFill } from "react-icons/ri";
-import {
-  BsExclamation,
-  BsExclamationCircle,
-  BsExclamationCircleFill,
-} from "react-icons/bs";
-import { usePathname, useRouter } from "next/navigation";
+import { BsExclamationCircleFill } from "react-icons/bs";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { BiMessageAltDetail, BiSolidArea } from "react-icons/bi";
-import React, { FC, Fragment, useEffect, useState } from "react";
+import type React from "react";
+import { type FC, Fragment, useEffect, useState } from "react";
 import { FaHotTub, FaMapMarkerAlt, FaUser } from "react-icons/fa";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Zoom, Pagination } from "swiper/modules";
@@ -47,7 +43,6 @@ import "swiper/css/zoom";
 
 import Input from "@/shared/Input";
 import Badge from "@/shared/Badge";
-import { useAuth } from "@/hooks/useAuth";
 import dateParser from "@/helper/dateParser";
 import ButtonClose from "@/shared/ButtonClose";
 import ButtonCircle from "@/shared/ButtonCircle";
@@ -56,11 +51,10 @@ import LikeSaveBtns from "@/components/LikeSaveBtns";
 import MapWithCircle from "@/components/MapWithCircle";
 import ButtonSecondary from "@/shared/ButtonSecondary";
 import { useLoadScript } from "@react-google-maps/api";
-import { BentoGridDemo } from "@/components/BentoGrid";
 import { Dialog, Transition } from "@headlessui/react";
-import { EventInterface } from "@/app/editproperty/page";
+import type { EventInterface } from "@/app/editproperty/page";
 import CommentListing from "@/components/CommentListing";
-import { PropertiesDataType, PropertyDataType } from "@/data/types";
+import type { PropertiesDataType } from "@/data/types";
 import FiveStartIconForRate from "@/components/FiveStartIconForRate";
 import { ArrowRightIcon, Squares2X2Icon } from "@heroicons/react/24/outline";
 
@@ -103,7 +97,8 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const searchParams = useSearchParams();
 
   const param: string = params.id[0];
-  const indexId: number = parseInt(searchParams.get("portion") || "0") || 0;
+  const indexId: number =
+    Number.parseInt(searchParams.get("portion") || "0") || 0;
 
   const [particularProperty, setParticularProperty] =
     useState<PropertiesDataType>();
@@ -133,7 +128,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const [nddt, setNddt] = useState<string>(dt2);
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "", // Set your API key here
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   });
 
   // TODO: Accessing current Location
@@ -216,7 +211,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       //! adding events from airbnb to already booked dates
       eventsFromAirbnb.forEach((event) => {
         const newDates: Date[] = [];
-        let currDt = new Date(event.start || new Date());
+        const currDt = new Date(event.start || new Date());
         while (currDt < new Date(event.end || new Date())) {
           newDates.push(currDt);
           currDt.setDate(currDt.getDate() + 1);
@@ -245,7 +240,9 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           try {
             const commonPropertyResponse = await axios.post(
               "/api/newProperties/getPropertiesByCommonId",
-              { commonId: response.data.property.commonId }
+              {
+                commonId: response.data.property.commonId,
+              }
             );
             if (commonPropertyResponse.data.commonIdProperties) {
               setCommonProperties(
@@ -331,10 +328,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   if (data) {
     const value = JSON.parse(data)["numberOfPortions"];
     if (value) {
-      portions = parseInt(value, 10);
+      portions = Number.parseInt(value, 10);
     }
   }
-  let checkPortion = portions > 1 ? portions : 0;
+  const checkPortion = portions > 1 ? portions : 0;
 
   const [selectedDates, setSelectedDates] = useState<DateRange>({
     startDate: null,
@@ -387,7 +384,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     }
   }, [checkPortion]);
 
-  let [isOpenModalAmenities, setIsOpenModalAmenities] = useState(false);
+  const [isOpenModalAmenities, setIsOpenModalAmenities] = useState(false);
 
   function closeModalAmenities() {
     setIsOpenModalAmenities(false);
@@ -395,6 +392,17 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
   function openModalAmenities() {
     setIsOpenModalAmenities(true);
+  }
+
+  const [isOpenModalImages, setIsOpenModalImages] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false); // Added missing state
+
+  function closeModalImages() {
+    setIsOpenModalImages(false);
+  }
+
+  function openModalImages() {
+    setIsOpenModalImages(true);
   }
 
   const [location, setLocation] = useState<string[]>(() => {
@@ -418,7 +426,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       <div className=" lg:border lg:dark:border-neutral-600 rounded-xl lg:p-2">
         <div className="flex justify-between items-center lg:mt-2">
           <Badge name={particularProperty?.propertyType} />
-          <Badge name={particularProperty?.VSID} />
+          {/* <Badge name={particularProperty?.VSID} /> */}
           {particularProperty?.rentalType === "Long Term" &&
             (particularProperty?.isTopFloor ? (
               <Badge name={"Top Floor"} />
@@ -653,12 +661,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     return (
       <div className="listingSection__wrap">
         {/* HEADING */}
-        <div>
-          <h2 className="text-2xl font-semibold">Room Rates </h2>
-          <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-            Prices may increase on weekends or holidays
-          </span>
-        </div>
+        <h2 className="text-2xl font-semibold">Room Rates </h2>
+        <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
+          Prices may increase on weekends or holidays
+        </span>
         <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
         {/* CONTENT */}
         <div className="flow-root">
@@ -1098,7 +1104,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     const calculateDateDifference = (start: Date | null, end: Date | null) => {
       if (start && end) {
         const timeDiff = end.getTime() - start.getTime();
-        return Math.ceil(timeDiff / (1000 * 3600 * 24)); // Adding 1 to include both start and end dates
+        return Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Adding 1 to include both start and end dates
       }
       return 0;
     };
@@ -1283,7 +1289,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                 <div className="lg:h-48 md:h-44 sm:h-40 w-full">
                   {commonProperties[index]?.propertyCoverFileUrl ? (
                     <img
-                      src={commonProperties[index]?.propertyCoverFileUrl}
+                      src={
+                        commonProperties[index]?.propertyCoverFileUrl ||
+                        "/placeholder.svg"
+                      }
                       alt="Portion Image"
                       className="cover w-full object-fill h-full rounded-xl hover:opacity-60"
                     />
@@ -1332,7 +1341,172 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     );
   };
 
-  const [modalIsOpen, setModalIsOpen] = useState<boolean>(false);
+  interface ContactFormData {
+    firstName: string;
+    lastName: string;
+    telephone: string;
+    email: string;
+    message: string;
+    agreeToTerms: boolean;
+  }
+
+  const LongTermcContactForm: React.FC = () => {
+    const [formData, setFormData] = useState<ContactFormData>({
+      firstName: "",
+      lastName: "",
+      telephone: "",
+      email: "",
+      message: "",
+
+      agreeToTerms: false,
+    });
+
+    const handleInputChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleCheckboxChange = (name: string, checked: boolean) => {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      console.log("Form submitted:", formData);
+      // Handle form submission here
+    };
+
+    return (
+      <div className="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg">
+        <div className="p-6">
+          <div className="mt-4 bg-white  rounded-xl p-4  flex items-baseline space-x-2">
+            <span className="text-2xl font-bold text-orange-400">
+              €{particularProperty?.basePriceLongTerm}
+            </span>
+            <span className="text-gray-600 dark:text-gray-400 text-base">
+              /month
+            </span>
+          </div>
+
+          {/* Header with logo */}
+          <div className="flex items-start justify-between mb-6">
+            <h2 className="text-lg font-medium text-gray-800 leading-tight">
+              Send a message to
+              <br />
+              the owner
+            </h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* First Name */}
+            <div>
+              <input
+                type="text"
+                name="firstName"
+                placeholder="First Name*"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Last Name */}
+            <div>
+              <input
+                type="text"
+                name="lastName"
+                placeholder="Last Name*"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Telephone */}
+            <div>
+              <input
+                type="tel"
+                name="telephone"
+                placeholder="Telephone*"
+                value={formData.telephone}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Message */}
+            <div>
+              <textarea
+                name="message"
+                placeholder="Enter Message Description*"
+                value={formData.message}
+                onChange={handleInputChange}
+                rows={6}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!formData.agreeToTerms}
+              className="w-full bg-orange-400 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 rounded-md transition-colors duration-200"
+            >
+              Submit
+            </button>
+
+            {/* Terms Agreement */}
+            <div className="flex items-start space-x-2 pt-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={formData.agreeToTerms}
+                onChange={(e) =>
+                  handleCheckboxChange("agreeToTerms", e.target.checked)
+                }
+                className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+              />
+              <label
+                htmlFor="terms"
+                className="text-xs text-gray-600 leading-relaxed cursor-pointer"
+              >
+                By submitting this form, you confirm that you agree to our{" "}
+                <Link href="/termsandconditions">
+                  <span className="text-blue-600 underline">terms of use</span>{" "}
+                </Link>
+                and{" "}
+                <Link href="/privacy-policy">
+                  {" "}
+                  <span className="text-blue-600 underline">
+                    privacy policy
+                  </span>
+                </Link>{" "}
+                of vacationsaga.com
+              </label>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
   const ModalImages: React.FC<ModalImagesProps> = ({
     modalIsOpen,
     setModalIsOpen,
@@ -1448,48 +1622,57 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       <header className="rounded-md sm:rounded-xl">
         {/* Main Grid Layout for larger screens */}
         <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
-      <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
-        {particularProperty?.propertyCoverFileUrl ? (
-          <img
-            src={particularProperty?.propertyCoverFileUrl || "/placeholder.svg"}
-            alt="Cover Image"
-            className="object-cover h-full w-full"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col justify-center items-center">
-            <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
-            <span className="text-neutral-600 font-medium">Image not found</span>
-          </div>
-        )}
-      </div>
-
-      {/* Thumbnail images for larger screens */}
-      {allImages
-        ?.filter((_, i) => i >= 1 && i < 5)
-        .map((item, index) => (
-          <div className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl" key={index}>
-            {allImages[index + 1] ? (
+          <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
+            {particularProperty?.propertyCoverFileUrl ? (
               <img
-                src={allImages[index + 1] || "/placeholder.svg"}
-                alt="Property Picture"
-                className="object-cover rounded-xl sm:rounded-xl w-full h-full"
+                src={
+                  particularProperty?.propertyCoverFileUrl || "/placeholder.svg"
+                }
+                alt="Cover Image"
+                className="object-cover h-full w-full"
               />
             ) : (
-              <div className="flex flex-col justify-center items-center">
-                <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
-                <p>Image not found!</p>
+              <div className="w-full h-full flex flex-col justify-center items-center">
+                <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
+                <span className="text-neutral-600 font-medium">
+                  Image not found
+                </span>
               </div>
             )}
           </div>
-        ))}
-      <button
-        className="absolute flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
-        onClick={() => setModalIsOpen(true)}
-      >
-        <Squares2X2Icon className="w-5 h-5" />
-        <span className="ml-2 text-neutral-800 text-sm font-medium">Show all photos</span>
-      </button>
-    </div>
+
+          {/* Thumbnail images for larger screens */}
+          {allImages
+            ?.filter((_, i) => i >= 1 && i < 5)
+            .map((item, index) => (
+              <div
+                className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
+                key={index}
+              >
+                {allImages[index + 1] ? (
+                  <img
+                    src={allImages[index + 1] || "/placeholder.svg"}
+                    alt="Property Picture"
+                    className="object-cover rounded-xl sm:rounded-xl w-full h-full"
+                  />
+                ) : (
+                  <div className="flex flex-col justify-center items-center">
+                    <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
+                    <p>Image not found!</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          <button
+            className="absolute flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
+            onClick={() => setModalIsOpen(true)}
+          >
+            <Squares2X2Icon className="w-5 h-5" />
+            <span className="ml-2 text-neutral-800 text-sm font-medium">
+              Show all photos
+            </span>
+          </button>
+        </div>
         <div className="block md:hidden  w-full mt-4">
           <Slider {...carouselSettings}>
             {[particularProperty?.propertyCoverFileUrl, ...propertyPicturesTemp]
@@ -1502,7 +1685,9 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                   <img
                     src={
                       item ||
-                      "https://cdn.pixabay.com/photo/2013/07/12/12/56/home-146585_1280.png"
+                      "https://cdn.pixabay.com/photo/2013/07/12/12/56/home-146585_1280.png" ||
+                      "/placeholder.svg" ||
+                      "/placeholder.svg"
                     }
                     alt="Property Picture"
                     className="object-cover rounded-xl sm:rounded-xl w-full h-full"
@@ -1550,7 +1735,11 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
         {/* SIDEBAR */}
         <div className="hidden lg:block flex-grow mt-14 lg:mt-0">
-          <div className="sticky top-28">{renderSidebar()}</div>
+          {particularProperty?.rentalType === "Long Term" ? (
+            <LongTermcContactForm />
+          ) : (
+            renderSidebar()
+          )}
         </div>
       </main>
     </div>
