@@ -533,9 +533,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
         <div className=" z-50 ">
           <MobileFooterSticky
             price={particularProperty?.basePrice}
+            priceLongTerm={particularProperty?.basePriceLongTerm}
+            rentalType={particularProperty?.rentalType}
             nights={particularProperty?.night[0] || 3}
+            
           />
         </div>
+        {/* <p>{particularProperty?.basePrice} hello</p> */}
         <h2 className="text-2xl font-semibold  mb-2">Stay information</h2>
         {particularProperty?.newReviews ? (
           <div
@@ -1122,7 +1126,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
     return (
       <div className="listingSectionSidebar__wrap shadow-xl">
-        <div className="flex justify-between">
+        <div className="flex justify-between border-2 border-red-500">
           <span className="text-3xl font-semibold">
             € {basePrice}
             <span className="ml-1 text-base font-normal text-neutral-500 dark:text-neutral-400">
@@ -1172,7 +1176,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               )}
             </span>
             <span>€ {totalPrice}</span>
-            {/* <span>€ {bookingPrice}</span> */}
+         
           </div>
 
           <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
@@ -1620,90 +1624,79 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       className={`nc-ListingStayDetailPage ${modalIsOpen ? "blur-md" : ""} `}
     >
       <header className="rounded-md sm:rounded-xl">
-        {/* Main Grid Layout for larger screens */}
-        <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
-          <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
-            {particularProperty?.propertyCoverFileUrl ? (
-              <img
-                src={
-                  particularProperty?.propertyCoverFileUrl || "/placeholder.svg"
-                }
-                alt="Cover Image"
-                className="object-cover h-full w-full"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col justify-center items-center">
-                <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
-                <span className="text-neutral-600 font-medium">
-                  Image not found
-                </span>
-              </div>
-            )}
-          </div>
+  {/* Main Grid Layout for larger screens */}
+  <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2 hidden md:block">
+    <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
+      {particularProperty?.propertyCoverFileUrl ? (
+        <img
+          src={particularProperty?.propertyCoverFileUrl || "/placeholder.svg"}
+          alt="Cover Image"
+          className="object-cover h-full w-full"
+        />
+      ) : (
+        <div className="w-full h-full flex flex-col justify-center items-center">
+          <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
+          <span className="text-neutral-600 font-medium">Image not found</span>
+        </div>
+      )}
+    </div>
 
-          {/* Thumbnail images for larger screens */}
-          {allImages
-            ?.filter((_, i) => i >= 1 && i < 5)
-            .map((item, index) => (
-              <div
-                className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
-                key={index}
-              >
-                {allImages[index + 1] ? (
-                  <img
-                    src={allImages[index + 1] || "/placeholder.svg"}
-                    alt="Property Picture"
-                    className="object-cover rounded-xl sm:rounded-xl w-full h-full"
-                  />
-                ) : (
-                  <div className="flex flex-col justify-center items-center">
-                    <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
-                    <p>Image not found!</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          <button
-            className="absolute flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
-            onClick={() => setModalIsOpen(true)}
-          >
-            <Squares2X2Icon className="w-5 h-5" />
-            <span className="ml-2 text-neutral-800 text-sm font-medium">
-              Show all photos
-            </span>
-          </button>
+    {/* Thumbnail images for larger screens */}
+    {allImages
+      ?.filter((_, i) => i >= 1 && i < 5)
+      .map((item, index) => (
+        <div
+          className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
+          key={index}
+        >
+          {allImages[index + 1] ? (
+            <img
+              src={allImages[index + 1] || "/placeholder.svg"}
+              alt="Property Picture"
+              className="object-cover rounded-xl w-full h-full"
+            />
+          ) : (
+            <div className="flex flex-col justify-center items-center">
+              <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
+              <p>Image not found!</p>
+            </div>
+          )}
         </div>
-        <div className="block md:hidden  w-full mt-4">
-          <Slider {...carouselSettings}>
-            {[particularProperty?.propertyCoverFileUrl, ...propertyPicturesTemp]
-              .filter((url, i) => i >= 0 && i < 5)
-              .map((item, index) => (
-                <div
-                  key={index}
-                  className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
-                >
-                  <img
-                    src={
-                      item ||
-                      "https://cdn.pixabay.com/photo/2013/07/12/12/56/home-146585_1280.png" ||
-                      "/placeholder.svg" ||
-                      "/placeholder.svg"
-                    }
-                    alt="Property Picture"
-                    className="object-cover rounded-xl sm:rounded-xl w-full h-full"
-                  />
-                </div>
-              ))}
-          </Slider>
-          <button
-            className=" flex mt-10 text-xs items-center gap-x-2 md:flex md:items-center md:justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-10"
-            onClick={() => setModalIsOpen(true)}
-          >
-            <Squares2X2Icon className="w-5 h-5" />
-            Show all photos
-          </button>
-        </div>
-      </header>
+      ))}
+
+    {/* Show all photos button */}
+    <button
+      className="absolute flex items-center justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
+      onClick={() => setModalIsOpen(true)}
+    >
+      <Squares2X2Icon className="w-5 h-5" />
+      <span className="ml-2 text-neutral-800 text-sm font-medium">
+        Show all photos
+      </span>
+    </button>
+  </div>
+
+  {/* Mobile view - single image with click-to-open */}
+  <div className="relative block  md:hidden w-full mt-4">
+    
+      <img
+        src={
+          particularProperty?.propertyCoverFileUrl ||
+          "https://cdn.pixabay.com/photo/2013/07/12/12/56/home-146585_1280.png" ||
+          "/placeholder.svg"
+        }
+        alt="Property Picture"
+        className="object-cover rounded-xl w-full h-full"
+      />
+  
+    <button onClick={() => setModalIsOpen(true)} className="absolute left-3 bottom-3 flex items-center justify-center bg-neutral-100 rounded-xl px-2 py-2 text-neutral-500 hover:bg-neutral-200 "> <Squares2X2Icon className="w-5 h-5" />
+      <span className="ml-2 text-neutral-800 text-sm font-medium">
+        Show all photos
+      </span></button>
+  </div>
+</header>
+
+
 
       {modalIsOpen && (
         <ModalImages

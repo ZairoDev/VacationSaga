@@ -4,7 +4,7 @@ import ButtonPrimary from "@/shared/ButtonPrimary";
 import converSelectedDateToString from "@/utils/converSelectedDateToString";
 import ModalReserveMobile from "./ModalReserveMobile";
 
-const MobileFooterSticky = ({nights, price} : {nights?: number, price?: number|undefined}) => {
+const MobileFooterSticky = ({nights, price,rentalType , priceLongTerm}: {nights?: number, price?: number|undefined ,rentalType?: string, priceLongTerm?: number|undefined}) => {
   const [startDate, setStartDate] = useState<Date | null>(
     new Date()
   );
@@ -17,10 +17,13 @@ const MobileFooterSticky = ({nights, price} : {nights?: number, price?: number|u
       <div className="container flex items-center justify-between">
         <div className="">
           <span className="block text-xl font-semibold">
-            €{price || NaN}
-            <span className="ml-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+            {rentalType === "Long Term"?`€ ${priceLongTerm}`:`€ ${price}`}
+
+            {rentalType === "Long Term"?<span className="ml-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
+              /month
+            </span>: <span className="ml-1 text-sm font-normal text-neutral-500 dark:text-neutral-400">
               /night
-            </span>
+            </span>}
           </span>
           <ModalSelectDate footerStartDate={(value) => setStartDate(value)} footerEndDate={(value) => setEndDate(value)}
             renderChildren={({ openModal }) => (
