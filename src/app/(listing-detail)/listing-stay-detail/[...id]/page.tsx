@@ -1126,7 +1126,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
     return (
       <div className="listingSectionSidebar__wrap shadow-xl">
-        <div className="flex justify-between border-2 border-red-500">
+        <div className="flex justify-between ">
           <span className="text-3xl font-semibold">
             € {basePrice}
             <span className="ml-1 text-base font-normal text-neutral-500 dark:text-neutral-400">
