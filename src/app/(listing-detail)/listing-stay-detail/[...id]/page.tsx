@@ -536,7 +536,6 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
             priceLongTerm={particularProperty?.basePriceLongTerm}
             rentalType={particularProperty?.rentalType}
             nights={particularProperty?.night[0] || 3}
-            
           />
         </div>
         {/* <p>{particularProperty?.basePrice} hello</p> */}
@@ -836,10 +835,8 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
               strategy="beforeInteractive"
             />
-            {center && isLoaded && (
-              <MapWithCircle center={center} radius={3000} />
-            )}
-            {/* <iframe
+            {center && <MapWithCircle center={center} radius={3000} />}
+            <iframe
               width="100%"
               height="100%"
               loading="lazy"
@@ -847,7 +844,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               referrerPolicy="no-referrer-when-downgrade"
               // src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyAGVJfZMAKYfZ71nzL_v5i3LjTTWnCYwTY&center=${center?.lat},${center?.lng}&zoom=15`}
               src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${center?.lat},${center?.lng}&q=37.087287,25.373241`}
-            ></iframe> */}
+            ></iframe>
           </div>
         </div>
       </div>
@@ -867,7 +864,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
             <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />
 
             {/* CONTENT */}
-            <div className="">
+            {particularProperty?.rentalType === "Short Term" && <div className="">
               <h4 className="text-lg font-semibold">Check-in time</h4>
               <div className="mt-3 text-neutral-500 dark:text-neutral-400 max-w-md text-sm sm:text-base">
                 <div className="flex space-x-10 justify-between p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
@@ -877,10 +874,11 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
                 <div className="flex space-x-10 justify-between p-3">
                   <span>Check-out</span>
                   <span>{particularProperty?.time[1]}:00</span>
-                </div>
+                </div>    
               </div>
-            </div>
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />
+            </div>}
+
+            {particularProperty?.rentalType === "Short Term" && <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />}
 
             {/* CONTENT */}
             <div>
@@ -1176,7 +1174,6 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               )}
             </span>
             <span>€ {totalPrice}</span>
-         
           </div>
 
           <div className="flex justify-between text-neutral-600 dark:text-neutral-300">
@@ -1349,6 +1346,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     firstName: string;
     lastName: string;
     telephone: string;
+    VSID: string;
     email: string;
     message: string;
     agreeToTerms: boolean;
@@ -1359,6 +1357,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       firstName: "",
       lastName: "",
       telephone: "",
+      VSID:particularProperty?.VSID || "",
       email: "",
       message: "",
 
@@ -1376,140 +1375,197 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       setFormData((prev) => ({ ...prev, [name]: checked }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      console.log("Form submitted:", formData);
-      // Handle form submission here
-    };
+   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!formData.agreeToTerms) {
+      alert("Please agree to the terms and conditions.");
+      return;
+    }
+
+    try {
+      const res = await axios.post("/api/websiteLeads", formData);
+
+      if (res.data.success) {
+        alert("Message sent successfully!");
+        setFormData({
+          firstName: "",
+          lastName: "",
+          telephone: "",
+          VSID:"",
+          email: "",
+          message: "",
+          agreeToTerms: false,
+        });
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(error.response?.data?.error || "Failed to send message.");
+    }
+  };
+
+  const propertyName = particularProperty?.propertyName || "";
+  const propertyvsid = particularProperty?.VSID || "";
+const message = encodeURIComponent(`Hello, I want to enquire about ${propertyName} (VSID: ${propertyvsid})`);
+const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
+
 
     return (
-      <div className="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg">
-        <div className="p-6">
-          <div className="mt-4 bg-white  rounded-xl p-4  flex items-baseline space-x-2">
-            <span className="text-2xl font-bold text-orange-400">
-              €{particularProperty?.basePriceLongTerm}
-            </span>
-            <span className="text-gray-600 dark:text-gray-400 text-base">
-              /month
-            </span>
-          </div>
+      <div className="w-full max-w-md mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors duration-300">
+  <div className="p-6">
+    {/* Price Section */}
+    <div className="mt-4 bg-white dark:bg-gray-900 rounded-xl p-4 flex items-baseline space-x-2">
+      <span className="text-2xl font-bold text-orange-400">
+        €{particularProperty?.basePriceLongTerm}
+      </span>
+      <span className="text-gray-600 dark:text-gray-400 text-base">
+        /month
+      </span>
+    </div>
 
-          {/* Header with logo */}
-          <div className="flex items-start justify-between mb-6">
-            <h2 className="text-lg font-medium text-gray-800 leading-tight">
-              Send a message to
-              <br />
-              the owner
-            </h2>
-          </div>
+    {/* Header */}
+    <div className="flex items-start justify-between mb-6">
+      <h2 className="text-lg font-medium text-gray-800 dark:text-gray-100 leading-tight">
+        Send a message to
+        <br />
+        the owner
+      </h2>
+    </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* First Name */}
-            <div>
-              <input
-                type="text"
-                name="firstName"
-                placeholder="First Name*"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Last Name */}
-            <div>
-              <input
-                type="text"
-                name="lastName"
-                placeholder="Last Name*"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Telephone */}
-            <div>
-              <input
-                type="tel"
-                name="telephone"
-                placeholder="Telephone*"
-                value={formData.telephone}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <input
-                type="email"
-                name="email"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Message */}
-            <div>
-              <textarea
-                name="message"
-                placeholder="Enter Message Description*"
-                value={formData.message}
-                onChange={handleInputChange}
-                rows={6}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-700 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={!formData.agreeToTerms}
-              className="w-full bg-orange-400 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 rounded-md transition-colors duration-200"
-            >
-              Submit
-            </button>
-
-            {/* Terms Agreement */}
-            <div className="flex items-start space-x-2 pt-2">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={formData.agreeToTerms}
-                onChange={(e) =>
-                  handleCheckboxChange("agreeToTerms", e.target.checked)
-                }
-                className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
-              />
-              <label
-                htmlFor="terms"
-                className="text-xs text-gray-600 leading-relaxed cursor-pointer"
-              >
-                By submitting this form, you confirm that you agree to our{" "}
-                <Link href="/termsandconditions">
-                  <span className="text-blue-600 underline">terms of use</span>{" "}
-                </Link>
-                and{" "}
-                <Link href="/privacy-policy">
-                  {" "}
-                  <span className="text-blue-600 underline">
-                    privacy policy
-                  </span>
-                </Link>{" "}
-                of vacationsaga.com
-              </label>
-            </div>
-          </form>
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* First Name */}
+      <div>
+        <input
+          type="text"
+          name="firstName"
+          placeholder="First Name*"
+          value={formData.firstName}
+          onChange={handleInputChange}
+          required
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
       </div>
-    );
-  };
+
+      {/* Last Name */}
+      <div>
+        <input
+          type="text"
+          name="lastName"
+          placeholder="Last Name*"
+          value={formData.lastName}
+          onChange={handleInputChange}
+          required
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Telephone */}
+      <div>
+        <input
+          type="tel"
+          name="telephone"
+          placeholder="Telephone*"
+          value={formData.telephone}
+          onChange={handleInputChange}
+          required
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Email */}
+      <div>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email address"
+          value={formData.email}
+          onChange={handleInputChange}
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md placeholder:text-gray-500 dark:placeholder:text-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Message */}
+      <div>
+        <textarea
+          name="message"
+          placeholder="Enter Message Description*"
+          value={formData.message}
+          onChange={handleInputChange}
+          rows={6}
+          className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-700 dark:text-gray-100 text-sm resize-none placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={!formData.agreeToTerms}
+        className="w-full bg-orange-400 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 rounded-md transition-colors duration-200"
+      >
+        Submit
+      </button>
+
+      {/* Terms Agreement */}
+      <div className="flex items-start space-x-2 pt-2">
+        <input
+          type="checkbox"
+          id="terms"
+          checked={formData.agreeToTerms}
+          onChange={(e) =>
+            handleCheckboxChange("agreeToTerms", e.target.checked)
+          }
+          className="w-4 h-4 text-blue-600 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+        />
+        <label
+          htmlFor="terms"
+          className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed cursor-pointer"
+        >
+          By submitting this form, you confirm that you agree to our{" "}
+          <Link href="/termsandconditions">
+            <span className="text-blue-600 dark:text-blue-400 underline">
+              terms of use
+            </span>
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy-policy">
+            <span className="text-blue-600 dark:text-blue-400 underline">
+              privacy policy
+            </span>
+          </Link>{" "}
+          of vacationsaga.com
+        </label>
+      </div>
+    </form>
+
+    {/* OR Divider */}
+    <div className="relative flex items-center py-6">
+      <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+      <span className="flex-shrink mx-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
+        or
+      </span>
+      <div className="flex-grow border-t border-gray-200 dark:border-gray-700"></div>
+    </div>
+
+    {/* WhatsApp Button */}
+    <a
+      href={whatsappUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center justify-center w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-md transition-colors duration-200 space-x-2"
+    >
+      <svg
+        className="w-5 h-5"
+        fill="currentColor"
+        viewBox="0 0 24 24"             
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+      </svg>
+      <span>Contact us on WhatsApp</span>
+    </a>
+  </div>
+</div>
+    )}
 
   const ModalImages: React.FC<ModalImagesProps> = ({
     modalIsOpen,
@@ -1624,79 +1680,86 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       className={`nc-ListingStayDetailPage ${modalIsOpen ? "blur-md" : ""} `}
     >
       <header className="rounded-md sm:rounded-xl">
-  {/* Main Grid Layout for larger screens */}
-  <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2 hidden md:block">
-    <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
-      {particularProperty?.propertyCoverFileUrl ? (
-        <img
-          src={particularProperty?.propertyCoverFileUrl || "/placeholder.svg"}
-          alt="Cover Image"
-          className="object-cover h-full w-full"
-        />
-      ) : (
-        <div className="w-full h-full flex flex-col justify-center items-center">
-          <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
-          <span className="text-neutral-600 font-medium">Image not found</span>
+        {/* Main Grid Layout for larger screens */}
+        <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2 hidden md:block">
+          <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
+            {particularProperty?.propertyCoverFileUrl ? (
+              <img
+                src={
+                  particularProperty?.propertyCoverFileUrl || "/placeholder.svg"
+                }
+                alt="Cover Image"
+                className="object-cover h-full w-full"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col justify-center items-center">
+                <BsExclamationCircleFill className="w-1/4 h-1/4 mb-2 text-neutral-600" />
+                <span className="text-neutral-600 font-medium">
+                  Image not found
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnail images for larger screens */}
+          {allImages
+            ?.filter((_, i) => i >= 1 && i < 5)
+            .map((item, index) => (
+              <div
+                className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
+                key={index}
+              >
+                {allImages[index + 1] ? (
+                  <img
+                    src={allImages[index + 1] || "/placeholder.svg"}
+                    alt="Property Picture"
+                    className="object-cover rounded-xl w-full h-full"
+                  />
+                ) : (
+                  <div className="flex flex-col justify-center items-center">
+                    <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
+                    <p>Image not found!</p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+          {/* Show all photos button */}
+          <button
+            className="absolute flex items-center justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
+            onClick={() => setModalIsOpen(true)}
+          >
+            <Squares2X2Icon className="w-5 h-5" />
+            <span className="ml-2 text-neutral-800 text-sm font-medium">
+              Show all photos
+            </span>
+          </button>
         </div>
-      )}
-    </div>
 
-    {/* Thumbnail images for larger screens */}
-    {allImages
-      ?.filter((_, i) => i >= 1 && i < 5)
-      .map((item, index) => (
-        <div
-          className="aspect-w-4 aspect-h-3 sm:aspect-w-6 sm:aspect-h-5 rounded-xl"
-          key={index}
-        >
-          {allImages[index + 1] ? (
-            <img
-              src={allImages[index + 1] || "/placeholder.svg"}
-              alt="Property Picture"
-              className="object-cover rounded-xl w-full h-full"
-            />
-          ) : (
-            <div className="flex flex-col justify-center items-center">
-              <BsExclamationCircleFill className="w-1/2 h-1/2 mb-2 text-neutral-700" />
-              <p>Image not found!</p>
-            </div>
-          )}
+        {/* Mobile view - single image with click-to-open */}
+        <div className="relative block  md:hidden w-full mt-4">
+          <img
+            src={
+              particularProperty?.propertyCoverFileUrl ||
+              "https://cdn.pixabay.com/photo/2013/07/12/12/56/home-146585_1280.png" ||
+              "/placeholder.svg"
+            }
+            alt="Property Picture"
+            className="object-cover rounded-xl w-full h-full"
+          />
+
+          <button
+            onClick={() => setModalIsOpen(true)}
+            className="absolute left-3 bottom-3 flex items-center justify-center bg-neutral-100 rounded-xl px-2 py-2 text-neutral-500 hover:bg-neutral-200 "
+          >
+            {" "}
+            <Squares2X2Icon className="w-5 h-5" />
+            <span className="ml-2 text-neutral-800 text-sm font-medium">
+              Show all photos
+            </span>
+          </button>
         </div>
-      ))}
-
-    {/* Show all photos button */}
-    <button
-      className="absolute flex items-center justify-center left-3 bottom-3 px-4 py-2 rounded-xl bg-neutral-100 text-neutral-500 hover:bg-neutral-200 z-30"
-      onClick={() => setModalIsOpen(true)}
-    >
-      <Squares2X2Icon className="w-5 h-5" />
-      <span className="ml-2 text-neutral-800 text-sm font-medium">
-        Show all photos
-      </span>
-    </button>
-  </div>
-
-  {/* Mobile view - single image with click-to-open */}
-  <div className="relative block  md:hidden w-full mt-4">
-    
-      <img
-        src={
-          particularProperty?.propertyCoverFileUrl ||
-          "https://cdn.pixabay.com/photo/2013/07/12/12/56/home-146585_1280.png" ||
-          "/placeholder.svg"
-        }
-        alt="Property Picture"
-        className="object-cover rounded-xl w-full h-full"
-      />
-  
-    <button onClick={() => setModalIsOpen(true)} className="absolute left-3 bottom-3 flex items-center justify-center bg-neutral-100 rounded-xl px-2 py-2 text-neutral-500 hover:bg-neutral-200 "> <Squares2X2Icon className="w-5 h-5" />
-      <span className="ml-2 text-neutral-800 text-sm font-medium">
-        Show all photos
-      </span></button>
-  </div>
-</header>
-
-
+      </header>
 
       {modalIsOpen && (
         <ModalImages
@@ -1712,7 +1775,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {renderSection1()}
           {renderSection2()}
           {renderSection3()}
-          {renderSection4()}
+          {particularProperty?.rentalType === "Short Term" && renderSection4()}
           {bookedState && particularProperty?.rentalType === "Short Term" && (
             <SectionDateRange
               prices={particularProperty?.pricePerDay}
@@ -1722,7 +1785,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {(commonProperties?.length || 0) > 1 && renderPortionCards()}
           {renderSection5()}
           {/* {renderSection6()} */}
-          {/* {center && center?.lat != 0 && center?.lng != 0 && renderSection7()} */}
+          {center && center?.lat != 0 && center?.lng != 0 && renderSection7()}
           {renderSection8()}
         </div>
 
