@@ -323,14 +323,21 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     }
   }, [userIdOfProperty]);
 
-  let portions = 0;
-  const data = localStorage.getItem("page1") || "";
-  if (data) {
-    const value = JSON.parse(data)["numberOfPortions"];
-    if (value) {
-      portions = Number.parseInt(value, 10);
+  const [portions, setPortions] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const data = localStorage.getItem("page1");
+      if (data) {
+        try {
+          const value = JSON.parse(data)?.numberOfPortions;
+          if (value) setPortions(value);
+        } catch (err) {
+          console.error("Error parsing localStorage:", err);
+        }
+      }
     }
-  }
+  }, []);
   const checkPortion = portions > 1 ? portions : 0;
 
   const [selectedDates, setSelectedDates] = useState<DateRange>({
@@ -835,7 +842,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
               strategy="beforeInteractive"
             />
-            {center && <MapWithCircle center={center} radius={3000} />}
+            {isLoaded && center && <MapWithCircle center={center} radius={3000} />}
             <iframe
               width="100%"
               height="100%"
