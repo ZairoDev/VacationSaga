@@ -1,38 +1,40 @@
-// components/MapWithCircle.tsx
-import React, { useEffect, useRef } from 'react';
+"use client";
+
+import React, { useEffect, useRef } from "react";
 
 interface MapWithCircleProps {
   center: { lat: number; lng: number };
-  radius: number; // Radius in meters
+  radius: number; // meters
 }
 
 const MapWithCircle: React.FC<MapWithCircleProps> = ({ center, radius }) => {
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // ✅ ensure client-side only
+    if (typeof window === "undefined") return;
+    // ✅ ensure google maps is loaded
+    if (!(window as any).google || !(window as any).google.maps) return;
     if (!mapRef.current) return;
 
-    // Initialize the map, centered at the specified location
-    const map = new google.maps.Map(mapRef.current, {
+    const map = new (window as any).google.maps.Map(mapRef.current, {
       center,
       zoom: 12,
-      // disableDefaultUI: true,  // Hide default map controls
     });
 
-    // Create a circle overlay around the center location
-    new google.maps.Circle({
+    new (window as any).google.maps.Circle({
       map,
       center,
       radius,
-      fillColor: '#EA580C',    // Circle fill color
-      fillOpacity: 0.2,        // Circle transparency
-      strokeColor: '#EA580C',  // Circle border color
-      strokeOpacity: 0.35,     // Circle border transparency
-      strokeWeight: 2,         // Circle border width
+      fillColor: "#EA580C",
+      fillOpacity: 0.2,
+      strokeColor: "#EA580C",
+      strokeOpacity: 0.35,
+      strokeWeight: 2,
     });
   }, [center, radius]);
 
-  return <div ref={mapRef} style={{ width: '100%', height: '500px' }} />;
+  return <div ref={mapRef} style={{ width: "100%", height: "500px" }} />;
 };
 
 export default MapWithCircle;

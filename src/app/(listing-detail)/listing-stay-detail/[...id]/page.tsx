@@ -17,6 +17,8 @@ import axios from "axios";
 import Link from "next/link";
 import Slider from "react-slick";
 import Script from "next/script";
+import dynamic from "next/dynamic";
+
 import { FaBath } from "react-icons/fa";
 import "slick-carousel/slick/slick.css";
 import { FaCheck } from "react-icons/fa";
@@ -48,7 +50,10 @@ import ButtonClose from "@/shared/ButtonClose";
 import ButtonCircle from "@/shared/ButtonCircle";
 import ButtonPrimary from "@/shared/ButtonPrimary";
 import LikeSaveBtns from "@/components/LikeSaveBtns";
-import MapWithCircle from "@/components/MapWithCircle";
+const MapWithCircle = dynamic(() => import("@/components/MapWithCircle"), {
+  ssr: false, // 🚀 ensures it only runs on client
+});
+
 import ButtonSecondary from "@/shared/ButtonSecondary";
 import { useLoadScript } from "@react-google-maps/api";
 import { Dialog, Transition } from "@headlessui/react";
@@ -126,6 +131,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const dt2 = tomorrow.toISOString().split("T")[0];
   const [stdt, setStdt] = useState<string>(dt1);
   const [nddt, setNddt] = useState<string>(dt2);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
@@ -824,37 +830,34 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const renderSection7 = () => {
     return (
       <div className="listingSection__wrap">
-        {/* HEADING */}
-        <div>
-          <h2 className="text-2xl font-semibold">Location</h2>
-          <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-            {/* {location[2]}, {location[1]}, {location[0]} */}
-            {particularProperty?.city}, {particularProperty?.state},{" "}
-            {particularProperty?.country}
-          </span>
-        </div>
-        <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
+    <div>
+      <h2 className="text-2xl font-semibold">Location</h2>
+      <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
+        {particularProperty?.city}, {particularProperty?.state},{" "}
+        {particularProperty?.country}
+      </span>
+    </div>
+    <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
 
-        {/* MAP */}
-        <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
-          <div className="rounded-xl overflow-hidden z-0">
-            <Script
-              src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
-              strategy="beforeInteractive"
-            />
-            {isLoaded && center && <MapWithCircle center={center} radius={3000} />}
-            <iframe
-              width="100%"
-              height="100%"
-              loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
-              // src={`https://www.google.com/maps/embed/v1/view?key=AIzaSyAGVJfZMAKYfZ71nzL_v5i3LjTTWnCYwTY&center=${center?.lat},${center?.lng}&zoom=15`}
-              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${center?.lat},${center?.lng}&q=37.087287,25.373241`}
-            ></iframe>
-          </div>
-        </div>
+    <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
+      <div className="rounded-xl overflow-hidden z-0">
+        {loadError && <p className="text-red-500">Map failed to load</p>}
+        {!isLoaded && <p>Loading map...</p>}
+
+        {isLoaded && typeof window !== "undefined" && center && (
+          <MapWithCircle center={center} radius={3000} />
+        )}
       </div>
+      <iframe
+    width="100%"
+    height="100%"
+    loading="lazy"
+    allowFullScreen
+    referrerPolicy="no-referrer-when-downgrade"
+    src={`https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=${center?.lat},${center?.lng}&zoom=15`}
+  ></iframe>
+    </div>
+  </div>
     );
   };
 
