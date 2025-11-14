@@ -1665,16 +1665,25 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
   }, [particularProperty?.propertyPictureUrls]);
 
   useEffect(() => {
+    if (!particularProperty) return;
+
     let arr: string[] = [];
-    if (particularProperty?.propertyCoverFileUrl != undefined)
-      arr.push(particularProperty?.propertyCoverFileUrl);
-    if (particularProperty?.propertyPictureUrls != undefined)
-      arr = [...arr, ...particularProperty?.propertyPictureUrls];
-    if (particularProperty?.propertyImages != undefined)
-      arr = [...arr, ...particularProperty?.propertyImages];
-    arr = arr.filter((item) => item != "");
-    setAllImages(arr);
+
+    if (particularProperty.propertyCoverFileUrl)
+      arr.push(particularProperty.propertyCoverFileUrl);
+
+    if (particularProperty.propertyPictureUrls)
+      arr.push(...particularProperty.propertyPictureUrls);
+
+    if (particularProperty.propertyImages)
+      arr.push(...particularProperty.propertyImages);
+
+    const uniqueImages = Array.from(new Set(arr.filter((item) => item !== "")));
+
+    setAllImages(uniqueImages);
   }, [particularProperty]);
+  
+  
 
   const carouselSettings = {
     dots: true,
