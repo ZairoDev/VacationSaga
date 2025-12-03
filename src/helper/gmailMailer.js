@@ -102,6 +102,7 @@ export const sendContactEmail = async (userDetails) => {
     const text = `
         Name: ${userDetails.name}
         Email: ${userDetails.email}
+        Phone: ${userDetails.phone}
         Message: ${userDetails.message}
       `;
 

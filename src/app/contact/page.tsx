@@ -42,25 +42,30 @@ const info = [
 const PageContact: FC<PageContactProps> = ({}) => {
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const [sendDetailsLoading, setSendDetailsLoading] = useState<boolean>(false);
 
   const handleContactForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setSendDetailsLoading(true);
-    if (!nameRef.current?.value || !emailRef.current?.value) {
+    if (!nameRef.current?.value || !emailRef.current?.value || !phoneRef.current?.value) {
+      toast.error("Please fill in all required fields");
+      setSendDetailsLoading(false);
       return;
     }
     try {
       const response = await axios.post("/api/contact", {
         name: nameRef.current?.value,
         email: emailRef.current?.value,
+        phone: phoneRef.current?.value,
         message: messageRef.current?.value,
       });
       if (response) {
         toast.success(response.data.message);
         nameRef.current!.value = "";
         emailRef.current!.value = "";
+        phoneRef.current!.value = "";
         messageRef.current!.value = "";
       }
     } catch (err: any) {
@@ -121,6 +126,17 @@ const PageContact: FC<PageContactProps> = ({}) => {
                     placeholder="example@example.com"
                     className="mt-1"
                     ref={emailRef}
+                  />
+                </label>
+                <label className="block">
+                  <Label>Phone number *</Label>
+
+                  <Input
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    className="mt-1"
+                    ref={phoneRef}
+                    required
                   />
                 </label>
                 <label className="block">

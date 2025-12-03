@@ -6,9 +6,15 @@ connectDb();
 
 export async function POST(request) {
   const reqBody = await request.json();
-  const { name, email, message } = reqBody;
+  const { name, email, phone, message } = reqBody;
+  if (!name || !email || !phone) {
+    return NextResponse.json(
+      { error: "Missing required contact information" },
+      { status: 400 }
+    );
+  }
   try {
-    await sendContactEmail({ name, email, message });
+    await sendContactEmail({ name, email, phone, message });
     return NextResponse.json(
       { message: "Thank you for contacting us. We will get back to you soon." },
       { status: 200 }
