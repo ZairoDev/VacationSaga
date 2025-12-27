@@ -435,9 +435,27 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   });
 
   const renderSection1 = () => {
+    // Display text logic
+    const getAvailabilityText = () => {
+      const availability = particularProperty?.availability;
+      if (availability === "Not Available" || availability === "not available") {
+        return "Rented";
+      }
+      return availability;
+    };
+
+    // Badge color and style logic - minimal and classy
+    const getAvailabilityBadgeClass = () => {
+      const availability = particularProperty?.availability;
+      if (availability === "Available" || availability === "available") {
+        return "bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800";
+      }
+      return "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800";
+    };
+
     return (
       <div className=" lg:border lg:dark:border-neutral-600 rounded-xl lg:p-2">
-        <div className="flex justify-between items-center lg:mt-2">
+        <div className="flex justify-between items-center lg:mt-2 flex-wrap gap-2">
           <Badge name={particularProperty?.propertyType} />
           {/* <Badge name={particularProperty?.VSID} /> */}
           {particularProperty?.rentalType === "Long Term" &&
@@ -449,6 +467,8 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {particularProperty?.rentalType === "Long Term" && (
             <Badge name={`${particularProperty.propertyStyle}`} />
           )}
+
+
           <LikeSaveBtns />
         </div>
 
@@ -1416,9 +1436,12 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
   const propertyName = particularProperty?.propertyName || "";
   const propertyvsid = particularProperty?.VSID || "";
-const message = encodeURIComponent(`Hello, I want to enquire about ${propertyName} (VSID: ${propertyvsid})`);
-const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
-
+  const isSoldOut = particularProperty?.availability === "Not Available" || particularProperty?.availability === "not available";
+  
+  const message = isSoldOut 
+    ? encodeURIComponent(`Hello, the property ${propertyName} (VSID: ${propertyvsid}) is rented. I'd like to find similar properties or be notified when available.`)
+    : encodeURIComponent(`Hello, I want to enquire about ${propertyName} (VSID: ${propertyvsid})`);
+  const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
 
     return (
       <div className="w-full max-w-md mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors duration-300">
@@ -1433,12 +1456,41 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
       </span>
     </div>
 
+    {/* Rented Message */}
+    {isSoldOut && (
+      <div className="my-4 p-3.5 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+        <div className="flex items-start space-x-2.5">
+          <svg
+            className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <div>
+            <h3 className="text-sm font-medium text-red-700 dark:text-red-300 mb-0.5">
+              Property Rented
+            </h3>
+            <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed">
+              Contact us to find similar properties or get notified when available.
+            </p>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* Header */}
     <div className="flex items-start justify-between mb-6">
       <h2 className="text-lg font-medium text-gray-800 dark:text-gray-100 leading-tight">
-        Send a message to
+        {isSoldOut ? "Get Notified" : "Send a message to"}
         <br />
-        the owner
+        {isSoldOut ? "or Find Similar" : "the owner"}
       </h2>
     </div>
 
@@ -1498,7 +1550,11 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
       <div>
         <textarea
           name="message"
-          placeholder="Enter Message Description*"
+          placeholder={
+            isSoldOut
+              ? "Let us know your requirements for similar properties*"
+              : "Enter Message Description*"
+          }
           value={formData.message}
           onChange={handleInputChange}
           rows={6}
@@ -1512,7 +1568,7 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
         disabled={!formData.agreeToTerms}
         className="w-full bg-orange-400 hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-medium py-3 rounded-md transition-colors duration-200"
       >
-        Submit
+        {isSoldOut ? "Request Similar Properties" : "Submit"}
       </button>
 
       {/* Terms Agreement */}
@@ -1700,7 +1756,7 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
     >
       <header className="rounded-md sm:rounded-xl">
         {/* Main Grid Layout for larger screens */}
-        <div className="relative md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2 hidden md:block">
+        <div className="relative hidden md:grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
           <div className="col-span-2 row-span-3 sm:row-span-2 relative rounded-md sm:rounded-xl overflow-hidden">
             {particularProperty?.propertyCoverFileUrl ? (
               <img
@@ -1716,6 +1772,44 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
                 <span className="text-neutral-600 font-medium">
                   Image not found
                 </span>
+              </div>
+            )}
+            {/* RENTED - Diagonal Seal */}
+            {(particularProperty?.availability === "Not Available" ||
+              particularProperty?.availability === "not available") && (
+              <div className="absolute top-0 left-0 z-10 pointer-events-none">
+                {/* Diagonal stamp cutting across corner */}
+                <div 
+                  className="relative bg-gradient-to-br from-orange-500 to-orange-600 transform -rotate-45  origin-top-left shadow-[0_8px_20px_rgba(0,0,0,0.3)]"
+                  style={{
+                    width: '420px',
+                    height: '60px',
+                    marginTop: '180px',
+                    marginLeft: '-120px'
+                  }}
+                >
+                  {/* Border layer for depth */}
+                  <div className="absolute inset-3 border-2 border-white/30"></div>
+                  
+                  {/* Main typography */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-white font-black text-xl  uppercase select-none" 
+                          style={{ 
+                            textShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                            letterSpacing: '0.15em',
+                            fontWeight: 200
+                          }}>
+                      RENTED
+                    </span>
+                  </div>
+                  
+                  {/* Corner accents */}
+                  <div className="absolute top-3 left-3 w-6 h-6 border-l-3 border-t-3 border-white/50"></div>
+                  <div className="absolute bottom-3 right-3 w-6 h-6 border-r-3 border-b-3 border-white/50"></div>
+                  
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                </div>
               </div>
             )}
           </div>
@@ -1756,7 +1850,7 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
         </div>
 
         {/* Mobile view - single image with click-to-open */}
-        <div className="relative block  md:hidden w-full mt-4">
+        <div className="relative block  md:hidden w-full mt-4 overflow-hidden rounded-xl">
           <img
             src={
               particularProperty?.propertyCoverFileUrl ||
@@ -1766,6 +1860,45 @@ const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
             alt="Property Picture"
             className="object-cover rounded-xl w-full h-full"
           />
+          
+          {/* RENTED - Diagonal Seal Mobile */}
+          {(particularProperty?.availability === "Not Available" ||
+            particularProperty?.availability === "not available") && (
+            <div className="absolute top-0 left-0 z-40 pointer-events-none">
+              {/* Diagonal stamp cutting across corner */}
+              <div 
+                className="relative bg-gradient-to-br from-orange-500 to-orange-600 transform -rotate-45 origin-top-left shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
+                style={{
+                  width: '400px',
+                    height: '40px',
+                    marginTop: '160px',
+                    marginLeft: '-125px'
+                }}
+              >
+                {/* Border layer for depth */}
+                <div className="absolute inset-2.5 border-2 border-white/30"></div>
+                
+                {/* Main typography */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white font-black text-md tracking-[0.2em] uppercase select-none" 
+                        style={{ 
+                          textShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                          letterSpacing: '0.1em',
+                          fontWeight: 200
+                        }}>
+                    RENTED
+                  </span>
+                </div>
+                
+                {/* Corner accents */}
+                <div className="absolute top-2.5 left-2.5 w-5 h-5 border-l-2 border-t-2 border-white/50"></div>
+                <div className="absolute bottom-2.5 right-2.5 w-5 h-5 border-r-2 border-b-2 border-white/50"></div>
+                
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+              </div>
+            </div>
+          )}
 
           <button
             onClick={() => setModalIsOpen(true)}

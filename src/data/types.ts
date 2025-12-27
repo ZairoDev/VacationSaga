@@ -260,6 +260,7 @@ export interface PropertiesDataType {
   lastUpdatedBy?: string[];
   lastUpdates?: string[];
   isLive: boolean;
+  availability: string;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -140,6 +140,10 @@ const PropertySchema: Schema = new Schema(
       type: Boolean,
       default: true,
     },
+    availability: {
+      type: String,
+      default: "Available",
+    },
   },
   { timestamps: true }
 );
