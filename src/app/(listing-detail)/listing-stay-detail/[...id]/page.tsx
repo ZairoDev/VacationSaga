@@ -563,14 +563,17 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const renderSection2 = () => {
     return (
       <div className="listingSection__wrap ">
-        <div className=" z-50 ">
-          <MobileFooterSticky
-            price={particularProperty?.basePrice}
-            priceLongTerm={particularProperty?.basePriceLongTerm}
-            rentalType={particularProperty?.rentalType}
-            nights={particularProperty?.night[0] || 3}
-          />
-        </div>
+        {/* Only show MobileFooterSticky for Short Term properties */}
+        {particularProperty?.rentalType === "Short Term" && (
+          <div className=" z-50 ">
+            <MobileFooterSticky
+              price={particularProperty?.basePrice}
+              priceLongTerm={particularProperty?.basePriceLongTerm}
+              rentalType={particularProperty?.rentalType}
+              nights={particularProperty?.night[0] || 3}
+            />
+          </div>
+        )}
         {/* <p>{particularProperty?.basePrice} hello</p> */}
         <h2 className="text-2xl font-semibold  mb-2">Stay information</h2>
         {particularProperty?.newReviews ? (
@@ -1941,7 +1944,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {renderSection8()}
         </div>
 
-        {/* SIDEBAR */}
+        {/* SIDEBAR - Desktop Only */}
         <div className="hidden lg:block flex-grow mt-14 lg:mt-0">
           {particularProperty?.rentalType === "Long Term" ? (
             <LongTermcContactForm />
@@ -1949,6 +1952,13 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
             renderSidebar()
           )}
         </div>
+
+        {/* MOBILE FORM - Long Term Properties Only */}
+        {particularProperty?.rentalType === "Long Term" && (
+          <div className="block lg:hidden w-full mt-8">
+            <LongTermcContactForm />
+          </div>
+        )}
       </main>
     </div>
   );

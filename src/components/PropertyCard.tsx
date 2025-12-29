@@ -21,7 +21,8 @@ import PropertyGallerySlider from "@/components/PropertyGallerySlider";
 // const DEMO_DATA = DEMO_STAY_LISTINGS[0];
 
 export interface extendedPropertyCard extends PropertyDataType {
-  basePriceLongTerm?: number
+  basePriceLongTerm?: number;
+  availability?: string;
 }
 
 interface propertiesCardProps {
@@ -52,7 +53,8 @@ const PropertyCard: FC<propertiesCardProps> = ({
     beds,
     basePrice,
     rentalType,
-    basePriceLongTerm
+    basePriceLongTerm,
+    availability
   } = data as extendedPropertyCard;
 
   const cardImages: string[] = [
@@ -90,6 +92,42 @@ const PropertyCard: FC<propertiesCardProps> = ({
           id={_id}
         />
         <BtnLikeIcon isLiked={false} className="absolute right-3 top-3 z-[1]" />
+        
+        {/* Rented Badge */}
+        {(availability === "Not Available" || availability === "not available") && (
+          <div className="absolute top-0 left-0 z-[2] pointer-events-none overflow-hidden rounded-tl-lg">
+            <div 
+              className="relative bg-gradient-to-br from-orange-500 to-orange-600 transform -rotate-45 origin-top-left shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
+              style={{
+                width: '180px',
+                height: '32px',
+                marginTop: '75px',
+                marginLeft: '-50px'
+              }}
+            >
+              {/* Border accent */}
+              <div className="absolute inset-1.5 border border-white/30"></div>
+              
+              {/* Text */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span 
+                  className="text-white font-black text-xs uppercase select-none" 
+                  style={{ 
+                    textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                    letterSpacing: '0.15em',
+                    fontWeight: 800
+                  }}
+                >
+                  RENTED
+                </span>
+              </div>
+              
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+            </div>
+          </div>
+        )}
+        
         {/* {saleOff && <SaleOffBadge className="absolute left-3 top-3" />} */}
         {/* {monthlyDiscount?.length && (
           <SaleOffBadge
