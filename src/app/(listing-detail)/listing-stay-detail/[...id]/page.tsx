@@ -565,7 +565,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       <div className="listingSection__wrap ">
         {/* Only show MobileFooterSticky for Short Term properties */}
         {particularProperty?.rentalType === "Short Term" && (
-          <div className=" z-50 ">
+          <div className=" z-10 ">
             <MobileFooterSticky
               price={particularProperty?.basePrice}
               priceLongTerm={particularProperty?.basePriceLongTerm}
@@ -1867,7 +1867,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           {/* RENTED - Diagonal Seal Mobile */}
           {(particularProperty?.availability === "Not Available" ||
             particularProperty?.availability === "not available") && (
-            <div className="absolute top-0 left-0 z-40 pointer-events-none">
+            <div className="absolute top-0 left-0 z-50 pointer-events-none">
               {/* Diagonal stamp cutting across corner */}
               <div 
                 className="relative bg-gradient-to-br from-orange-500 to-orange-600 transform -rotate-45 origin-top-left shadow-[0_6px_16px_rgba(0,0,0,0.3)]"
