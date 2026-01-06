@@ -217,9 +217,26 @@ const CheckOutPagePageMain: FC<CheckOutPagePageMainProps> = ({
       );
     }
   };
+  // Check if user is logged in, redirect to login if not
   useEffect(() => {
-    getLoggedInUser();
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const response = await axios.post("/api/user/profile");
+        if (response.data.data) {
+          setLoggedInUser(response.data.data);
+        } else {
+          // User not logged in, redirect to login
+          const currentPath = window.location.pathname + window.location.search;
+          router.push(`/login?redirect=${encodeURIComponent(currentPath)}&role=Traveller`);
+        }
+      } catch (err) {
+        // User not logged in, redirect to login
+        const currentPath = window.location.pathname + window.location.search;
+        router.push(`/login?redirect=${encodeURIComponent(currentPath)}&role=Traveller`);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const handleBookingConfirmation = async () => {
     setLoading(true);

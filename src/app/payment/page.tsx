@@ -51,10 +51,24 @@ function Payment() {
   };
 
   useEffect(() => {
+    // Check if user is logged in, redirect to login if not
+    const checkAuth = async () => {
+      try {
+        await axios.post("/api/user/profile");
+      } catch (err) {
+        // User not logged in, redirect to login
+        const currentPath = window.location.pathname + window.location.search;
+        router.push(`/login?redirect=${encodeURIComponent(currentPath)}&role=Traveller`);
+        return;
+      }
+    };
+    
+    checkAuth();
+    
     if (pId) {
       getPropertyById();
     }
-  }, []);
+  }, [router, pId]);
 
   const decryptToken = async () => {
     try {

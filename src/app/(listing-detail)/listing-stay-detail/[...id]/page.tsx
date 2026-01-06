@@ -18,6 +18,7 @@ import Link from "next/link";
 import Slider from "react-slick";
 import Script from "next/script";
 import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
 import { FaBath } from "react-icons/fa";
 import "slick-carousel/slick/slick.css";
@@ -50,9 +51,7 @@ import ButtonClose from "@/shared/ButtonClose";
 import ButtonCircle from "@/shared/ButtonCircle";
 import ButtonPrimary from "@/shared/ButtonPrimary";
 import LikeSaveBtns from "@/components/LikeSaveBtns";
-const MapWithCircle = dynamic(() => import("@/components/MapWithCircle"), {
-  ssr: false, // 🚀 ensures it only runs on client
-});
+
 
 import ButtonSecondary from "@/shared/ButtonSecondary";
 import { useLoadScript } from "@react-google-maps/api";
@@ -95,16 +94,13 @@ interface CenterDataType {
   lng: number;
 }
 
-const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
+const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }) => {
   // const { user } = useAuth();
   // const router = useRouter();
   // const thisPathname = usePathname();
   const searchParams = useSearchParams();
 
-  const param: string = params.id[0];
-  const indexId: number =
-    Number.parseInt(searchParams.get("portion") || "0") || 0;
-
+  // All hooks must be called before any conditional returns
   const [particularProperty, setParticularProperty] =
     useState<PropertiesDataType>();
   const [allImages, setAllImages] = useState<any[]>([]);
@@ -132,10 +128,47 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
   const [stdt, setStdt] = useState<string>(dt1);
   const [nddt, setNddt] = useState<string>(dt2);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [bookedState, setBookedState] = useState<boolean>(false);
+  const [alreadyBookedDates, setAlreadyBookedDates] = useState<Date[]>([]);
+  const [bookedDates, setBookedDates] = useState<EventInterface[]>([]);
+  const [bookingPrice, setBookingPrice] = useState(0);
+  const [portions, setPortions] = useState(0);
+  const [selectedDates, setSelectedDates] = useState<DateRange>({
+    startDate: null,
+    endDate: null,
+  });
+  const [savedDates, setSavedDates] = useState<Date[]>(() => {
+    const saved = localStorage.getItem("dates") || "";
+    if (saved) {
+      const value = JSON.parse(saved);
+      const start = new Date(value.startDate);
+      const end = new Date(value.endDate);
+      return [start, end];
+    }
+    const today = new Date();
+    return [today, today];
+  });
+  const [minNights, setMinNights] = useState<number>(1);
+  const [numberOfNights, setNumberOfNights] = useState<number>(0);
+  const [portionCoverFileUrls, setPortionCoverFileUrls] = useState<string[]>([]);
+  const checkPortion = portions > 1 ? portions : 0;
+  const [isOpenModalAmenities, setIsOpenModalAmenities] = useState(false);
+  const [isOpenModalImages, setIsOpenModalImages] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [location, setLocation] = useState<string[]>([]);
+  const [totalGuests, setTotalGuests] = useState<number>(0);
+  const [minNightStay, setMinNightStay] = useState<number | undefined>(undefined);
+  const [propertyPicturesTemp, setPropertyPicturesTemp] = useState<string[]>([]);
 
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   });
+
+  // Validate params after all hooks are called
+  const isValidParams = params?.id && Array.isArray(params.id) && params.id.length > 0;
+  const param: string = isValidParams ? params.id[0] : "";
+  const indexId: number =
+    Number.parseInt(searchParams.get("portion") || "0") || 0;
 
   // TODO: Accessing current Location
   useEffect(() => {
@@ -166,12 +199,6 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     };
     navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
   }, []);
-
-  // TODO: handle external booked dates
-  const [bookedState, setBookedState] = useState<boolean>(false);
-  const [alreadyBookedDates, setAlreadyBookedDates] = useState<Date[]>([]);
-  const [bookedDates, setBookedDates] = useState<EventInterface[]>([]);
-  const [bookingPrice, setBookingPrice] = useState(0);
   const fetchAndParseICal = async (url: string) => {
     try {
       const response = await axios.post("/api/ical", { url });
@@ -290,10 +317,11 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     };
 
     const getBookedDates = async () => {
+      if (!isValidParams || !param) return;
       try {
         const response = await axios.post(
           "/api/newProperties/getBlockedDates",
-          { propertyId: params.id[0] }
+          { propertyId: param }
         );
 
         setAlreadyBookedDates((prev) => [...prev, ...response?.data?.data]);
@@ -302,9 +330,12 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       }
     };
 
-    getProperties();
-    getBookedDates();
-  }, []);
+    if (isValidParams && param) {
+      getProperties();
+      getBookedDates();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isValidParams, param]);
 
   useEffect(() => {
     const getUsername = async () => {
@@ -327,9 +358,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     if (userIdOfProperty) {
       getUsername();
     }
-  }, [userIdOfProperty]);
-
-  const [portions, setPortions] = useState(0);
+  }, [userIdOfProperty, userEmail]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -344,30 +373,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
       }
     }
   }, []);
-  const checkPortion = portions > 1 ? portions : 0;
 
-  const [selectedDates, setSelectedDates] = useState<DateRange>({
-    startDate: null,
-    endDate: null,
-  });
   const handleDatesChange = (dates: DateRange) => {
     setSelectedDates(dates);
   };
-
-  const [savedDates, setSavedDates] = useState<Date[]>(() => {
-    const saved = localStorage.getItem("dates") || "";
-    if (saved) {
-      const value = JSON.parse(saved);
-      const start = new Date(value.startDate);
-      const end = new Date(value.endDate);
-      return [start, end];
-    }
-    const today = new Date();
-    return [today, today];
-  });
-
-  const [minNights, setMinNights] = useState<number>(1);
-  const [numberOfNights, setNumberOfNights] = useState<number>(0);
   useEffect(() => {
     const newMinNights = particularProperty?.night?.[0] ?? 1;
     setMinNights(newMinNights);
@@ -383,21 +392,19 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     }
   }, [savedDates, particularProperty?.night]);
 
-  const [portionCoverFileUrls, setPortionCoverFileUrls] = useState<string[]>(
-    Array(checkPortion).fill("")
-  );
-
   useEffect(() => {
     const savedData = localStorage.getItem("portionCoverFileUrls") || "";
     if (!savedData) {
-      setPortionCoverFileUrls(Array(checkPortion).fill(1));
+      setPortionCoverFileUrls(Array(checkPortion).fill(""));
     } else {
-      const value = JSON.parse(savedData);
-      setPortionCoverFileUrls(value);
+      try {
+        const value = JSON.parse(savedData);
+        setPortionCoverFileUrls(value);
+      } catch (err) {
+        console.error("Error parsing portionCoverFileUrls:", err);
+      }
     }
   }, [checkPortion]);
-
-  const [isOpenModalAmenities, setIsOpenModalAmenities] = useState(false);
 
   function closeModalAmenities() {
     setIsOpenModalAmenities(false);
@@ -407,9 +414,6 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     setIsOpenModalAmenities(true);
   }
 
-  const [isOpenModalImages, setIsOpenModalImages] = useState(false);
-  const [modalIsOpen, setModalIsOpen] = useState(false); // Added missing state
-
   function closeModalImages() {
     setIsOpenModalImages(false);
   }
@@ -418,26 +422,81 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     setIsOpenModalImages(true);
   }
 
-  const [location, setLocation] = useState<string[]>(() => {
+  useEffect(() => {
     const savedPage = localStorage.getItem("page2") || "";
     if (savedPage) {
-      const value = JSON.parse(savedPage);
-      return [
-        value.country,
-        value.state,
-        value.city,
-        value.postalCode,
-        value.street,
-        value.roomNumber,
-      ];
+      try {
+        const value = JSON.parse(savedPage);
+        setLocation([
+          value.country,
+          value.state,
+          value.city,
+          value.postalCode,
+          value.street,
+          value.roomNumber,
+        ]);
+      } catch (err) {
+        console.error("Error parsing page2:", err);
+      }
     }
-    return ["", "", "", "", "", ""];
-  });
+  }, []);
+
+  useEffect(() => {
+    const savedValue = localStorage.getItem("totalGuests") || "";
+    if (savedValue) {
+      try {
+        const total = JSON.parse(savedValue);
+        setTotalGuests(total);
+      } catch (err) {
+        console.error("Error parsing totalGuests:", err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (particularProperty?.propertyPictureUrls) {
+      setPropertyPicturesTemp(particularProperty?.propertyPictureUrls);
+    }
+  }, [particularProperty?.propertyPictureUrls]);
+
+  useEffect(() => {
+    if (!particularProperty) return;
+
+    let arr: string[] = [];
+
+    if (particularProperty.propertyCoverFileUrl)
+      arr.push(particularProperty.propertyCoverFileUrl);
+
+    if (particularProperty.propertyPictureUrls)
+      arr.push(...particularProperty.propertyPictureUrls);
+
+    if (particularProperty.propertyImages)
+      arr.push(...particularProperty.propertyImages);
+
+    const uniqueImages = Array.from(new Set(arr.filter((item) => item !== "")));
+
+    setAllImages(uniqueImages);
+  }, [particularProperty]);
+
+  // Early return check after all hooks
+  if (!isValidParams) {
+    return (
+      <div className="container py-24">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-4">Property Not Found</h2>
+          <p className="text-neutral-500">The property you&apos;re looking for doesn&apos;t exist.</p>
+          <Link href="/" className="mt-4 inline-block text-primary-6000 hover:underline">
+            Go back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const renderSection1 = () => {
     // Display text logic
     const getAvailabilityText = () => {
-      const availability = particularProperty?.availability;
+      const availability = (particularProperty as any)?.availability as string | undefined;
       if (availability === "Not Available" || availability === "not available") {
         return "Rented";
       }
@@ -446,7 +505,7 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
     // Badge color and style logic - minimal and classy
     const getAvailabilityBadgeClass = () => {
-      const availability = particularProperty?.availability;
+      const availability = (particularProperty as any)?.availability as string | undefined;
       if (availability === "Available" || availability === "available") {
         return "bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800";
       }
@@ -864,12 +923,21 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
     <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
       <div className="rounded-xl overflow-hidden z-0">
-        {loadError && <p className="text-red-500">Map failed to load</p>}
-        {!isLoaded && <p>Loading map...</p>}
-
-        {isLoaded && typeof window !== "undefined" && center && (
-          <MapWithCircle center={center} radius={3000} />
+        {loadError && (
+          <div className="w-full h-[500px] bg-neutral-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center">
+            <p className="text-red-500">Map failed to load</p>
+          </div>
         )}
+        {!isLoaded && !loadError && (
+          <div className="w-full h-[500px] bg-neutral-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-6000 border-t-transparent mb-2"></div>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">Loading map...</p>
+            </div>
+          </div>
+        )}
+
+
       </div>
       <iframe
     width="100%"
@@ -1085,21 +1153,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     );
   };
 
-  const [totalGuests, setTotalGuests] = useState<number>(() => {
-    const savedValue = localStorage.getItem("totalGuests") || "";
-    if (savedValue) {
-      const total = JSON.parse(savedValue);
-      return total;
-    }
-    return 0;
-  });
   const handleGuestChange = (totalGuests: number) => {
     setTotalGuests(totalGuests);
   };
 
-  const [minNightStay, setMinNightStay] = useState<number | undefined>(
-    undefined
-  );
   const renderSidebar = () => {
     const handleDatesChange = (dates: {
       startDate: Date | null;
@@ -1439,7 +1496,8 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
 
   const propertyName = particularProperty?.propertyName || "";
   const propertyvsid = particularProperty?.VSID || "";
-  const isSoldOut = particularProperty?.availability === "Not Available" || particularProperty?.availability === "not available";
+  const availability = (particularProperty as any)?.availability as string | undefined;
+  const isSoldOut = availability === "Not Available" || availability === "not available";
   
   const message = isSoldOut 
     ? encodeURIComponent(`Hello, the property ${propertyName} (VSID: ${propertyvsid}) is rented. I'd like to find similar properties or be notified when available.`)
@@ -1713,37 +1771,6 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
     );
   };
 
-  const [propertyPicturesTemp, setPropertyPicturesTemp] = useState<string[]>(
-    []
-  );
-
-  useEffect(() => {
-    if (particularProperty?.propertyPictureUrls) {
-      setPropertyPicturesTemp(particularProperty?.propertyPictureUrls);
-    }
-  }, [particularProperty?.propertyPictureUrls]);
-
-  useEffect(() => {
-    if (!particularProperty) return;
-
-    let arr: string[] = [];
-
-    if (particularProperty.propertyCoverFileUrl)
-      arr.push(particularProperty.propertyCoverFileUrl);
-
-    if (particularProperty.propertyPictureUrls)
-      arr.push(...particularProperty.propertyPictureUrls);
-
-    if (particularProperty.propertyImages)
-      arr.push(...particularProperty.propertyImages);
-
-    const uniqueImages = Array.from(new Set(arr.filter((item) => item !== "")));
-
-    setAllImages(uniqueImages);
-  }, [particularProperty]);
-  
-  
-
   const carouselSettings = {
     dots: true,
     infinite: true,
@@ -1778,8 +1805,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
               </div>
             )}
             {/* RENTED - Diagonal Seal */}
-            {(particularProperty?.availability === "Not Available" ||
-              particularProperty?.availability === "not available") && (
+            {(() => {
+              const avail = (particularProperty as any)?.availability as string | undefined;
+              return avail === "Not Available" || avail === "not available";
+            })() && (
               <div className="absolute top-0 left-0 z-10 pointer-events-none">
                 {/* Diagonal stamp cutting across corner */}
                 <div 
@@ -1865,8 +1894,10 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
           />
           
           {/* RENTED - Diagonal Seal Mobile */}
-          {(particularProperty?.availability === "Not Available" ||
-            particularProperty?.availability === "not available") && (
+          {(() => {
+            const avail = (particularProperty as any)?.availability as string | undefined;
+            return avail === "Not Available" || avail === "not available";
+          })() && (
             <div className="absolute top-0 left-0 z-50 pointer-events-none">
               {/* Diagonal stamp cutting across corner */}
               <div 
@@ -1961,6 +1992,23 @@ const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
         )}
       </main>
     </div>
+  );
+};
+
+const ListingStayDetailPage: FC<ListingStayDetailPageProps> = ({ params }) => {
+  return (
+    <Suspense
+      fallback={
+        <div className="container py-24 flex items-center justify-center min-h-[500px]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-6000 border-t-transparent mb-4"></div>
+            <p className="text-neutral-600 dark:text-neutral-400">Loading property details...</p>
+          </div>
+        </div>
+      }
+    >
+      <ListingStayDetailPageContent params={params} />
+    </Suspense>
   );
 };
 

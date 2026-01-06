@@ -5,14 +5,14 @@ import ListingImageGallery from "@/components/listing-image-gallery/ListingImage
 import SectionSliderNewCategories from "@/components/SectionSliderNewCategories";
 import SectionSubscribe2 from "@/components/SectionSubscribe2";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import React, { ReactNode } from "react";
+import React, { ReactNode, Suspense } from "react";
 import MobileFooterSticky from "./(components)/MobileFooterSticky";
 import { imageGallery as listingStayImageGallery } from "./listing-stay-detail/constant";
 import { imageGallery as listingCarImageGallery } from "./listing-car-detail/constant";
 import { imageGallery as listingExperienceImageGallery } from "./listing-experiences-detail/constant";
 import { Route } from "next";
 
-const DetailtLayout = ({ children }: { children: ReactNode }) => {
+const DetailtLayoutContent = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
   const thisPathname = usePathname();
   const searchParams = useSearchParams();
@@ -67,6 +67,23 @@ const DetailtLayout = ({ children }: { children: ReactNode }) => {
       {/* STICKY FOOTER MOBILE */}
       {/* <MobileFooterSticky /> */}
     </div>
+  );
+};
+
+const DetailtLayout = ({ children }: { children: ReactNode }) => {
+  return (
+    <Suspense
+      fallback={
+        <div className="container py-24 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-6000 border-t-transparent mb-4"></div>
+            <p className="text-neutral-600 dark:text-neutral-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <DetailtLayoutContent>{children}</DetailtLayoutContent>
+    </Suspense>
   );
 };
 

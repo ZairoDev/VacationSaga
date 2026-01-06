@@ -6,18 +6,26 @@ interface Props {
   href?: PathName;
   place?: string;
   guests?: number;
+  rentalType?: string;
 }
 
-const ButtonSubmit: FC<Props> = ({ href = "/listing-stay", place, guests }) => {
+const ButtonSubmit: FC<Props> = ({ href = "/listing-stay", place, guests, rentalType }) => {
+  const queryParams: Record<string, string | number | undefined> = {
+    place: place,
+    guests: guests
+  };
+  
+  // Add rentalType to query params if provided
+  if (rentalType) {
+    queryParams.rentalType = rentalType;
+  }
+  
   return (
     <Link
       // href={href}
       href={{
         pathname: "/listing-stay",
-        query: {
-          place: place,
-          guests: guests
-        }
+        query: queryParams
       }}
       type="button"
       className="h-10 md:h-16 w-full md:w-16 rounded-full bg-primary-6000 hover:bg-primary-700 flex items-center justify-center text-neutral-50 focus:outline-none"

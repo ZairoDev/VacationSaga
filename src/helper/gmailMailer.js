@@ -7,7 +7,7 @@ import {
   OwnerBookingTemplate,
   sendBookingCancellationEmailToTravellerTemplate,
   TravellerBookingConfirmationTemplate,
-  TravellerBookingTemplate,
+  TravellerBookingTemplate,       
 } from "@/app/emailTemplate/email";
 
 export const sendEmail = async ({ email, subject, text, price }) => {
@@ -17,7 +17,7 @@ export const sendEmail = async ({ email, subject, text, price }) => {
       auth: {
         user: "zairo.developer@gmail.com",
         pass: "gwlz rnrv gpio uzcp",
-      },
+      },  
     });
 
     // Set up email options

@@ -62,25 +62,18 @@ const DatePickerCustomHeaderTwoMonth = ({
   customHeaderCount,
   decreaseMonth,
   increaseMonth,
-  minDate = new Date(),
 }: DatePickerCustomHeaderTwoMonthProps) => {
-  const isPreviousMonthDisabled = () => {
-    const previousMonth = new Date(monthDate);
-    previousMonth.setMonth(previousMonth.getMonth() - 1);
-    return previousMonth < minDate;
-  };
+  // Allow free navigation - minDate on DatePicker will handle disabling past date selection
+  // Users should be able to navigate to any month to view dates
 
   return (
     <div>
       <button
         aria-label="Previous Month"
-        className={`react-datepicker__navigation react-datepicker__navigation--previous absolute -top-1 left-0 flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 ${
-          isPreviousMonthDisabled() ? 'opacity-100 cursor-not-allowed' : ''
-        }`}
+        className="react-datepicker__navigation react-datepicker__navigation--previous absolute -top-1 left-0 flex items-center justify-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
         style={customHeaderCount === 1 ? { visibility: "hidden" } : {}}
         onClick={decreaseMonth}
         type="button"
-        disabled={isPreviousMonthDisabled()}
       >
         <span className="react-datepicker__navigation-icon react-datepicker__navigation-icon--previous">
           <ChevronLeftIcon className="w-5 h-5" />

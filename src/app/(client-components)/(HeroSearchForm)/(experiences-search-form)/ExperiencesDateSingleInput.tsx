@@ -19,9 +19,13 @@ const ExperiencesDateSingleInput: FC<ExperiencesDateSingleInputProps> = ({
   fieldClassName = "[ nc-hero-field-padding ]",
 }) => {
   const [startDate, setStartDate] = useState<Date | null>(
-    new Date("2023/03/01")
+    new Date()
   );
-  const [endDate, setEndDate] = useState<Date | null>(new Date("2023/03/16"));
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 2);
+    return date;
+  });
 
   const onChangeDate = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
@@ -99,6 +103,7 @@ const ExperiencesDateSingleInput: FC<ExperiencesDateSingleInputProps> = ({
                     monthsShown={2}
                     showPopperArrow={false}
                     inline
+                    minDate={new Date()}
                     renderCustomHeader={(p) => (
                       <DatePickerCustomHeaderTwoMonth {...p} />
                     )}

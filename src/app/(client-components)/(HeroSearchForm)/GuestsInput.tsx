@@ -15,6 +15,7 @@ export interface GuestsInputProps {
   className?: string;
   buttonSubmitHref?: PathName;
   hasButtonSubmit?: boolean;
+  rentalType?: string;
 }
 
 const GuestsInput: FC<GuestsInputProps> = ({
@@ -22,6 +23,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
   className = "[ nc-flex-1 ]",
   buttonSubmitHref = "/listing-stay-map" as PathName,
   hasButtonSubmit = true,
+  rentalType,
 }) => {
   const context = useContext(SearchInputContext);
 
@@ -98,7 +100,7 @@ const GuestsInput: FC<GuestsInputProps> = ({
             {/* BUTTON SUBMIT OF FORM */}
             {hasButtonSubmit && (
               <div className="pr-2 xl:pr-4">
-                <ButtonSubmit href={buttonSubmitHref} place={place} guests={guests} />
+                <ButtonSubmit href={buttonSubmitHref} place={place} guests={guests} rentalType={rentalType} />
               </div>
             )}
           </div>

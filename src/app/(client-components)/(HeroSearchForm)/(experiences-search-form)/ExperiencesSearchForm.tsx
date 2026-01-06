@@ -33,7 +33,11 @@ import ExperiencesDateSingleInput from "./ExperiencesDateSingleInput";
 import { SearchInputContext, SearchInputProvider } from "@/context/SearchInput";
 import { useMedia } from "react-use";
 
-const ExperiencesSearchForm: FC<{}> = ({}) => {
+export interface ExperiencesSearchFormProps {
+  rentalType?: string;
+}
+
+const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({ rentalType }) => {
   const isMobile = useMedia("(max-width: 640px)", true);
   const renderForm = () => {
 
@@ -45,7 +49,7 @@ const ExperiencesSearchForm: FC<{}> = ({}) => {
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <ExperiencesDateSingleInput className="flex-1" />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
-            <GuestsInput className="flex-1" />
+            <GuestsInput className="flex-1" rentalType={rentalType} />
           </form>
         </SearchInputProvider>
       );
@@ -58,7 +62,7 @@ const ExperiencesSearchForm: FC<{}> = ({}) => {
           <div className="self-center border border-slate-200 dark:border-slate-700 h-8"></div>
           <ExperiencesDateSingleInput className="flex-1" />
           <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
-          <GuestsInput className="flex-1" />
+          <GuestsInput className="flex-1" rentalType={rentalType} />
         </form>
       </SearchInputProvider>
     );

@@ -20,7 +20,11 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
   const [startDate, setStartDate] = useState<Date | null>(
     new Date(Date.now())
   );
-  const [endDate, setEndDate] = useState<Date | null>(new Date(Date.now()));
+  const [endDate, setEndDate] = useState<Date | null>(()=>{
+    const date  = new Date();
+    date.setDate(date.getDate() + 3);
+    return date;
+  });
   //
 
   const onChangeDate = (dates: [Date | null, Date | null]) => {

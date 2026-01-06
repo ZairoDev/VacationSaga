@@ -80,6 +80,10 @@ const TabFilters: FC<RentalType> = ({
   const [isOpenMoreFilterMobile, setisOpenMoreFilterMobile] = useState(false);
   const [rangePrices, setRangePrices] = useState([0, 5000]);
   const [selectedValue, setSelectedValue] = useState<string>("");
+  const [bedsValue, setBedsValue] = useState(0);
+  const [bedroomsValue, setBedroomsValue] = useState(0);
+  const [bathroomsValue, setBathroomsValue] = useState(0);
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
 
   const handleRadioChange = (value: string) => {
     setSelectedValue(value);
@@ -122,10 +126,13 @@ const TabFilters: FC<RentalType> = ({
         {({ open, close }) => (
           <>
             <Popover.Button
-              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000 focus:outline-none ${open ? "!border-primary-500 " : ""
-                }`}
+              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border transition-all duration-200 ${
+                selectedValue
+                  ? "border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                  : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000"
+              } ${open ? "!border-primary-500 " : ""} focus:outline-none`}
             >
-              <span>Type of place</span>
+              <span>{selectedValue || "Type of place"}</span>
               <i className="las la-angle-down ml-2"></i>
             </Popover.Button>
             <Transition
@@ -143,17 +150,25 @@ const TabFilters: FC<RentalType> = ({
                     {typeOfPaces.map((item) => (
                       <div
                         key={item.name}
-                        className="flex items-center gap-x-4">
+                        className="flex items-center gap-x-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                        onClick={() => {
+                          handleRadioChange(item.name);
+                          setTimeout(() => close(), 200);
+                        }}
+                      >
                         <input
                           id={item.name}
                           type="radio"
                           name="typeOfPlace"
                           value={item.name}
                           checked={selectedValue === item.name}
-                          onChange={() => handleRadioChange(item.name)}
+                          onChange={() => {
+                            handleRadioChange(item.name);
+                            setTimeout(() => close(), 200);
+                          }}
                           className="form-radio h-4 w-4 text-primary-600 transition duration-150 ease-in-out"
                         />
-                        <label htmlFor={item.name} className="flex flex-col">
+                        <label htmlFor={item.name} className="flex flex-col cursor-pointer flex-1">
                           <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                             {item.name}
                           </span>
@@ -174,15 +189,23 @@ const TabFilters: FC<RentalType> = ({
   };
 
   const renderTabsRoomAndBeds = () => {
+    const hasRoomFilters = bedsValue > 0 || bedroomsValue > 0 || bathroomsValue > 0;
     return (
       <Popover className="relative">
         {({ open, close }) => (
           <>
             <Popover.Button
-              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000 focus:outline-none ${open ? "!border-primary-500 " : ""
-                }`}
+              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border transition-all duration-200 ${
+                hasRoomFilters
+                  ? "border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                  : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000"
+              } ${open ? "!border-primary-500 " : ""} focus:outline-none`}
             >
-              <span>Rooms of Beds</span>
+              <span>
+                {hasRoomFilters
+                  ? `${bedsValue > 0 ? bedsValue + " bed" + (bedsValue > 1 ? "s" : "") : ""}${bedsValue > 0 && bedroomsValue > 0 ? ", " : ""}${bedroomsValue > 0 ? bedroomsValue + " room" + (bedroomsValue > 1 ? "s" : "") : ""}`
+                  : "Rooms & Beds"}
+              </span>
               <i className="las la-angle-down ml-2"></i>
             </Popover.Button>
             <Transition
@@ -195,22 +218,34 @@ const TabFilters: FC<RentalType> = ({
               leaveTo="opacity-0 translate-y-1"
             >
               <Popover.Panel className="absolute z-10 w-screen max-w-sm px-4 mt-3 left-0 sm:px-0 lg:max-w-md">
-                <div className="overflow-hidden rounded-2xl shadow-xl bg-white dark:bg-neutral-900   border border-neutral-200 dark:border-neutral-700">
+                <div className="overflow-hidden rounded-2xl shadow-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
                   <div className="relative flex flex-col px-5 py-6 space-y-5">
                     <NcInputNumber
                       label="Beds"
                       max={10}
-                      onChange={(value) => setBeds(value)}
+                      defaultValue={bedsValue}
+                      onChange={(value) => {
+                        setBedsValue(value);
+                        setBeds(value);
+                      }}
                     />
                     <NcInputNumber
                       label="Bedrooms"
                       max={10}
-                      onChange={(value) => setBedRooms(value)}
+                      defaultValue={bedroomsValue}
+                      onChange={(value) => {
+                        setBedroomsValue(value);
+                        setBedRooms(value);
+                      }}
                     />
                     <NcInputNumber
                       label="Bathrooms"
                       max={10}
-                      onChange={(value) => setBathrooms(value)}
+                      defaultValue={bathroomsValue}
+                      onChange={(value) => {
+                        setBathroomsValue(value);
+                        setBathrooms(value);
+                      }}
                     />
                   </div>
                 </div>
@@ -223,19 +258,48 @@ const TabFilters: FC<RentalType> = ({
   };
 
   const renderTabsPriceRage = () => {
+    const hasPriceFilter = rangePrices[0] > 0 || rangePrices[1] < 5000;
+    const handleClearPrice = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setRangePrices([0, 5000]);
+      setMinPrice(0);
+      setMaxPrice(999999);
+    };
     return (
       <Popover className="relative">
         {({ open, close }) => (
           <>
             <Popover.Button
-              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-primary-500 bg-primary-50 text-primary-700 focus:outline-none `}
+              className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border transition-all duration-200 ${
+                hasPriceFilter
+                  ? "border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                  : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000"
+              } ${open ? "!border-primary-500 " : ""} focus:outline-none`}
             >
               <span>
-                {`€ ${convertNumbThousand(
-                  rangePrices[0]
-                )} - € ${convertNumbThousand(rangePrices[1])}`}{" "}
+                {hasPriceFilter
+                  ? `€ ${convertNumbThousand(rangePrices[0])} - € ${convertNumbThousand(rangePrices[1])}`
+                  : "Price range"}
               </span>
-              {renderXClear()}
+              {hasPriceFilter && (
+                <span
+                  onClick={handleClearPrice}
+                  className="w-4 h-4 rounded-full bg-primary-500 text-white flex items-center justify-center ml-3 cursor-pointer hover:bg-primary-600 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-3 w-3"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </span>
+              )}
             </Popover.Button>
             <Transition
               as={Fragment}
@@ -333,7 +397,14 @@ const TabFilters: FC<RentalType> = ({
         <div className="flex flex-col space-y-5">
           {list1.map((item) => (
             <Checkbox
-              setPropertyType={(value: string) => setPropertyType(value)}
+              setPropertyType={(value: string) => {
+                setPropertyType(value);
+                if (value) {
+                  setSelectedPropertyTypes((prev) => [...prev.filter((p) => p !== item.name), item.name]);
+                } else {
+                  setSelectedPropertyTypes((prev) => prev.filter((p) => p !== item.name));
+                }
+              }}
               key={item.name}
               name={data[0].name}
               label={item.name}
@@ -343,11 +414,17 @@ const TabFilters: FC<RentalType> = ({
         <div className="flex flex-col space-y-5">
           {list2.map((item) => (
             <Checkbox
-              setPropertyType={(value: string) => setPropertyType(value)}
+              setPropertyType={(value: string) => {
+                setPropertyType(value);
+                if (value) {
+                  setSelectedPropertyTypes((prev) => [...prev.filter((p) => p !== item.name), item.name]);
+                } else {
+                  setSelectedPropertyTypes((prev) => prev.filter((p) => p !== item.name));
+                }
+              }}
               key={item.name}
               name={data[0].name}
               label={item.name}
-            // defaultChecked={!!item.defaultChecked}
             />
           ))}
         </div>
@@ -356,14 +433,46 @@ const TabFilters: FC<RentalType> = ({
   };
 
   const renderTabMoreFilter = () => {
+    const hasPropertyTypeFilter = selectedPropertyTypes.length > 0;
+    const handleClearPropertyType = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setSelectedPropertyTypes([]);
+      setPropertyType("");
+    };
     return (
       <div>
         <div
-          className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border border-primary-500 bg-primary-50 text-primary-700 focus:outline-none cursor-pointer`}
+          className={`flex items-center justify-center px-4 py-2 text-sm rounded-full border transition-all duration-200 ${
+            hasPropertyTypeFilter
+              ? "border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+              : "border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-6000"
+          } focus:outline-none cursor-pointer`}
           onClick={openModalMoreFilter}
         >
-          <span>More filters (3)</span>
-          {renderXClear()}
+          <span>
+            {hasPropertyTypeFilter
+              ? `Property type${selectedPropertyTypes.length > 1 ? "s" : ""} (${selectedPropertyTypes.length})`
+              : "More filters"}
+          </span>
+          {hasPropertyTypeFilter && (
+            <span
+              onClick={handleClearPropertyType}
+              className="w-4 h-4 rounded-full bg-primary-500 text-white flex items-center justify-center ml-3 cursor-pointer hover:bg-primary-600 transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </span>
+          )}
         </div>
 
         <Transition appear show={isOpenMoreFilter} as={Fragment}>
@@ -417,7 +526,7 @@ const TabFilters: FC<RentalType> = ({
                   <div className="flex-grow overflow-y-auto">
                     <div className="px-10 divide-y divide-neutral-200 dark:divide-neutral-800">
                       <div className="py-7">
-                        <h3 className="text-xl font-medium">Property type</h3>
+                        <h3 className="text-xl font-medium text-neutral-900 dark:text-neutral-100">Property type</h3>
                         <div className="mt-6 relative ">
                           {renderMoreFilterItem(moreFilter3)}
                         </div>

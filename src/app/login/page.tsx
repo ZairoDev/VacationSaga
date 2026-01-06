@@ -30,10 +30,12 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
 
   useEffect(() => {
     const { token } = parseCookies();
-    if (token) {
+    // Only redirect if user is already logged in and there's no redirect parameter
+    const redirectPath = params.get("redirect");
+    if (token && !redirectPath) {
       router.push("/");
     }
-  }, []);
+  }, [params, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -49,7 +51,14 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
         Cookies.set("token", response.data.token, { expires: 1 });
         localStorage.setItem("token", response.data.token);
         setToken(response.data.tokenData);
-        router.push("/");
+        
+        // Redirect to the intended page if provided, otherwise go to home
+        const redirectPath = params.get("redirect");
+        if (redirectPath) {
+          router.push(decodeURIComponent(redirectPath) as any);
+        } else {
+          router.push("/");
+        }
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {

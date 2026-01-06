@@ -59,9 +59,9 @@ const HeroSearchForm: FC<HeroSearchFormProps> = ({
       // case "Experiences":
       //   return <ExperiencesSearchForm />;
       case "Short Term Rentals":
-        return <StaySearchForm />;
+        return <StaySearchForm rentalType="Short Term" />;
       case "Long Term Rentals":
-        return <ExperiencesSearchForm />;
+        return <ExperiencesSearchForm rentalType="Long Term" />;
       // case "Cars":
       //   return <RentalCarSearchForm />;
       // case "Flights":

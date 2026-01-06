@@ -40,11 +40,28 @@
 
 // export default PageAbout;
 
-import React, { FC } from "react";
+"use client";
+import React, { FC, Suspense } from "react";
 import SectionGridFeaturePlaces from "./SectionGridFeaturePlaces";
+
+const MainPageContent: FC = () => {
+  return <SectionGridFeaturePlaces />;
+};
+
 const MainPage: FC = () => {
   return (
-    <SectionGridFeaturePlaces />
+    <Suspense
+      fallback={
+        <div className="container py-24 flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-6000 border-t-transparent mb-4"></div>
+            <p className="text-neutral-600 dark:text-neutral-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <MainPageContent />
+    </Suspense>
   );
 };
 

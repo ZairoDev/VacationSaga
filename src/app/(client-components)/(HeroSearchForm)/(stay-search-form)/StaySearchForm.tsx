@@ -5,7 +5,11 @@ import StayDatesRangeInput from "./StayDatesRangeInput";
 import { SearchInputContext, SearchInputProvider } from "@/context/SearchInput";
 import { useMedia } from "react-use";
 
-const StaySearchForm: FC<{}> = ({}) => {
+export interface StaySearchFormProps {
+  rentalType?: string;
+}
+
+const StaySearchForm: FC<StaySearchFormProps> = ({ rentalType }) => {
   const isMobile = useMedia("(max-width: 640px)", true);
   const renderForm = () => {
 
@@ -17,7 +21,7 @@ const StaySearchForm: FC<{}> = ({}) => {
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <StayDatesRangeInput className="flex-1" />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
-            <GuestsInput className="flex-1" />
+            <GuestsInput className="flex-1" rentalType={rentalType} />
           </form>
         </SearchInputProvider>
       );
@@ -30,7 +34,7 @@ const StaySearchForm: FC<{}> = ({}) => {
           <div className="self-center border border-slate-200 dark:border-slate-700 h-8"></div>
           <StayDatesRangeInput className="flex-1" />
           <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
-          <GuestsInput className="flex-1" />
+          <GuestsInput className="flex-1" rentalType={rentalType} />
         </form>
       </SearchInputProvider>
     );
