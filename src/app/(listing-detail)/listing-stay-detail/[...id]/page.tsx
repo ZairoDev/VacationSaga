@@ -4,6 +4,7 @@ import {
   MdConstruction,
   MdHomeWork,
   MdOutlineEnergySavingsLeaf,
+  MdApartment,
 } from "react-icons/md";
 import {
   IoIosBed,
@@ -517,17 +518,9 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
         <div className="flex justify-between items-center lg:mt-2 flex-wrap gap-2">
           <Badge name={particularProperty?.propertyType} />
           {/* <Badge name={particularProperty?.VSID} /> */}
-          {particularProperty?.rentalType === "Long Term" &&
-            (particularProperty?.isTopFloor ? (
-              <Badge name={"Top Floor"} />
-            ) : (
-              <Badge name={`Floor ${particularProperty?.floor}`} />
-            ))}
           {particularProperty?.rentalType === "Long Term" && (
             <Badge name={`${particularProperty.propertyStyle}`} />
           )}
-
-
           <LikeSaveBtns />
         </div>
 
@@ -606,6 +599,19 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
               <span className="sm:block hidden">sq</span>
             </h3>
           </div>
+          {particularProperty?.rentalType === "Long Term" &&
+            (particularProperty?.isTopFloor === true ||
+              (particularProperty?.floor != null &&
+                particularProperty?.floor !== "")) && (
+            <div className="flex items-center space-x-3">
+              <MdApartment className="text-2xl" />
+              <h3 className=" flex gap-x-1 text-sm">
+                {particularProperty?.isTopFloor
+                  ? "Top Floor"
+                  : `Floor ${particularProperty?.floor}`}
+              </h3>
+            </div>
+          )}
           {particularProperty?.rentalType === "Long Term" && (
             <div className="flex items-center space-x-3">
               <IoIosCompass className="text-2xl" />

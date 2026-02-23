@@ -47,11 +47,12 @@ const SectionGridFeaturePlacesAllProperties: FC<
           rentalType ? `&rentalType=${rentalType}` : ""
         }`
       );
-      if (response.data.length === 0) {
+      const list = Array.isArray(response.data) ? response.data : [];
+      if (list.length === 0) {
         setHasMore(false);
       } else {
         setFetchedData((prevData) =>
-          page === 1 ? response.data : [...prevData, ...response.data]
+          page === 1 ? list : [...prevData, ...list]
         );
         setHasMore(true);
       }
@@ -140,7 +141,9 @@ const SectionGridFeaturePlacesAllProperties: FC<
                   </div>
                 </div>
               ))
-            : fetchedData.map((stay, index) => renderCard(stay, index))}
+            : (Array.isArray(fetchedData) ? fetchedData : []).map((stay, index) =>
+                renderCard(stay, index)
+              )}
         </div>
 
         {hasMore && (
