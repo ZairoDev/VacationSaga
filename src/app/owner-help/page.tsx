@@ -126,7 +126,7 @@ export default function OwnerHelp() {
             updated.
           </p>
           <p>
-            Failure to honor confirmed bookings may impact the property's listing status.
+            Failure to honor confirmed bookings may impact the property&apos;s listing status.
           </p>
         </section>
 

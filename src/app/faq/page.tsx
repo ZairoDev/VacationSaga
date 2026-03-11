@@ -137,7 +137,7 @@ const ownerFaqGroups: FaqGroup[] = [
     title: "Managing Availability",
     items: [
       {
-        question: "21. How do I update my property's availability?",
+        question: "21. How do I update my property&apos;s availability?",
         answer:
           "Owners should inform the platform whenever availability changes.",
       },
@@ -427,7 +427,7 @@ const travellerFaqGroups: FaqGroup[] = [
       {
         question: "9. How far in advance can I book a property?",
         answer:
-          "Booking availability depends on the property owner's schedule and listing availability.",
+          "Booking availability depends on the property owner&apos;s schedule and listing availability.",
       },
       {
         question: "10. Can I request specific amenities or services?",
@@ -517,7 +517,7 @@ const travellerFaqGroups: FaqGroup[] = [
       {
         question: "24. Are all amenities guaranteed?",
         answer:
-          "Amenities depend on the property owner’s listing and may vary.",
+          "Amenities depend on the property owner&apos;s listing and may vary.",
       },
       {
         question: "25. Can property availability change after inquiry?",
@@ -527,7 +527,7 @@ const travellerFaqGroups: FaqGroup[] = [
       {
         question: "26. Can I visit the property before booking?",
         answer:
-          "Yes. Property visits may be arranged prior to booking. The visit will be scheduled based on mutual discussion and the availability of the property owner or manager, and timings may vary depending on the owner's convenience and property accessibility.",
+          "Yes. Property visits may be arranged prior to booking. The visit will be scheduled based on mutual discussion and the availability of the property owner or manager, and timings may vary depending on the owner&apos;s convenience and property accessibility.",
       },
     ],
   },
@@ -537,7 +537,7 @@ const travellerFaqGroups: FaqGroup[] = [
       {
         question: "27. What documents are required at check-in?",
         answer:
-          "Valid identification may be required depending on the property’s policies.",
+          "Valid identification may be required depending on the property&apos;s policies.",
       },
       {
         question: "28. What time is check-in and check-out?",
@@ -572,7 +572,7 @@ const travellerFaqGroups: FaqGroup[] = [
       {
         question: "33. Can I visit the property before booking?",
         answer:
-          "Property visits may be arranged depending on the property owner's policy.",
+          "Property visits may be arranged depending on the property owner&apos;s policy.",
       },
       {
         question: "34. Who should I contact for booking assistance?",
