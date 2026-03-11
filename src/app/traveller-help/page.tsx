@@ -117,9 +117,86 @@ function Page() {
   };
 
   return (
-    <div className=" justify-center items-center m-4 p-4 flex flex-col">
+    <div className="justify-center items-center m-4 p-4 flex flex-col">
+      {/* Travel Safety and Verification Policy */}
+      <div className="w-full max-w-4xl mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-neutral-900 dark:text-neutral-100 mb-6">
+          Travel Safety and Verification Policy
+        </h1>
+        <p className="text-sm md:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed mb-6">
+          Your safety and travel experience are important to us. We encourage all travellers to
+          follow responsible travel practices while using our platform.
+        </p>
+        <div className="space-y-6 text-sm md:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
+          {/* 1. Property Verification */}
+          <section>
+            <h2 className="font-semibold text-lg md:text-xl mb-2">
+              1. Property Verification
+            </h2>
+            <p className="mb-2">
+              Where possible, property listings are reviewed before being published to ensure that
+              basic details and documentation are provided by the property owner. However,
+              travellers are encouraged to review property details carefully before booking.
+            </p>
+          </section>
+
+          {/* 2. Identity Verification */}
+          <section>
+            <h2 className="font-semibold text-lg md:text-xl mb-2">
+              2. Identity Verification
+            </h2>
+            <p>
+              Travellers may be required to provide valid identification during the booking or
+              check-in process in accordance with property policies and local regulations.
+            </p>
+          </section>
+
+          {/* 3. Responsible Conduct */}
+          <section>
+            <h2 className="font-semibold text-lg md:text-xl mb-2">
+              3. Responsible Conduct
+            </h2>
+            <p className="mb-2">
+              Travellers must respect property rules, community standards, and local regulations
+              during their stay. Activities that may result in cancellation of stay include:
+            </p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Property damage</li>
+              <li>Disturbance to neighbors</li>
+              <li>Illegal activities</li>
+              <li>Violation of house rules</li>
+            </ul>
+          </section>
+
+          {/* 4. Safety Recommendations */}
+          <section>
+            <h2 className="font-semibold text-lg md:text-xl mb-2">
+              4. Safety Recommendations
+            </h2>
+            <p className="mb-2">For a safe travel experience, travellers should:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Review property details and amenities before booking</li>
+              <li>Communicate clearly with property owners regarding check-in instructions</li>
+              <li>Keep copies of booking confirmations and travel documents</li>
+              <li>Follow local safety and travel guidelines</li>
+            </ul>
+          </section>
+
+          {/* 5. Emergency Support */}
+          <section>
+            <h2 className="font-semibold text-lg md:text-xl mb-2">
+              5. Emergency Support
+            </h2>
+            <p>
+              In case of urgent issues related to your booking, travellers are advised to contact
+              the platform support team immediately through the official communication channels.
+            </p>
+          </section>
+        </div>
+      </div>
+
       {/* Search Bar */}
-      <div className="w-1/2">
+      <div className="w-full sm:w-1/2">
         <Input
           className=" p-2 border-gray-400 rounded"
           type="text"
@@ -136,7 +213,7 @@ function Page() {
       {error && <p className="mt-4 text-orange-500">{error}</p>}
 
       {/* Results */}
-      <div className="mt-4 w-1/2">
+      <div className="mt-4 w-full sm:w-1/2">
         {results.length > 0 ? (
           results.map((result: any) => (
             <div

@@ -30,8 +30,9 @@ const widgetMenus: WidgetFooterMenu[] = [
     title: "Useful Links",
     menus: [
       { href: "/about", label: "About Us" },
-      { href: "#", label: "How we Work" },
-      { href: "/subscription", label: "Becoma Host" },
+   
+      { href: "/faq", label: "Frequently Asked Questions" },
+      { href: "/subscription", label: "Become a Host" },
       { href: "/blog", label: "Blogs" },
       { href: "/contact", label: "Contact Us" },
     ],
