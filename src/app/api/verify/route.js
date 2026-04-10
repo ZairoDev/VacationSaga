@@ -37,7 +37,14 @@ export async function POST(request) {
   }
   // console.log("valid signature");
 
-  const loggedInUserId = getDataFromToken();
+  const loggedInUserId = getDataFromToken(request);
+  if (!loggedInUserId) {
+    return NextResponse.json(
+      { message: "payment verification failed", isOk: false },
+      { status: 400 }
+    );
+  }
+
   const user = await Users.findOne({ _id: loggedInUserId });
   if (!user) {
     return NextResponse.json(

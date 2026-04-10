@@ -2,9 +2,11 @@ import { connectDb } from "../../../helper/db";
 import { NextRequest, NextResponse } from "next/server";
 import { Properties } from "@/models/property";
 
-connectDb();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req) {
+  await connectDb();
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") || "12", 10);
   const page = parseInt(searchParams.get("page") || "1", 10);

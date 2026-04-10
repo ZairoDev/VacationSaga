@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import NavigationItem from "./NavigationItem";
 import { NAVIGATION_DEMO } from "@/data/navigation";
@@ -7,11 +9,13 @@ function Navigation() {
   let token = "";
   const IsServer = typeof window === "undefined";
   if (!IsServer) {
+    // `token` in localStorage is tokenData JSON (not JWT string)
     token = window.localStorage.getItem("token") || "";
   }
 
   let navigationWhenLoggedIn = NAVIGATION_DEMO;
-  if (token){
+  const isLoggedIn = !!token && token !== "null";
+  if (isLoggedIn){
     navigationWhenLoggedIn = NAVIGATION_DEMO.filter((item) => item.href!="/signup");
   }else{
     navigationWhenLoggedIn = NAVIGATION_DEMO.filter((item) => item.name!="Logout");

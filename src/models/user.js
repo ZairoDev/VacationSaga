@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
     nationality: {
-      type: String,
+      type: String,  
       default: "",
     },
     gender: {
@@ -33,7 +33,9 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
+      required: function () {
+        return this.authProvider === "credentials";
+      },
     },
     myRequests: {
       type: [String],
@@ -54,7 +56,9 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required "],
+      required: function () {
+        return this.authProvider === "credentials";
+      },
     },
     isVerified: {
       type: Boolean,
@@ -64,6 +68,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["Owner", "Traveller"],
       default: "Owner", // Optional: you can set a default role if needed
+    },
+
+    // OAuth support (does not affect credentials flow)
+    authProvider: {
+      type: String,
+      enum: ["credentials", "google"],
+      default: "credentials",
+    },
+    oauthProvider: {
+      type: String,
+      default: "",
+    },
+    oauthProviderId: {
+      type: String,
+      default: "",
     },
 
     Payment: Object,

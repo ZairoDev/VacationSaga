@@ -28,6 +28,12 @@ export async function POST(request: NextRequest) {
       bookingStatus,
     } = await request.json();
     const travellerId = getDataFromToken(request);
+    if (!travellerId) {
+      return NextResponse.json(
+        { error: "You must be logged in as a traveller to book" },
+        { status: 401 }
+      );
+    }
     const owner: UserDataType | null = await Users.findOne({
       email: ownerEmail,
     });

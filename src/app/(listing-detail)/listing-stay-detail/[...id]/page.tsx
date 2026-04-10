@@ -187,7 +187,7 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
       switch (error.code) {
         case error.PERMISSION_DENIED:
           setError("Permission denied");
-          break;
+          break; 
         case error.POSITION_UNAVAILABLE:
           setError("Position unavailable");
           break;

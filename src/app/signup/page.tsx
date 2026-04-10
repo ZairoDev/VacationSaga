@@ -8,6 +8,7 @@ import ButtonPrimary from "@/shared/ButtonPrimary";
 import Link from "next/link";
 import axios from "axios";
 import countryCodesList from "country-codes-list";
+import OAuthButtons from "../(client-components)/OAuthButtons";
 export interface PageSignUpProps {}
 
 const PageSignUp: FC<PageSignUpProps> = () => {
@@ -101,6 +102,12 @@ const PageSignUp: FC<PageSignUpProps> = () => {
             Signup
           </h2>
           <div className="max-w-md mx-auto space-y-6">
+            <OAuthButtons role={role} />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+              <span className="text-xs font-medium text-neutral-500">OR</span>
+              <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+            </div>
             <form className="grid grid-cols-1 gap-6" onSubmit={onSignup}>
               <label className="block">
                 <span className="text-neutral-800 dark:text-neutral-200">

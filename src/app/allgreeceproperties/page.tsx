@@ -58,11 +58,11 @@ const MainPage: FC = () => {
             <p className="text-neutral-600 dark:text-neutral-400">Loading...</p>
           </div>
         </div>
-      }
-    >
+      } 
+    >   
       <MainPageContent />
     </Suspense>
   );
-};
+};  
 
 export default MainPage;

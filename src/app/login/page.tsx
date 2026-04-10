@@ -13,6 +13,7 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Input from "@/shared/Input";
 import { useAuthStore } from "@/AuthStore";
 import ButtonPrimary from "@/shared/ButtonPrimary";
+import OAuthButtons from "../(client-components)/OAuthButtons";
 
 export interface PageLoginProps {}
 
@@ -48,8 +49,9 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
       });
       if (response.status === 200) {
         toast.success("Login successful");
-        Cookies.set("token", response.data.token, { expires: 1 });
-        localStorage.setItem("token", response.data.token);
+        // JWT is already set as an httpOnly cookie by the API.
+        // Keep an optional client-readable copy under a different key if needed.
+        localStorage.setItem("app_jwt", response.data.token);
         setToken(response.data.tokenData);
         
         // Redirect to the intended page if provided, otherwise go to home
@@ -110,6 +112,12 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
             </div>
           }
           <div className="max-w-md mx-auto space-y-6">
+            <OAuthButtons role={role} />
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+              <span className="text-xs font-medium text-neutral-500">OR</span>
+              <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
+            </div>
             <form
               className="grid grid-cols-1 gap-6 relative"
               onSubmit={handleSubmit}

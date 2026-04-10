@@ -7,7 +7,15 @@ import Travellers from "@/models/traveller";
 connectDb();
 
 export async function POST(request) {
-  const userId = await getDataFromToken(request);
+  const userId = getDataFromToken(request);
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: "Not authenticated" },
+      { status: 401 }
+    );
+  }
+
   const user = await User.findOne({ _id: userId }).select("-password");
 
   if (!user) {
@@ -25,7 +33,7 @@ export async function POST(request) {
   }
 
   return NextResponse.json({
-    message: "User found ",
+    message: "User found",
     data: user,
   });
 }

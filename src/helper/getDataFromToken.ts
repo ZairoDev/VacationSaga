@@ -1,13 +1,18 @@
 import { NextRequest } from "next/server";
 import jwt from "jsonwebtoken";
 
-export const getDataFromToken = (request: NextRequest) => {
+// Safe helper: returns user id or null instead of throwing when token is missing/invalid
+export const getDataFromToken = (request: NextRequest): string | null => {
   try {
-    const token = request.cookies.get("token")?.value || "";
-    // console.log("token: ", token);
-    const decodedToken: any = jwt.verify(token, process.env.TOKEN_SECRET!);
-    return decodedToken.id;
-  } catch (error: any) {
-    throw new Error(error.message);
+    const token = request.cookies.get("token")?.value;
+    if (!token) return null;
+
+    const secret = process.env.TOKEN_SECRET;
+    if (!secret) return null;
+
+    const decodedToken: any = jwt.verify(token, secret);
+    return decodedToken?.id ?? null;
+  } catch {
+    return null;
   }
 };

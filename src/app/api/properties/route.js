@@ -2,9 +2,11 @@ import { connectDb } from "../../../helper/db";
 import { NextResponse } from "next/server";
 import { Property } from "@/models/listing";
 
-connectDb();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
+    await connectDb();
     // const {
     //     ObjectId,
 	// 	userId,

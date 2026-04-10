@@ -10,6 +10,7 @@ export function middleware(request: NextRequest) {
     path === "/signup" ||
     path === "/verifyemail" ||
     path === "/" ||
+    path.startsWith("/auth") ||
     path.startsWith("/listing-stay") ||
     path.startsWith("/listing-experiences") ||
     path.startsWith("/listing-car") ||
