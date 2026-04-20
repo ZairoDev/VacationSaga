@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri ="https://vacationsaga.com/api/oauth/google/callback";
   if (!clientId || !redirectUri) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("role", roleParam);
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 10, // 10 minutes
-    domain: process.env.DOMAIN,
+    // domain: process.env.DOMAIN,
   });
 
   return response;
