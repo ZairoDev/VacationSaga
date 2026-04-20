@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 10, // 10 minutes
+    domain: process.env.DOMAIN,
   });
 
   return response;
