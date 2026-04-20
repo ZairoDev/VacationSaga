@@ -4,12 +4,10 @@ import { NextResponse } from "next/server";
 
 import User from "../../../../models/user";
 import { connectDb } from "../../../../helper/db";
-import Travellers from "../../../../models/traveller";
-
-connectDb();
 
 export async function POST(request) {
   try {
+    await connectDb();
     const reqBody = await request.json();
     const { email, password, role } = reqBody;
     // console.log(reqBody);
@@ -21,14 +19,20 @@ export async function POST(request) {
       );
     }
 
-    const LoginUser =
-      role === "Traveller"
-        ? await Travellers.findOne({ email })
-        : await User.findOne({ email });
+    const LoginUser = await User.findOne({ email });
 
     if (!LoginUser) {
       return NextResponse.json(
         { error: "Please Enter valid email or password" },
+        { status: 400 }
+      );
+    }
+
+    if (LoginUser.role !== role) {
+      return NextResponse.json(
+        {
+          error: `This account is registered as ${LoginUser.role}. Please log in with that role.`,
+        },
         { status: 400 }
       );
     }
@@ -81,6 +85,16 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
+    if (
+      error?.name === "MongooseServerSelectionError" ||
+      `${error?.message || ""}`.includes("ENOTFOUND") ||
+      `${error?.message || ""}`.includes("ECONNREFUSED")
+    ) {
+      return NextResponse.json(
+        { error: "Database connection failed. Please try again later." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

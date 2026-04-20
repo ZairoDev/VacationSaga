@@ -1,22 +1,17 @@
 import { connectDb } from "../../../../helper/db";
 import User from "../../../../models/user";
 import bcryptjs from "bcryptjs";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sendEmail } from "../../../../helper/mailer";
-import Travellers from "../../../../models/traveller";
 
-await connectDb();
-
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   try {
+    await connectDb();
     const reqBody = await request.json();
     const { name, email, password, role, sendDetails, phone } = reqBody;
     console.log(reqBody);
 
-    const SignupUser =
-      role === "Traveller"
-        ? await Travellers.findOne({ email })
-        : await User.findOne({ email });
+    const SignupUser = await User.findOne({ email });
 
     if (SignupUser) {
       return NextResponse.json(
@@ -37,16 +32,18 @@ export async function POST(request) {
     ) {
       console.log("not complete");
       return NextResponse.json(
-        { message: "All fields are required" },
-        { status: 400 },
-        { success: false }
+        { message: "All fields are required", success: false },
+        { status: 400 }
       );
     }
 
-    const newUser =
-      role === "Traveller"
-        ? new Travellers({ name, email, password: hashedPassword, role, phone })
-        : new User({ name, email, password: hashedPassword, role, phone });
+    const newUser = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      phone,
+    });
 
     const savedUser = await newUser.save();
     console.log(savedUser);
@@ -71,8 +68,18 @@ export async function POST(request) {
         savedUser,
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error while creating user:", error);
+    if (
+      error?.name === "MongooseServerSelectionError" ||
+      `${error?.message || ""}`.includes("ENOTFOUND") ||
+      `${error?.message || ""}`.includes("ECONNREFUSED")
+    ) {
+      return NextResponse.json(
+        { message: "Database connection failed. Please try again later." },
+        { status: 503 }
+      );
+    }
     return NextResponse.json(
       { message: "Error while creating user" },
       { status: 500 }

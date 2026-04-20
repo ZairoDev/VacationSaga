@@ -4,9 +4,15 @@ import User from "../../../../models/user";
 import { NextResponse } from "next/server";
 import Travellers from "@/models/traveller";
 
-connectDb();
-
 export async function POST(request) {
+  try {
+    await connectDb();
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Database connection failed. Please try again later." },
+      { status: 503 }
+    );
+  }
   const userId = getDataFromToken(request);
 
   if (!userId) {
@@ -16,16 +22,11 @@ export async function POST(request) {
     );
   }
 
-  const user = await User.findOne({ _id: userId }).select("-password");
+  let user = await User.findOne({ _id: userId }).select("-password");
 
+  // Legacy: traveller accounts created before unified `users` collection
   if (!user) {
-    const traveller = await Travellers.findOne({ _id: userId }).select("-password");
-    if (traveller) {
-      return NextResponse.json(
-        { message: "User found", data: traveller },
-        { status: 200 }
-      );
-    }
+    user = await Travellers.findOne({ _id: userId }).select("-password");
   }
 
   if (!user) {

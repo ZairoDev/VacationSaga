@@ -1,6 +1,5 @@
 // TODO : The above code is working fine without decoded feature
 
-import Travellers from "@/models/traveller";
 import User from "@/models/user";
 import bcryptjs from "bcryptjs";
 
@@ -12,19 +11,10 @@ export async function POST(request) {
     // Decode the token received from the request
     const decodedToken = decodeURIComponent(token);
 
-    let user = "";
-
-    user = await User.findOne({
+    const user = await User.findOne({
       forgotPasswordToken: decodedToken,
       forgotPasswordTokenExpiry: { $gt: Date.now() },
     });
-
-    if (!user) {
-      user = await Travellers.findOne({
-        forgotPasswordToken: decodedToken,
-        forgotPasswordTokenExpiry: { $gt: Date.now() },
-      });
-    }
 
     if (!user) {
       return new Response(

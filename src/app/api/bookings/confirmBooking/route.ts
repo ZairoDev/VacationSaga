@@ -7,8 +7,8 @@ import {
 import { Bookings } from "@/models/bookings";
 import { Property } from "@/models/listing";
 import { Properties } from "@/models/property";
-import Travellers from "@/models/traveller";
 import Users from "@/models/user";
+import { findTravellerByEmail } from "@/helper/resolveTraveller";
 import { NextRequest, NextResponse } from "next/server";
 
 connectDb();
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const traveller = await Travellers.findOne({ email: travellerEmail });
+    const traveller = await findTravellerByEmail(travellerEmail);
     if (!traveller) {
       console.log("traveller not found");
       return NextResponse.json(

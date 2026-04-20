@@ -4,7 +4,6 @@ import {
   sendBookingCancellationEmailToTraveller,
 } from "@/helper/gmailMailer";
 import { Bookings } from "@/models/bookings";
-import Travellers from "@/models/traveller";
 import Users from "@/models/user";
 import { NextRequest, NextResponse } from "next/server";
 connectDb();

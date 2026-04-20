@@ -7,7 +7,10 @@ import {
 } from "@/helper/gmailMailer";
 import Users from "@/models/user";
 import { connectDb } from "@/helper/db";
-import Travellers from "@/models/traveller";
+import {
+  findTravellerById,
+  pushTravellerUpcomingRequest,
+} from "@/helper/resolveTraveller";
 import { UserDataType } from "@/data/types";
 import { Bookings } from "@/models/bookings";
 import { Properties } from "@/models/property";
@@ -66,7 +69,7 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-    const traveller = await Travellers.findById(travellerId);
+    const traveller = await findTravellerById(travellerId);
     if (!traveller) {
       return NextResponse.json(
         { error: "You are not a traveller! Please login as a Traveller" },
@@ -145,9 +148,10 @@ export async function POST(request: NextRequest) {
       );
     }
     try {
-      const updateTraveller = await Travellers.findByIdAndUpdate(travellerId, {
-        $push: { myUpcommingRequests: booking._id },
-      });
+      const updateTraveller = await pushTravellerUpcomingRequest(
+        travellerId,
+        booking._id
+      );
     } catch (err) {
       console.log("Traveller field not updated");
       return NextResponse.json(

@@ -2,7 +2,6 @@
 
 import axios from "axios";
 import Link from "next/link";
-import Cookies from "js-cookie";
 import { parseCookies } from "nookies";
 import { Toaster, toast } from "sonner";
 import { CgSpinner } from "react-icons/cg";
@@ -13,7 +12,6 @@ import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import Input from "@/shared/Input";
 import { useAuthStore } from "@/AuthStore";
 import ButtonPrimary from "@/shared/ButtonPrimary";
-import OAuthButtons from "../(client-components)/OAuthButtons";
 
 export interface PageLoginProps {}
 
@@ -21,6 +19,8 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
   const router = useRouter();
   const params = useSearchParams();
   const role = params.get("role");
+  const redirectPath = params.get("redirect");
+  const oauthError = params.get("error");
 
   const { setToken } = useAuthStore();
 
@@ -32,11 +32,37 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
   useEffect(() => {
     const { token } = parseCookies();
     // Only redirect if user is already logged in and there's no redirect parameter
-    const redirectPath = params.get("redirect");
     if (token && !redirectPath) {
       router.push("/");
     }
-  }, [params, router]);
+  }, [router, redirectPath]);
+
+  useEffect(() => {
+    if (!oauthError) return;
+    const map: Record<string, string> = {
+      missing_role: "Please select a role first.",
+      missing_code: "Google login failed. Please try again.",
+      google_denied: "Google sign-in was cancelled.",
+      oauth_state: "Security check failed. Please try again.",
+      missing_oauth_cookie: "Google login timed out. Please try again.",
+      missing_google_config: "Google login is not configured on the server.",
+      oauth_failed: "Google login failed. Please try again.",
+      oauth_role_mismatch:
+        "This Google account is already registered with a different role. Use that role or another account.",
+    };
+    toast.error(map[oauthError] ?? "Authentication failed. Please try again.");
+  }, [oauthError]);
+
+  const handleGoogleLogin = () => {
+    if (role !== "Owner" && role !== "Traveller") {
+      toast.error("Please Select A Role before Login");
+      return;
+    }
+    const qs = new URLSearchParams();
+    qs.set("role", role);
+    if (redirectPath) qs.set("redirect", redirectPath);
+    window.location.href = `/api/oauth/google/start?${qs.toString()}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -55,7 +81,6 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
         setToken(response.data.tokenData);
         
         // Redirect to the intended page if provided, otherwise go to home
-        const redirectPath = params.get("redirect");
         if (redirectPath) {
           router.push(decodeURIComponent(redirectPath) as any);
         } else {
@@ -112,12 +137,13 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
             </div>
           }
           <div className="max-w-md mx-auto space-y-6">
-            <OAuthButtons role={role} />
-            <div className="flex items-center gap-4">
-              <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
-              <span className="text-xs font-medium text-neutral-500">OR</span>
-              <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
-            </div>
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-3 font-medium text-neutral-800 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition"
+            >
+              Sign in with Google
+            </button>
             <form
               className="grid grid-cols-1 gap-6 relative"
               onSubmit={handleSubmit}

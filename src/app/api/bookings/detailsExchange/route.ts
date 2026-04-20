@@ -3,8 +3,8 @@ import { getDataFromToken } from "@/helper/getDataFromToken";
 import { sendDetailsExchangeMail } from "@/helper/gmailMailer";
 import { Bookings } from "@/models/bookings";
 import { Properties } from "@/models/property";
-import Travellers from "@/models/traveller";
 import Users from "@/models/user";
+import { findTravellerById } from "@/helper/resolveTraveller";
 import { NextRequest, NextResponse } from "next/server";
 
 connectDb();
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const traveller = await Travellers.findById(travellerId);
+    const traveller = await findTravellerById(travellerId);
 
     if (!traveller) {
       return NextResponse.json(

@@ -1,197 +1,204 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
-import bcryptjs from "bcryptjs";
-
+import User from "@/models/user";
 import { connectDb } from "@/helper/db";
-import Users from "@/models/user";
-import Travellers from "@/models/traveller";
-import { signAppToken } from "@/helper/authToken";
+import { withAuthCookie } from "@/helper/authToken";
 
-type GoogleUserInfo = {
-  sub: string;
-  email: string;
-  email_verified?: boolean;
-  name?: string;
-  given_name?: string;
-  family_name?: string;
-  picture?: string;
+type OAuthStartPayload = {
+  state: string;
+  codeVerifier: string;
+  role: "Owner" | "Traveller";
+  redirect: string;
 };
+
+function utf8FromBase64Url(input: string) {
+  const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = base64.length % 4 === 0 ? "" : "=".repeat(4 - (base64.length % 4));
+  return Buffer.from(base64 + pad, "base64").toString("utf8");
+}
+
+async function exchangeCodeForTokens(args: {
+  code: string;
+  codeVerifier: string;
+  redirectUri: string;
+  clientId: string;
+  clientSecret: string;
+}) {
+  const body = new URLSearchParams();
+  body.set("code", args.code);
+  body.set("client_id", args.clientId);
+  body.set("client_secret", args.clientSecret);
+  body.set("redirect_uri", args.redirectUri);
+  body.set("grant_type", "authorization_code");
+  body.set("code_verifier", args.codeVerifier);
+
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body,
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`token_exchange_failed:${res.status}:${text}`);
+  }
+
+  return (await res.json()) as {
+    access_token: string;
+    expires_in: number;
+    id_token?: string;
+    token_type: string;
+    scope?: string;
+    refresh_token?: string;
+  };
+}
+
+async function fetchGoogleUserInfo(accessToken: string) {
+  const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+    headers: { authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`userinfo_failed:${res.status}:${text}`);
+  }
+  return (await res.json()) as {
+    sub: string;
+    name?: string;
+    given_name?: string;
+    family_name?: string;
+    picture?: string;
+    email: string;
+    email_verified?: boolean;
+  };
+}
+
+function redirectToLogin(request: NextRequest, params: Record<string, string>) {
+  const loginUrl = new URL("/login", request.url);
+  for (const [k, v] of Object.entries(params)) loginUrl.searchParams.set(k, v);
+  return NextResponse.redirect(loginUrl);
+}
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
+  const oauthError = url.searchParams.get("error");
 
-  const cookieState = request.cookies.get("oauth_state")?.value;
-  const codeVerifier = request.cookies.get("oauth_code_verifier")?.value;
-  const role = request.cookies.get("oauth_role")?.value || "Traveller";
-  const redirect = request.cookies.get("oauth_redirect")?.value || "/";
-
-  // Clear transient cookies early
-  const clearCookies = (res: NextResponse) => {
-    ["oauth_state", "oauth_code_verifier", "oauth_role", "oauth_redirect"].forEach(
-      (name) => {
-        res.cookies.set(name, "", { path: "/", maxAge: 0 });
-      }
-    );
-  };
-
+  if (oauthError) {
+    return redirectToLogin(request, { error: "google_denied" });
+  }
   if (!code || !state) {
-    const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-    clearCookies(res);
+    return redirectToLogin(request, { error: "missing_code" });
+  }
+
+  const cookieVal = request.cookies.get("google_oauth")?.value;
+  if (!cookieVal) {
+    return redirectToLogin(request, { error: "missing_oauth_cookie" });
+  }
+
+  let payload: OAuthStartPayload | null = null;
+  try {
+    payload = JSON.parse(utf8FromBase64Url(cookieVal)) as OAuthStartPayload;
+  } catch {
+    payload = null;
+  }
+
+  if (!payload || payload.state !== state) {
+    const res = redirectToLogin(request, { error: "oauth_state" });
+    res.cookies.delete("google_oauth");
     return res;
   }
 
-  if (!cookieState || state !== cookieState) {
-    const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-    clearCookies(res);
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  if (!clientId || !clientSecret || !redirectUri) {
+    const res = redirectToLogin(request, {
+      role: payload.role,
+      error: "missing_google_config",
+    });
+    res.cookies.delete("google_oauth");
     return res;
   }
-
-  if (!codeVerifier) {
-    const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-    clearCookies(res);
-    return res;
-  }
-
-  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || `${url.protocol}//${url.host}`;
-
-  if (!clientId || !clientSecret) {
-    const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-    clearCookies(res);
-    return res;
-  }
-
-  const callbackUrl = new URL("/api/oauth/google/callback", appUrl);
 
   try {
     await connectDb();
 
-    // Exchange code for tokens
-    const tokenRes = await axios.post(
-      "https://oauth2.googleapis.com/token",
-      new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        code,
-        code_verifier: codeVerifier,
-        grant_type: "authorization_code",
-        redirect_uri: callbackUrl.toString(),
-      }).toString(),
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      }
-    );
-
-    const accessToken: string | undefined = tokenRes.data?.access_token;
-    if (!accessToken) {
-      const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-      clearCookies(res);
-      return res;
-    }
-
-    // Fetch user profile
-    const userInfoRes = await axios.get<GoogleUserInfo>(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-
-    const profile = userInfoRes.data;
-    if (!profile?.email) {
-      const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-      clearCookies(res);
-      return res;
-    }
-
-    const normalizedRole = role === "Owner" ? "Owner" : "Traveller";
-    const Model = normalizedRole === "Traveller" ? Travellers : Users;
-
-    // Find existing by provider id or email
-    const existing =
-      (await Model.findOne({ oauthProvider: "google", oauthProviderId: profile.sub })) ||
-      (await Model.findOne({ email: profile.email }));
-
-    const displayName =
-      profile.name ||
-      [profile.given_name, profile.family_name].filter(Boolean).join(" ") ||
-      profile.email.split("@")[0];
-
-    let userDoc = existing;
-    if (!userDoc) {
-      const salt = await bcryptjs.genSalt(10);
-      const randomPassword = await bcryptjs.hash(profile.sub + Date.now().toString(), salt);
-
-      userDoc = await new Model({
-        name: displayName,
-        email: profile.email,
-        profilePic: profile.picture || "",
-        isVerified: true,
-        role: normalizedRole,
-        authProvider: "google",
-        oauthProvider: "google",
-        oauthProviderId: profile.sub,
-        // satisfy existing schemas for credentials-only users
-        password: randomPassword,
-        phone: "",
-      }).save();
-    } else {
-      // Link provider if needed
-      const needsLink =
-        !userDoc.oauthProvider ||
-        !userDoc.oauthProviderId ||
-        userDoc.oauthProvider !== "google" ||
-        userDoc.oauthProviderId !== profile.sub;
-
-      if (needsLink) {
-        userDoc.oauthProvider = "google";
-        userDoc.oauthProviderId = profile.sub;
-        userDoc.authProvider = userDoc.authProvider || "google";
-        if (!userDoc.profilePic && profile.picture) {
-          userDoc.profilePic = profile.picture;
-        }
-        if (!userDoc.name && displayName) {
-          userDoc.name = displayName;
-        }
-        await userDoc.save();
-      }
-    }
-
-    const tokenData = {
-      id: userDoc._id.toString(),
-      name: userDoc.name,
-      email: userDoc.email,
-    };
-
-    const payload = {
-      message: "Login successful",
-      success: true,
-      tokenData: {
-        _id: userDoc._id,
-        name: userDoc.name,
-        email: userDoc.email,
-        role: normalizedRole,
-        isVerified: true,
-        profilePic: userDoc?.profilePic ?? "",
-      },
-    };
-    const token = signAppToken(tokenData);
-    const res = NextResponse.redirect(new URL(redirect, url.origin));
-    res.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24, // 1 day
+    const tokenResponse = await exchangeCodeForTokens({
+      code,
+      codeVerifier: payload.codeVerifier,
+      redirectUri,
+      clientId,
+      clientSecret,
     });
-    clearCookies(res);
-    return res;
-  } catch (err) {
-    const res = NextResponse.redirect(new URL(`/login?role=${role}`, url.origin));
-    clearCookies(res);
+
+    const userInfo = await fetchGoogleUserInfo(tokenResponse.access_token);
+    const email = (userInfo.email || "").toLowerCase().trim();
+    if (!email) {
+      throw new Error("missing_email");
+    }
+
+    const name =
+      userInfo.name ||
+      [userInfo.given_name, userInfo.family_name].filter(Boolean).join(" ") ||
+      "Google User";
+
+    const profilePic = userInfo.picture || "";
+    const providerId = userInfo.sub || "";
+
+    const existing = await User.findOne({ email });
+    if (existing && existing.role !== payload.role) {
+      throw new Error("role_mismatch");
+    }
+
+    const user =
+      existing ??
+      new User({
+        email,
+        role: payload.role,
+      });
+
+    user.name = name;
+    user.profilePic = profilePic;
+    user.isVerified = true;
+    user.authProvider = "google";
+    user.oauthProvider = "google";
+    user.oauthProviderId = providerId;
+
+    await user.save();
+
+    const redirectTarget = payload.redirect || "/";
+    const successRedirect = NextResponse.redirect(new URL(redirectTarget, request.url));
+
+    // Clear temporary cookie.
+    successRedirect.cookies.delete("google_oauth");
+
+    // Issue app session cookie (JWT).
+    const authed = withAuthCookie(
+      { success: true },
+      { id: user._id.toString(), name: user.name, email: user.email }
+    );
+
+    // Carry over JWT cookie onto redirect response.
+    const setCookie = authed.headers.get("set-cookie");
+    if (setCookie) {
+      successRedirect.headers.append("set-cookie", setCookie);
+    }
+
+    return successRedirect;
+  } catch (err: any) {
+    if (err?.message === "role_mismatch") {
+      const res = redirectToLogin(request, {
+        role: payload.role,
+        error: "oauth_role_mismatch",
+      });
+      res.cookies.delete("google_oauth");
+      return res;
+    }
+    const res = redirectToLogin(request, {
+      role: payload.role,
+      error: "oauth_failed",
+    });
+    res.cookies.delete("google_oauth");
     return res;
   }
 }

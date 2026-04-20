@@ -6,7 +6,6 @@ import {
   ResetPasswordTemplate,
   PropertyListedTemplate,
 } from "@/app/emailTemplate/email";
-import Travellers from "@/models/traveller";
 import landingPageForm from "@/models/landing-page-form";
 
 import Users from "../models/user";
@@ -57,23 +56,12 @@ export const sendEmail = async ({
       const hashedToken = await bcryptjs.hash(userId.toString(), 10);
       const encodedToken = encodeURIComponent(hashedToken);
 
-      const user = await Users.findById(userId);
-
-      if (user) {
-        await Users.findByIdAndUpdate(userId, {
-          $set: {
-            forgotPasswordToken: hashedToken,
-            forgotPasswordTokenExpiry: new Date(Date.now() + 3600000),
-          },
-        });
-      } else {
-        const traveller = await Travellers.findByIdAndUpdate(userId, {
-          $set: {
-            forgotPasswordToken: hashedToken,
-            forgotPasswordTokenExpiry: new Date(Date.now() + 3600000),
-          },
-        });
-      }
+      await Users.findByIdAndUpdate(userId, {
+        $set: {
+          forgotPasswordToken: hashedToken,
+          forgotPasswordTokenExpiry: new Date(Date.now() + 3600000),
+        },
+      });
 
       templateContent = ResetPasswordTemplate(encodedToken);
     } else if (emailType === "PROPERTY_LISTED") {

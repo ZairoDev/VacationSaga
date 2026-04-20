@@ -1,9 +1,10 @@
 import { connectDb } from "../../../../helper/db";
 import { NextResponse } from "next/server";
-connectDb();
 
 export async function GET(request) {
   try {
+    // Optional, but keep consistent: don't hang if DB is down.
+    await connectDb().catch(() => null);
     const response = NextResponse.json(
       { message: "Logged out successfully" },
       { success: true }

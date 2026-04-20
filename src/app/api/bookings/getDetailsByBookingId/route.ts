@@ -1,7 +1,7 @@
 import { connectDb } from "@/helper/db";
 import { Bookings } from "@/models/bookings";
 import { Properties } from "@/models/property";
-import Travellers from "@/models/traveller";
+import { findTravellerById } from "@/helper/resolveTraveller";
 import { NextRequest, NextResponse } from "next/server";
 
 connectDb();
@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const traveller = await Travellers.findById(booking.travellerId);
+    const traveller = await findTravellerById(
+      booking.travellerId?.toString?.() ?? String(booking.travellerId)
+    );
 
     if (!traveller) {
       return NextResponse.json(
