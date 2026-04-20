@@ -72,7 +72,8 @@ async function fetchGoogleUserInfo(accessToken: string) {
 }
 
 function redirectToLogin(request: NextRequest, params: Record<string, string>) {
-  const loginUrl = new URL("/login", request.url);
+   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vacationsaga.com";
+  const loginUrl = new URL("/login", baseUrl); 
   for (const [k, v] of Object.entries(params)) loginUrl.searchParams.set(k, v);
   return NextResponse.redirect(loginUrl);
 }
@@ -167,7 +168,8 @@ export async function GET(request: NextRequest) {
     await user.save();
 
     const redirectTarget = payload.redirect || "/";
-    const successRedirect = NextResponse.redirect(new URL(redirectTarget, request.url));
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vacationsaga.com";
+    const successRedirect = NextResponse.redirect(new URL(redirectTarget, baseUrl));
 
     // Clear temporary cookie.
     successRedirect.cookies.delete("google_oauth");
