@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import User from "@/models/user";
 import { connectDb } from "@/helper/db";
-import { withAuthCookie } from "@/helper/authToken";
+import { withAuthCookie, signAppToken } from "@/helper/authToken";
 
 type OAuthStartPayload = {
   state: string;
@@ -168,6 +168,31 @@ export async function GET(request: NextRequest) {
     await user.save();
 
     const redirectTarget = payload.redirect || "/";
+
+    // Mobile deep-link redirect: custom scheme (myapp://) can't receive cookies.
+    // Append the JWT + user data as query params so the native app can read them.
+    if (!redirectTarget.startsWith("http")) {
+      const token = signAppToken({
+        id: user._id.toString(),
+        name: user.name,
+        email: user.email,
+      });
+
+      const qs = new URLSearchParams({
+        token,
+        _id: user._id.toString(),
+        name: user.name || "",
+        email: user.email || "",
+        profilePic: user.profilePic || "",
+        role: user.role || payload.role,
+      });
+
+      const mobileRedirect = NextResponse.redirect(`${redirectTarget}?${qs.toString()}`);
+      mobileRedirect.cookies.delete("google_oauth");
+      return mobileRedirect;
+    }
+
+    // Normal web redirect — set session cookie as usual.
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vacationsaga.com";
     const successRedirect = NextResponse.redirect(new URL(redirectTarget, baseUrl));
 
