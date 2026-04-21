@@ -67,6 +67,7 @@ import GuestsInput from "../GuestsInput";
 import SectionDateRange from "../../SectionDateRange";
 import StayDatesRangeInput from "../StayDatesRangeInput";
 import MobileFooterSticky from "../../(components)/MobileFooterSticky";
+import { TbPawFilled } from "react-icons/tb";
 
 export interface ListingStayDetailPageProps {
   params: {
@@ -607,7 +608,9 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
               <MdApartment className="text-2xl" />
               <h3 className=" flex gap-x-1 text-sm">
                 {particularProperty?.isTopFloor
-                  ? "Top Floor"
+                  ? particularProperty?.floor
+                    ? `Top Floor (Floor ${particularProperty?.floor})`
+                    : "Top Floor"
                   : `Floor ${particularProperty?.floor}`}
               </h3>
             </div>
@@ -971,21 +974,25 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
             <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />
 
             {/* CONTENT */}
-            {particularProperty?.rentalType === "Short Term" && <div className="">
-              <h4 className="text-lg font-semibold">Check-in time</h4>
-              <div className="mt-3 text-neutral-500 dark:text-neutral-400 max-w-md text-sm sm:text-base">
-                <div className="flex space-x-10 justify-between p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-                  <span>Check-in</span>
-                  <span>{particularProperty?.time[0]}:00</span>
+            {particularProperty?.rentalType === "Short Term" && (
+              <div className="">
+                <h4 className="text-lg font-semibold">Check-in time</h4>
+                <div className="mt-3 text-neutral-500 dark:text-neutral-400 max-w-md text-sm sm:text-base">
+                  <div className="flex space-x-10 justify-between p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                    <span>Check-in</span>
+                    <span>{particularProperty?.time[0]}:00</span>
+                  </div>
+                  <div className="flex space-x-10 justify-between p-3">
+                    <span>Check-out</span>
+                    <span>{particularProperty?.time[1]}:00</span>
+                  </div>
                 </div>
-                <div className="flex space-x-10 justify-between p-3">
-                  <span>Check-out</span>
-                  <span>{particularProperty?.time[1]}:00</span>
-                </div>    
               </div>
-            </div>}
+            )}
 
-            {particularProperty?.rentalType === "Short Term" && <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />}
+            {particularProperty?.rentalType === "Short Term" && (
+              <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />
+            )}
 
             {/* CONTENT */}
             <div>
@@ -1013,12 +1020,12 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
                   {/* {["Cafe", "Restaurant", "Mall"]?.map((item, ind) => ( */}
                   {Array.from(
                     new Set(
-                      particularProperty?.nearbyLocations?.nearbyLocationTag
-                    )
+                      particularProperty?.nearbyLocations?.nearbyLocationTag,
+                    ),
                   )?.map((item, ind) =>
                     particularProperty?.nearbyLocations?.nearbyLocationName?.[
                       particularProperty?.nearbyLocations?.nearbyLocationTag?.indexOf(
-                        item
+                        item,
                       )
                     ] ? (
                       <div key={ind} className=" px-2">
@@ -1058,9 +1065,8 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
                                       <Link
                                         href={
                                           new URL(
-                                            particularProperty?.nearbyLocations?.nearbyLocationUrl?.[
-                                              index
-                                            ]
+                                            particularProperty?.nearbyLocations
+                                              ?.nearbyLocationUrl?.[index],
                                           )
                                         }
                                         target="_blank"
@@ -1093,12 +1099,12 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
                                         " m"}
                                   </div>
                                 </div>
-                              )
+                              ),
                           )}
 
                         <div className=" w-full h-0.5 bg-neutral-700 my-2"></div>
                       </div>
-                    ) : null
+                    ) : null,
                   )}
                 </div>
               </>
@@ -1108,6 +1114,15 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
 
                 {particularProperty?.rentalType === "Long Term" && (
                   <div className="mt-3 text-neutral-500 dark:text-neutral-400 space-y-2 w-full">
+                    <div className=" flex items-center gap-x-2">
+                      <MdApartment />
+                      Furnishing Status:{" "}
+                      {particularProperty?.propertyStyle || "Not specified"}
+                    </div>
+                    <div className=" flex items-center gap-x-2">
+                      <TbPawFilled />
+                      Pet Policy: {particularProperty?.pet || "Not specified"}
+                    </div>
                     <div className=" flex items-center gap-x-2">
                       <SiLevelsdotfyi />
                       Number of Levels: {particularProperty?.levels}
