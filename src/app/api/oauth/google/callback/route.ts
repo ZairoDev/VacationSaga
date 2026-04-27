@@ -72,8 +72,13 @@ async function fetchGoogleUserInfo(accessToken: string) {
 }
 
 function redirectToLogin(request: NextRequest, params: Record<string, string>) {
-   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://vacationsaga.com";
-  const loginUrl = new URL("/login", baseUrl); 
+  // Prefer the explicit env var; fall back to the origin of the incoming request
+  // so that local dev redirects stay on localhost instead of jumping to production.
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    request.nextUrl.origin ||
+    "https://vacationsaga.com";
+  const loginUrl = new URL("/login", baseUrl);
   for (const [k, v] of Object.entries(params)) loginUrl.searchParams.set(k, v);
   return NextResponse.redirect(loginUrl);
 }
@@ -111,7 +116,11 @@ export async function GET(request: NextRequest) {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = "https://vacationsaga.com/api/oauth/google/callback";
+  // Must match the URI used in /start and registered in Google Cloud Console.
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ||
+    "https://vacationsaga.com/api/oauth/google/callback";
+
   if (!clientId || !clientSecret || !redirectUri) {
     const res = redirectToLogin(request, {
       role: payload.role,
@@ -169,9 +178,13 @@ export async function GET(request: NextRequest) {
 
     const redirectTarget = payload.redirect || "/";
 
-    // Mobile deep-link redirect: custom scheme (myapp://) can't receive cookies.
-    // Append the JWT + user data as query params so the native app can read them.
-    if (!redirectTarget.startsWith("http")) {
+    // Mobile deep-link redirect: custom scheme (e.g. myapp://) can't receive cookies.
+    // Only enter this branch for non-http(s) schemes like myapp://, vacationsaga://, etc.
+    // A plain web path like "/" or "/dashboard" must NOT enter here — it has no scheme at all.
+    const isMobileDeepLink =
+      redirectTarget.includes("://") && !/^https?:\/\//i.test(redirectTarget);
+
+    if (isMobileDeepLink) {
       const token = signAppToken({
         id: user._id.toString(),
         name: user.name,
@@ -213,6 +226,20 @@ export async function GET(request: NextRequest) {
 
     return successRedirect;
   } catch (err: any) {
+    // Log the real cause so server logs show what actually failed
+    // (e.g. token_exchange_failed:400:{"error":"redirect_uri_mismatch",...})
+    console.error(
+      "[Google OAuth callback] error:",
+      err?.message ?? String(err),
+      "| redirectUri used:",
+      process.env.GOOGLE_REDIRECT_URI ||
+        "https://vacationsaga.com/api/oauth/google/callback (fallback)",
+      "| clientId present:",
+      !!process.env.GOOGLE_CLIENT_ID,
+      "| clientSecret present:",
+      !!process.env.GOOGLE_CLIENT_SECRET
+    );
+
     if (err?.message === "role_mismatch") {
       const res = redirectToLogin(request, {
         role: payload.role,
@@ -221,9 +248,17 @@ export async function GET(request: NextRequest) {
       res.cookies.delete("google_oauth");
       return res;
     }
+
+    // Surface a more specific error code when the token exchange failed so the
+    // login page can show a more helpful message.
+    const errorCode =
+      typeof err?.message === "string" && err.message.startsWith("token_exchange_failed")
+        ? "oauth_token_exchange"
+        : "oauth_failed";
+
     const res = redirectToLogin(request, {
       role: payload.role,
-      error: "oauth_failed",
+      error: errorCode,
     });
     res.cookies.delete("google_oauth");
     return res;
