@@ -59,3 +59,27 @@
   background: orange !important;
   opacity: 1;
 }
+
+/* Hosts marquee (SectionGridAuthorBox) */
+.marquee-track {
+  animation: hosts-marquee 35s linear infinite;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes hosts-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

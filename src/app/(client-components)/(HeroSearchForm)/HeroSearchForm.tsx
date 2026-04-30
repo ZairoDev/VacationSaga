@@ -6,78 +6,44 @@ import ExperiencesSearchForm from "./(experiences-search-form)/ExperiencesSearch
 import RentalCarSearchForm from "./(car-search-form)/RentalCarSearchForm";
 import FlightSearchForm from "./(flight-search-form)/FlightSearchForm";
 
-// export type SearchTab = "Stays" | "Experiences" | "Cars" | "Flights";
+// Backwards-compat export: used by Header3.
 export type SearchTab = "Short Term Rentals" | "Long Term Rentals";
 
 export interface HeroSearchFormProps {
   className?: string;
-  currentTab?: SearchTab;
-  // currentPage?: "Stays" | "Experiences" | "Cars" | "Flights";
-  currentPage?: "Short Term Rentals" | "Long Term Rentals" ;
+  formClassName?: string;
+  defaultMonthlyStays?: boolean;
 }
 
 const HeroSearchForm: FC<HeroSearchFormProps> = ({
   className = "",
-  // currentTab = "Stays",
-  currentTab = "Short Term Rentals",
-  currentPage,
+  formClassName,
+  defaultMonthlyStays = true,
 }) => {
-  // const tabs: SearchTab[] = ["Stays", "Experiences", "Cars", "Flights"];
-  const tabs: SearchTab[] = ["Short Term Rentals", "Long Term Rentals"];
-  const [tabActive, setTabActive] = useState<SearchTab>(currentTab);
-
-  const renderTab = () => {
-    return (
-      <ul className="ml-2 sm:ml-6 md:ml-12 flex space-x-5 sm:space-x-8 lg:space-x-11 overflow-x-auto hiddenScrollbar">
-        {tabs.map((tab) => {
-          const active = tab === tabActive;
-          return (
-            <li
-              onClick={() => setTabActive(tab)}
-              className={`flex-shrink-0 flex items-center cursor-pointer text-sm lg:text-base font-medium ${
-                active
-                  ? ""
-                  : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-400"
-              } `}
-              key={tab}
-            >
-              {active && (
-                <span className="block w-2.5 h-2.5 rounded-full bg-neutral-800 dark:bg-neutral-100 mr-2" />
-              )}
-              <span>{tab}</span>
-            </li>
-          );
-        })}
-      </ul>
-    );
-  };
-
-  const renderForm = () => {
-    switch (tabActive) {
-      // case "Stays":
-      //   return <StaySearchForm />;
-      // case "Experiences":
-      //   return <ExperiencesSearchForm />;
-      case "Short Term Rentals":
-        return <StaySearchForm rentalType="Short Term" />;
-      case "Long Term Rentals":
-        return <ExperiencesSearchForm rentalType="Long Term" />;
-      // case "Cars":
-      //   return <RentalCarSearchForm />;
-      // case "Flights":
-      //   return <FlightSearchForm />;
-
-      default:
-        return null;
-    }
-  };
+  // Monthly stays toggle replaces Short/Long term tabs:
+  // - monthlyStays = true  => Long term (monthly rentals)
+  // - monthlyStays = false => Short term
+  const [monthlyStays, setMonthlyStays] = useState<boolean>(defaultMonthlyStays);
 
   return (
     <div
-      className={`nc-HeroSearchForm w-full max-w-6xl py-5 lg:py-0 ${className}`}
+      className={`nc-HeroSearchForm w-full max-w-6xl ${className}`}
     >
-      {renderTab()}
-      {renderForm()}
+      {monthlyStays ? (
+        <ExperiencesSearchForm
+          rentalType="Long Term"
+          formClassName={formClassName}
+          monthlyStays={monthlyStays}
+          onMonthlyStaysChange={setMonthlyStays}
+        />
+      ) : (
+        <StaySearchForm
+          rentalType="Short Term"
+          formClassName={formClassName}
+          monthlyStays={monthlyStays}
+          onMonthlyStaysChange={setMonthlyStays}
+        />
+      )}
     </div>
   );
 };

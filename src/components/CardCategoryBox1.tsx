@@ -27,19 +27,22 @@ const CardCategoryBox1: FC<CardCategoryBox1Props> = ({
         name={convertNumbThousand(count)}
       /> */}
 
-      <div className="relative flex-shrink-0 w-24 h-24 rounded-full overflow-hidden">
+      <div className="relative flex-shrink-0 w-24 h-24 rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-800">
         {/* <Image
           src={thumbnail || ""}
           fill
           alt=""
           sizes="(max-width: 400px) 100vw, 400px"
         /> */}
-        <img 
-          src={thumbnail || ""} 
-          alt={name}
-          className=" object-cover w-auto h-auto "
-          
-        />
+        {!!thumbnail ? (
+          <img
+            src={thumbnail}
+            alt={name}
+            loading="lazy"
+            decoding="async"
+            className="block h-full w-full object-cover"
+          />
+        ) : null}
       </div>
       <div className="ml-4 flex-grow overflow-hidden">
         <h2 className="text-base font-medium">

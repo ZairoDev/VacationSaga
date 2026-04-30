@@ -62,91 +62,10 @@ const DEMO_CATS: TaxonomyType[] = [
     thumbnail:
       "https://images.pexels.com/photos/1701595/pexels-photo-1701595.jpeg?auto=compress&cs=tinysrgb&w=600",
   },
-  // {
-  //   id: "6",
-  //   href: "/listing-stay",
-  //   name: "Slovenia",
-  //   taxonomy: "category",
-  //   count: 188288,
-  //   thumbnail:
-  //     "https://images.pexels.com/photos/3214969/pexels-photo-3214969.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-  // },
-  // {
-  //   id: "7",
-  //   href: "/listing-stay",
-  //   name: "Slovakia",
-  //   taxonomy: "category",
-  //   count: 188288,
-  //   thumbnail:
-  //     "https://images.pexels.com/photos/280173/pexels-photo-280173.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-  // },
+  
 ];
 
-// const DEMO_CATS_2: TaxonomyType[] = [
-//   {
-//     id: "1",
-//     href: "/listing-stay-map",
-//     name: "Enjoy the great cold",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/5764100/pexels-photo-5764100.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260",
-//   },
-//   {
-//     id: "2",
-//     href: "/listing-stay-map",
-//     name: "Sleep in a floating way",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/2869499/pexels-photo-2869499.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-//   },
-//   {
-//     id: "3",
-//     href: "/listing-stay-map",
-//     name: "In the billionaire's house",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/7031413/pexels-photo-7031413.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-//   },
-//   {
-//     id: "4",
-//     href: "/listing-stay-map",
-//     name: "Cool in the deep forest",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/247532/pexels-photo-247532.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-//   },
-//   {
-//     id: "5",
-//     href: "/listing-stay-map",
-//     name: "In the billionaire's house",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/7031413/pexels-photo-7031413.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-//   },
-//   {
-//     id: "6",
-//     href: "/listing-stay-map",
-//     name: "In the billionaire's house",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/9828170/pexels-photo-9828170.jpeg?auto=compress&cs=tinysrgb&w=1600&lazy=load",
-//   },
-//   {
-//     id: "7",
-//     href: "/listing-stay-map",
-//     name: "Cool in the deep forest",
-//     taxonomy: "category",
-//     count: 188288,
-//     thumbnail:
-//       "https://images.pexels.com/photos/247532/pexels-photo-247532.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-//   },
-// ];
+
 
 export interface Properties {
   _id?: string;
@@ -235,56 +154,31 @@ function PageHome() {
 
       <div className="container relative space-y-24 mb-24 lg:space-y-28 lg:mb-28">
         {/* SECTION HERO */}
-        <SectionHero className="pt-10 lg:pt-16 lg:pb-16" />
+        <SectionHero className="lg:pb-16" />
 
         {/* SECTION 1 */}
-        <SectionSliderNewCategories categories={DEMO_CATS} />
+        <div className="-mt- -mb-20">
+          <SectionSliderNewCategories categories={DEMO_CATS} />
+        </div>
 
-        <SectionOurFeatures />
+        {/* <SectionOurFeatures /> */}
 
         <SectionGridFeaturePlaces cardType="card2" />
 
         <SectionHowItWork />
 
-        {/* <div className="relative py-16">
-          <BackgroundSection className="bg-orange-50 dark:bg-black/20" />
-          <SectionSliderNewCategories
-            categories={DEMO_CATS_2}
-            categoryCardType="card4"
-            itemPerRow={4}
-            heading="Suggestions for discovery"
-            subHeading="Popular places to stay that Vacation Saga recommends for you"
-            sliderStyle="style2"
-          />
-        </div> */}
-
-        {/* <SectionSubscribe2 /> */}
+  
 
         <div className="relative py-16">
-          <BackgroundSection className="bg-orange-50 dark:bg-black dark:bg-opacity-20 " />
+        
           <SectionGridAuthorBox />
         </div>
 
         <SectionGridCategoryBox />
-
-        <div className="relative py-16">
-          <BackgroundSection />
-          <SectionBecomeAnAuthor />
-        </div>
-
-        {/* <SectionSliderNewCategories
-          heading="Explore by types of stays"
-          subHeading="Explore houses based on 10 types of stays"
-          categoryCardType="card5"
-          itemPerRow={5}
-        /> */}
-
-        {/* <SectionVideos /> */}
-
-        <div className="relative py-16 ">
-          <BackgroundSection />
+ 
           <SectionClientSay />
-        </div>
+          <SectionBecomeAnAuthor />
+
       </div>
     </main>
   );

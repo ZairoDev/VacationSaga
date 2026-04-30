@@ -17,10 +17,14 @@ interface PlaceDetails {
 
 interface PlacesAutocompleteProps {
   onPlaceSelected: (place: PlaceDetails) => void;
+  placeholder?: string;
+  inputClassName?: string;
 }
 
 const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
   onPlaceSelected,
+  placeholder = "Search city, region, country",
+  inputClassName = "",
 }) => {
   const [address, setAddress] = useState<string>("");
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
@@ -69,7 +73,7 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
   }, [onPlaceSelected]);
 
   return (
-    <div className="w-auto">
+    <div className="w-full">
       <Autocomplete
         onLoad={onLoad}
         onPlaceChanged={onPlaceChanged}
@@ -79,12 +83,10 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
       >
         <input
           type="text"
-          placeholder="Enter a location"
+          placeholder={placeholder}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          style={{ width: "100%", height: "40px" }}
-          // className=" bg-transparent rounded-2xl dark:text-white my-4"
-          className=" bg-transparent dark:text-white border-none outline-none focus:outline-none"
+          className={`w-full bg-transparent border-none outline-none focus:outline-none text-sm text-neutral-700 placeholder:text-neutral-400 dark:text-neutral-100 dark:placeholder:text-neutral-500 ${inputClassName}`}
         />
       </Autocomplete>
     </div>

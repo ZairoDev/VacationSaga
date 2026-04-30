@@ -35,21 +35,36 @@ import { useMedia } from "react-use";
 
 export interface ExperiencesSearchFormProps {
   rentalType?: string;
+  formClassName?: string;
+  monthlyStays?: boolean;
+  onMonthlyStaysChange?: (value: boolean) => void;
 }
 
-const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({ rentalType }) => {
+const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({
+  rentalType,
+  formClassName = "",
+  monthlyStays = true,
+  onMonthlyStaysChange,
+}) => {
   const isMobile = useMedia("(max-width: 640px)", true);
   const renderForm = () => {
 
     if (isMobile) {
       return (
         <SearchInputProvider>
-          <form className=" w-full relative mt-8 flex flex-col shadow-xl dark:shadow-2xl rounded-lg bg-white dark:bg-neutral-800 ">
+          <form
+            className={`w-full relative mt-8 flex flex-col shadow-xl dark:shadow-2xl rounded-lg bg-white dark:bg-neutral-800 ${formClassName}`}
+          >
             <LocationInput className="flex-[1.5]" />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <ExperiencesDateSingleInput className="flex-1" />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
-            <GuestsInput className="flex-1" rentalType={rentalType} />
+            <GuestsInput
+              className="flex-1"
+              rentalType={rentalType}
+              monthlyStays={monthlyStays}
+              onMonthlyStaysChange={onMonthlyStaysChange}
+            />
           </form>
         </SearchInputProvider>
       );
@@ -57,12 +72,19 @@ const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({ rentalType }) =
 
     return (
       <SearchInputProvider>
-        <form className="w-full relative mt-8 flex rounded-full shadow-xl dark:shadow-2xl bg-white dark:bg-neutral-800 ">
+        <form
+          className={`w-full relative mt-8 flex items-center rounded-full shadow-xl dark:shadow-2xl bg-white dark:bg-neutral-800 ${formClassName}`}
+        >
           <LocationInput className="flex-[1.5]" />
-          <div className="self-center border border-slate-200 dark:border-slate-700 h-8"></div>
+          <div className="self-center h-10 w-px bg-neutral-200/80 dark:bg-neutral-700" />
           <ExperiencesDateSingleInput className="flex-1" />
-          <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div>
-          <GuestsInput className="flex-1" rentalType={rentalType} />
+          <div className="self-center h-10 w-px bg-neutral-200/80 dark:bg-neutral-700" />
+          <GuestsInput
+            className="flex-1"
+            rentalType={rentalType}
+            monthlyStays={monthlyStays}
+            onMonthlyStaysChange={onMonthlyStaysChange}
+          />
         </form>
       </SearchInputProvider>
     );
