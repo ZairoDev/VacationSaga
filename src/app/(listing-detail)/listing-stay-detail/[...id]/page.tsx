@@ -24,6 +24,20 @@ import { Suspense } from "react";
 import { FaBath } from "react-icons/fa";
 import "slick-carousel/slick/slick.css";
 import { FaCheck } from "react-icons/fa";
+import {
+  FiArrowUp,
+  FiBriefcase,
+  FiCoffee,
+  FiFeather,
+  FiLogIn,
+  FiMonitor,
+  FiRefreshCw,
+  FiShield,
+  FiThermometer,
+  FiTool,
+  FiWifi,
+  FiWind,
+} from "react-icons/fi";
 import { CiCalendar } from "react-icons/ci";
 import { FaRegClock } from "react-icons/fa";
 import "slick-carousel/slick/slick-theme.css";
@@ -157,6 +171,7 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
   const [isOpenModalAmenities, setIsOpenModalAmenities] = useState(false);
   const [isOpenModalImages, setIsOpenModalImages] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const [location, setLocation] = useState<string[]>([]);
   const [totalGuests, setTotalGuests] = useState<number>(0);
   const [minNightStay, setMinNightStay] = useState<number | undefined>(undefined);
@@ -496,144 +511,197 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
   }
 
   const renderSection1 = () => {
-    // Display text logic
-    const getAvailabilityText = () => {
-      const availability = (particularProperty as any)?.availability as string | undefined;
-      if (availability === "Not Available" || availability === "not available") {
-        return "Rented";
-      }
-      return availability;
-    };
+    const availability = (particularProperty as any)?.availability as string | undefined;
+    const isAvailable = availability === "Available" || availability === "available";
+    const isRented   = availability === "Not Available" || availability === "not available";
 
-    // Badge color and style logic - minimal and classy
-    const getAvailabilityBadgeClass = () => {
-      const availability = (particularProperty as any)?.availability as string | undefined;
-      if (availability === "Available" || availability === "available") {
-        return "bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800";
-      }
-      return "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800";
-    };
+    /* ── stat items for the bottom strip ── */
+    const baseStats = [
+      {
+        icon: (
+          <svg className="h-5 w-5 text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        ),
+        value: `${particularProperty?.guests || 3}`,
+        label: "Guests",
+      },
+      {
+        icon: (
+          <svg className="h-5 w-5 text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 9V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5" /><rect x="2" y="9" width="20" height="13" rx="2" />
+            <path d="M6 22v-3" /><path d="M18 22v-3" /><path d="M2 15h20" />
+          </svg>
+        ),
+        value: `${particularProperty?.bedrooms}`,
+        label: particularProperty?.bedrooms === 1 ? "Bedroom" : "Bedrooms",
+      },
+      {
+        icon: (
+          <svg className="h-5 w-5 text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 17v3" /><path d="M3 6V4a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v6" /><path d="M3 6h18" /><path d="M21 6v15" /><path d="M3 12h18" /><path d="M21 17H3" />
+          </svg>
+        ),
+        value: `${particularProperty?.bathroom}`,
+        label: particularProperty?.bathroom === 1 ? "Bathroom" : "Bathrooms",
+      },
+      {
+        icon: (
+          <svg className="h-5 w-5 text-neutral-500 dark:text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="2" /><path d="M2 9h20" /><path d="M9 2v20" />
+          </svg>
+        ),
+        value: `${particularProperty?.size} m²`,
+        label: "Area",
+      },
+    ];
+
+    /* optional long-term extras */
+    const ltExtras = particularProperty?.rentalType === "Long Term" ? [
+      (particularProperty?.isTopFloor || particularProperty?.floor) && {
+        icon: <MdApartment className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />,
+        value: particularProperty?.isTopFloor
+          ? particularProperty?.floor ? `Top (${particularProperty.floor})` : "Top Floor"
+          : `Floor ${particularProperty?.floor}`,
+        label: "Floor",
+      },
+      particularProperty?.orientation && {
+        icon: <IoIosCompass className="h-5 w-5 text-neutral-500 dark:text-neutral-400" />,
+        value: particularProperty.orientation,
+        label: "Orientation",
+      },
+    ].filter(Boolean) as { icon: React.ReactNode; value: string; label: string }[] : [];
+
+    /* top 2 amenities for the strip (like WiFi / AC in the screenshot) */
+    const amenityStats = allAmenities.slice(0, 2).map(([name]: [string, boolean]) => ({
+      icon: <FaCheck className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />,
+      value: name,
+      label: "",
+    }));
+
+    const allStats = [...baseStats, ...ltExtras, ...amenityStats];
 
     return (
-      <div className=" lg:border lg:dark:border-neutral-600 rounded-xl lg:p-2">
-        <div className="flex justify-between items-center lg:mt-2 flex-wrap gap-2">
-          <Badge name={particularProperty?.propertyType} />
-          {/* <Badge name={particularProperty?.VSID} /> */}
-          {particularProperty?.rentalType === "Long Term" && (
-            <Badge name={`${particularProperty.propertyStyle}`} />
-          )}
+      <div className="space-y-4 pb-8">
+        {/* ── Breadcrumb ── */}
+        <nav className="flex items-center flex-wrap gap-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <Link href="/" className="hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors">Home</Link>
+          {[particularProperty?.country, particularProperty?.state, particularProperty?.city].filter(Boolean).map((crumb, i) => (
+            <span key={i} className="flex items-center gap-1">
+              <span className="text-neutral-300 dark:text-neutral-600 select-none">›</span>
+              <span className="hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-default">{crumb}</span>
+            </span>
+          ))}
+          <span className="flex items-center gap-1">
+            <span className="text-neutral-300 dark:text-neutral-600 select-none">›</span>
+            <span className="text-neutral-400 dark:text-neutral-500">Property</span>
+          </span>
+        </nav>
+
+        {/* ── Title + badge ── */}
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white leading-tight">
+              VS ID — {particularProperty?.VSID}
+            </h1>
+            {availability && (
+              <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] ${
+                isAvailable
+                  ? "border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300"
+                  : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400"
+              }`}>
+                {isRented ? "Rented" : "Verified"}
+              </span>
+            )}
+          </div>
           <LikeSaveBtns />
         </div>
 
-        {/* 2 */}
-        <h2 className="text-xl sm:text-3xl mt-2 lg:text-4xl lg:mt-4 font-semibold">
-          VS ID - {particularProperty?.VSID}
-        </h2>
-
-        {/* 3 */}
-        <div className=" flex items-center space-x-4 lg:my-2">
-          {/* <StartRating /> */}
-          <span className="text-sm my-2 lg:text-lg flex items-center">
-            <i className="las la-map-marker-alt"></i>
-            <span className="ml-1 text-xs lg:text-lg">
-              {particularProperty?.city} {particularProperty?.country}
+        {/* ── Location + rating row ── */}
+        <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600 dark:text-neutral-400">
+          <div className="flex items-center gap-1.5">
+            <svg className="h-4 w-4 text-neutral-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>
+              {[
+                particularProperty?.street,
+                particularProperty?.city,
+                particularProperty?.state,
+                particularProperty?.country,
+              ].filter(Boolean).join(", ")}
+              {particularProperty?.rentalType === "Long Term" && particularProperty?.postalCode
+                ? ` ${particularProperty.postalCode}`
+                : ""}
             </span>
-          </span>
-          {particularProperty?.rentalType === "Long Term" && (
-            <span className="text-sm my-2 lg:text-lg flex items-center">
-              <span className="text-xs lg:text-sm">
-                {" "}
-                - {particularProperty?.area} of {particularProperty?.subarea},{" "}
-                {particularProperty?.neighbourhood},{" "}
-                {particularProperty?.postalCode}
+          </div>
+          <span className="h-4 w-px bg-neutral-200 dark:bg-neutral-700 flex-shrink-0" />
+          <div className="flex items-center gap-1.5">
+            <svg className="h-4 w-4 text-orange-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+            </svg>
+            <span className="font-semibold text-neutral-900 dark:text-white">4.8</span>
+            <span className="text-neutral-500 dark:text-neutral-400">(124 reviews)</span>
+          </div>
+        </div>
+
+        {/* ── Host + stats strip ── */}
+        <div className="flex flex-wrap items-center gap-0 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+          {/* Host cell */}
+          <div className="flex items-center gap-3 pr-6 mr-0">
+            <div className="h-10 w-10 rounded-full bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center flex-shrink-0">
+              <img
+                src="https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yaWRMcmd4Q01COGJuRWQ2bUl1V3R0dEtzaXkiLCJyaWQiOiJ1c2VyXzJqOHhkb0R5cUl4V05adXFlcWlXTlpsdGpwMiJ9"
+                alt="host"
+                className="h-10 w-10 rounded-full object-cover"
+              />
+            </div>
+            <div className="leading-snug">
+              <p className="text-sm font-bold text-neutral-900 dark:text-white">
+                {particularProperty?.propertyType || "Property"}
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Hosted by {username}</p>
+            </div>
+          </div>
+
+          {/* Pipe + stats */}
+          {allStats.map((stat, i) => (
+            <span key={i} className="flex items-center">
+              <span className="h-8 w-px bg-neutral-200 dark:bg-neutral-700 mx-0 flex-shrink-0" />
+              <span className="flex flex-col items-center px-4 sm:px-5 gap-1 min-w-[4rem]">
+                <span className="flex-shrink-0">{stat.icon}</span>
+                <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 whitespace-nowrap leading-none">
+                  {stat.value}{stat.label ? ` ${stat.label}` : ""}
+                </span>
               </span>
             </span>
-          )}
-        </div>
-
-        <div className="flex  items-center lg:my-4">
-          <img
-            src={
-              "https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yaWRMcmd4Q01COGJuRWQ2bUl1V3R0dEtzaXkiLCJyaWQiOiJ1c2VyXzJqOHhkb0R5cUl4V05adXFlcWlXTlpsdGpwMiJ9"
-            }
-            alt="user"
-            className=" rounded-full w-8"
-          />
-          <span className="ml-2.5 text-sm sm:text-base text-neutral-500 dark:text-neutral-400">
-            Hosted by
-            <span className="text-neutral-900 mr-2 dark:text-neutral-200 font-medium ml-2 ">
-              {username}
-            </span>
-          </span>
-        </div>
-
-        <div className="w-full border-b border-neutral-100 mt-2 mb-2 dark:border-neutral-700" />
-
-        {/* 6 */}
-
-        <div className="flex items-center justify-between xl:justify-start space-x-8 xl:space-x-12 text-sm text-neutral-700 dark:text-neutral-300">
-          <div className="flex items-center space-x-3 ">
-            <FaUser className="text-2xl" />
-            <h3 className=" flex gap-x-1 text-sm">
-              {particularProperty?.guests || 3}{" "}
-              <span className="sm:block hidden">Guests</span>
-            </h3>
-          </div>
-          <div className="flex items-center space-x-3">
-            <IoIosBed className="text-2xl" />
-            <h3 className=" flex gap-x-1 text-sm">
-              {particularProperty?.bedrooms}{" "}
-              <span className="sm:block hidden">Bedrooms</span>
-            </h3>
-          </div>
-          <div className="flex items-center space-x-3">
-            <FaBath className="text-2xl" />
-            <h3 className=" flex gap-x-1 text-sm">
-              {particularProperty?.bathroom}{" "}
-              <span className="sm:block hidden">Bathroom</span>
-            </h3>
-          </div>
-          <div className="flex items-center space-x-3">
-            <BiSolidArea className="text-2xl" />
-            <h3 className=" flex gap-x-1 text-sm">
-              {particularProperty?.size}{" "}
-              <span className="sm:block hidden">sq</span>
-            </h3>
-          </div>
-          {particularProperty?.rentalType === "Long Term" &&
-            (particularProperty?.isTopFloor === true ||
-              (particularProperty?.floor != null &&
-                particularProperty?.floor !== "")) && (
-            <div className="flex items-center space-x-3">
-              <MdApartment className="text-2xl" />
-              <h3 className=" flex gap-x-1 text-sm">
-                {particularProperty?.isTopFloor
-                  ? particularProperty?.floor
-                    ? `Top Floor (Floor ${particularProperty?.floor})`
-                    : "Top Floor"
-                  : `Floor ${particularProperty?.floor}`}
-              </h3>
-            </div>
-          )}
-          {particularProperty?.rentalType === "Long Term" && (
-            <div className="flex items-center space-x-3">
-              <IoIosCompass className="text-2xl" />
-              <h3 className=" flex gap-x-1 text-sm">
-                {particularProperty?.orientation}
-              </h3>
-            </div>
-          )}
+          ))}
         </div>
       </div>
     );
   };
 
   const renderSection2 = () => {
+    /* pick first available property image for the right panel */
+    const previewImg =
+      particularProperty?.propertyCoverFileUrl ||
+      particularProperty?.propertyPictureUrls?.[0] ||
+      particularProperty?.propertyImages?.[0] ||
+      null;
+
+    /* raw description text (strip html tags for truncation logic) */
+    const rawText = particularProperty?.newReviews
+      ? particularProperty.newReviews.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+      : (particularProperty?.reviews as string | undefined) ?? "";
+
+    const CHAR_LIMIT = 220;
+    const isTruncatable = rawText.length > CHAR_LIMIT;
+
     return (
-      <div className="listingSection__wrap ">
-        {/* Only show MobileFooterSticky for Short Term properties */}
+      <>
         {particularProperty?.rentalType === "Short Term" && (
-          <div className=" z-10 ">
+          <div className="z-10">
             <MobileFooterSticky
               price={particularProperty?.basePrice}
               priceLongTerm={particularProperty?.basePriceLongTerm}
@@ -642,51 +710,128 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
             />
           </div>
         )}
-        {/* <p>{particularProperty?.basePrice} hello</p> */}
-        <h2 className="text-2xl font-semibold  mb-2">Stay information</h2>
-        {particularProperty?.newReviews ? (
-          <div
-            dangerouslySetInnerHTML={{
-              __html: particularProperty?.newReviews ?? "",
-            }}
-            className=" disabled:cursor-not-allowed px-4"
-          ></div>
-        ) : (
-          particularProperty?.reviews
-        )}
-      </div>
+
+        {/* ── Card matching screenshot ── */}
+        <div className="flex flex-col sm:flex-row overflow-hidden rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+          {/* Left: text */}
+          <div className="flex flex-col justify-between gap-5 p-6 sm:p-8 sm:w-[48%] shrink-0">
+            <div className="space-y-4">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-neutral-900 dark:text-white leading-tight">
+                About this stay
+              </h2>
+
+              {particularProperty?.newReviews ? (
+                <div>
+                  <div
+                    dangerouslySetInnerHTML={{ __html: particularProperty.newReviews }}
+                    className={`prose prose-sm max-w-none text-neutral-600 dark:text-neutral-400 leading-relaxed ${!isAboutExpanded && isTruncatable ? "line-clamp-[6]" : ""}`}
+                  />
+                </div>
+              ) : (
+                <p className={`text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed ${!isAboutExpanded && isTruncatable ? "line-clamp-[6]" : ""}`}>
+                  {rawText}
+                </p>
+              )}
+            </div>
+
+            {isTruncatable && (
+              <button
+                type="button"
+                onClick={() => setIsAboutExpanded((v) => !v)}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors self-start"
+              >
+                {isAboutExpanded ? "Show less" : "Read more"}
+                <svg
+                  className={`h-4 w-4 transition-transform ${isAboutExpanded ? "rotate-180" : ""}`}
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+                  strokeLinecap="round" strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Right: property photo */}
+          {previewImg && (
+            <div className="relative sm:flex-1 h-56 sm:h-auto min-h-[220px]">
+              <img
+                src={previewImg}
+                alt="Property interior"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </div>
+          )}
+        </div>
+      </>
     );
   };
 
   const renderSection3 = () => {
+    const getAmenityIcon = (label: string) => {
+      const t = label.toLowerCase();
+      if (t.includes("wifi") || t.includes("wi-fi")) return <FiWifi />;
+      if (t.includes("air") || t.includes("ac") || t.includes("conditioning"))
+        return <FiWind />;
+      if (t.includes("heat") || t.includes("heating")) return <FiThermometer />;
+      if (t.includes("kitchen") || t.includes("cook")) return <FiCoffee />;
+      if (t.includes("washer") || t.includes("laundry")) return <FiRefreshCw />;
+      if (t.includes("tv") || t.includes("television")) return <FiMonitor />;
+      if (t.includes("workspace") || t.includes("desk")) return <FiBriefcase />;
+      if (t.includes("entrance") || t.includes("private")) return <FiLogIn />;
+      if (t.includes("hair")) return <FiFeather />;
+      if (t.includes("iron")) return <FiTool />;
+      if (t.includes("essential")) return <FiShield />;
+      if (t.includes("elevator") || t.includes("lift")) return <FiArrowUp />;
+      return <FaCheck className="text-[15px]" />;
+    };
+
     return (
       <div className="listingSection__wrap">
-        <div>
-          <h2 className="text-2xl font-semibold">Amenities </h2>
-          <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-            {` About the property's amenities and services`}
-          </span>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
+            Amenities
+          </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Everything you need for a comfortable stay
+          </p>
         </div>
-        <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
-        {/* 6 */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 text-sm text-neutral-700 dark:text-neutral-300 ">
+
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {allAmenities
             .filter((_, i) => i < 12)
             .map((item, index) => (
-              <div key={index} className="flex items-center space-x-3">
-                <FaCheck className=" text-2xl" />
-
-                <span>{item[0]}</span>
+              <div key={index} className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-200">
+                  <span className="text-[18px]">{getAmenityIcon(item[0])}</span>
+                </div>
+                <div className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                  {item[0]}
+                </div>
               </div>
             ))}
         </div>
 
-        {/* ----- */}
-        <div className="w-14 border-b border-neutral-200"></div>
-        <div>
-          <ButtonSecondary onClick={openModalAmenities}>
-            View more amenities
-          </ButtonSecondary>
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={openModalAmenities}
+            className="inline-flex items-center gap-2 rounded-full border border-orange-200 dark:border-orange-900/50 bg-white dark:bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-orange-600 dark:text-orange-400 hover:bg-orange-50/60 dark:hover:bg-orange-950/20 transition-colors"
+          >
+            View all amenities
+            <svg
+              className="h-4 w-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14" />
+              <path d="M12 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
         {renderMotalAmenities()}
       </div>
@@ -767,112 +912,111 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
   const renderSection4 = () => {
     return (
       <div className="listingSection__wrap">
-        {/* HEADING */}
-        <h2 className="text-2xl font-semibold">Room Rates </h2>
-        <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-          Prices may increase on weekends or holidays
-        </span>
-        <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
-        {/* CONTENT */}
-        <div className="flow-root">
-          <div className="text-sm sm:text-base text-neutral-6000 dark:text-neutral-300 -mb-4">
-            <div className="p-4 bg-neutral-100 dark:bg-neutral-800 flex justify-between items-center space-x-4 rounded-lg">
-              {particularProperty?.rentalType === "Short Term" ? (
-                <span>Monday - Thursday</span>
-              ) : (
-                <span>Monthly Rates</span>
-              )}
-              {/* <span>€ {price[indexId]}</span> */}
-              <span>
-                €{" "}
-                {particularProperty?.rentalType === "Short Term"
-                  ? particularProperty?.basePrice
-                  : particularProperty?.basePriceLongTerm}
+        <div className="space-y-1">
+          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-orange-500">Pricing</p>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Room Rates</h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Prices may increase on weekends or holidays</p>
+        </div>
+
+        <div className="h-px bg-neutral-100 dark:bg-neutral-800" />
+
+        <div className="rounded-2xl border border-neutral-100 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800">
+          <div className="flex items-center justify-between px-5 py-4 bg-neutral-50/80 dark:bg-neutral-900/50">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2 w-2 rounded-full bg-orange-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {particularProperty?.rentalType === "Short Term" ? "Monday — Thursday" : "Monthly Rate"}
               </span>
             </div>
-
-            {particularProperty?.rentalType === "Short Term" && (
-              <div className="p-4 bg-neutral-100 dark:bg-neutral-800 flex justify-between items-center space-x-4 rounded-lg">
-                <span>Friday - Sunday</span>
-                {/* <span>€ {page8.weekendPrice[indexId]}</span> */}
-                <span>€ {particularProperty?.weekendPrice}</span>
-              </div>
-            )}
-
-            {particularProperty?.rentalType === "Short Term" ? (
-              <div className="p-4 flex justify-between items-center space-x-4 rounded-lg">
-                <span>Weekly Discount</span>{" "}
-                <span>€ {particularProperty?.weeklyDiscount}</span>
-              </div>
-            ) : (
-              <div className="p-4 flex justify-between items-center space-x-4 rounded-lg">
-                {" "}
-                <span>Monthly Discount</span>
-                <span>€{particularProperty?.monthlyDiscount} % </span>
-              </div>
-            )}
-
-            {particularProperty?.rentalType === "Short Term" && (
-              <div>
-                {" "}
-                <div className="p-4 bg-neutral-100 dark:bg-neutral-800 flex justify-between items-center space-x-4 rounded-lg">
-                  <span>Minimum number of nights</span>
-                  <span>{particularProperty?.night[0]} nights</span>
-                </div>
-                <div className="p-4 flex justify-between items-center space-x-4 rounded-lg">
-                  <span>Max number of nights</span>
-                  <span>{particularProperty?.night[1]} nights</span>
-                </div>
-              </div>
-            )}
+            <span className="text-sm font-bold text-neutral-900 dark:text-white">
+              € {particularProperty?.rentalType === "Short Term" ? particularProperty?.basePrice : particularProperty?.basePriceLongTerm}
+            </span>
           </div>
+
+          {particularProperty?.rentalType === "Short Term" && (
+            <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-amber-400 flex-shrink-0" />
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Friday — Sunday</span>
+              </div>
+              <span className="text-sm font-bold text-neutral-900 dark:text-white">€ {particularProperty?.weekendPrice}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between px-5 py-4 bg-neutral-50/50 dark:bg-neutral-900/30">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 flex-shrink-0" />
+              <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                {particularProperty?.rentalType === "Short Term" ? "Weekly Discount" : "Monthly Discount"}
+              </span>
+            </div>
+            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+              {particularProperty?.rentalType === "Short Term"
+                ? `€ ${particularProperty?.weeklyDiscount}`
+                : `${particularProperty?.monthlyDiscount} %`}
+            </span>
+          </div>
+
+          {particularProperty?.rentalType === "Short Term" && (
+            <>
+              <div className="flex items-center justify-between px-5 py-4">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Minimum nights</span>
+                <span className="inline-flex items-center rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/40 px-3 py-1 text-xs font-bold text-orange-600 dark:text-orange-400">
+                  {particularProperty?.night[0]} nights
+                </span>
+              </div>
+              <div className="flex items-center justify-between px-5 py-4 bg-neutral-50/50 dark:bg-neutral-900/30">
+                <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Maximum nights</span>
+                <span className="inline-flex items-center rounded-lg bg-neutral-100 dark:bg-neutral-800 px-3 py-1 text-xs font-bold text-neutral-600 dark:text-neutral-400">
+                  {particularProperty?.night[1]} nights
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
   };
 
   const renderSection5 = () => {
+    const hostStats = [
+      { icon: <CiCalendar className="text-orange-400 text-base" />, text: "Joined long time ago" },
+      { icon: <BiMessageAltDetail className="text-orange-400 text-base" />, text: "Response rate — 100%" },
+      { icon: <FaRegClock className="text-orange-400 text-base" />, text: "Fast response — within a few hours" },
+      { icon: <IoLanguageOutline className="text-orange-400 text-base" />, text: `Language spoken — English${language ? `, ${language}` : ""}` },
+    ];
+
     return (
       <div className="listingSection__wrap">
-        {/* HEADING */}
-        <h2 className="text-2xl font-semibold">Host Information</h2>
-        <div className="w-14 border-b border-neutral-200 dark:border-neutral-700"></div>
+        <div className="space-y-1">
+          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-orange-500">Your host</p>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Meet the Host</h2>
+        </div>
 
-        {/* host */}
-        <div className="flex items-center space-x-4">
+        <div className="h-px bg-neutral-100 dark:bg-neutral-800" />
+
+        <div className="flex items-center gap-4">
           <img
-            src={
-              "https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yaWRMcmd4Q01COGJuRWQ2bUl1V3R0dEtzaXkiLCJyaWQiOiJ1c2VyXzJqOHhkb0R5cUl4V05adXFlcWlXTlpsdGpwMiJ9"
-            }
-            alt="user"
-            className=" rounded-full w-8"
+            src="https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yaWRMcmd4Q01COGJuRWQ2bUl1V3R0dEtzaXkiLCJyaWQiOiJ1c2VyXzJqOHhkb0R5cUl4V05adXFlcWlXTlpsdGpwMiJ9"
+            alt="host"
+            className="h-14 w-14 rounded-2xl ring-2 ring-orange-50 object-cover flex-shrink-0"
           />
           <div>
-            <p className="block text-xl font-medium">{username}</p>
+            <p className="text-base font-bold text-neutral-900 dark:text-white">{username}</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 uppercase tracking-wide">Property Host</p>
           </div>
         </div>
 
-        <div className="mt-1.5 flex flex-col text-neutral-500 dark:text-neutral-400 gap-y-2">
-          <div className="flex items-center gap-3 mb-3">
-            <CiCalendar className=" text-lg md:text-xl" />
-            <span className="text-sm md:text-base">Joined long time ago</span>
-          </div>
-          <div className="flex items-center gap-3 mb-3">
-            <BiMessageAltDetail className=" text-lg md:text-xl" />
-            <span className="text-sm md:text-base">Response rate - 100%</span>
-          </div>
-          <div className="flex items-center gap-3 mb-3">
-            <FaRegClock className=" text-lg md:text-xl" />
-            <span className="text-sm md:text-base">
-              Fast response - within a few hours
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <IoLanguageOutline className=" text-lg md:text-xl" />
-            <span className="text-sm md:text-base">
-              Language spoken - English, {language}
-            </span>
-          </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {hostStats.map((item, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 px-4 py-3"
+            >
+              <div className="flex-shrink-0">{item.icon}</div>
+              <span className="text-sm text-neutral-600 dark:text-neutral-400 leading-snug">{item.text}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -921,116 +1065,120 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
   const renderSection7 = () => {
     return (
       <div className="listingSection__wrap">
-    <div>
-      <h2 className="text-2xl font-semibold">Location</h2>
-      <span className="block mt-2 text-neutral-500 dark:text-neutral-400">
-        {particularProperty?.city}, {particularProperty?.state},{" "}
-        {particularProperty?.country}
-      </span>
-    </div>
-    <div className="w-14 border-b border-neutral-200 dark:border-neutral-700" />
+        <div className="space-y-1">
+          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-orange-500">Where you&apos;ll be</p>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Location</h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5">
+            <svg className="h-3.5 w-3.5 text-orange-400 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg>
+            {[particularProperty?.city, particularProperty?.state, particularProperty?.country].filter(Boolean).join(", ")}
+          </p>
+        </div>
 
-    <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 ring-1 ring-black/10 rounded-xl z-0">
-      <div className="rounded-xl overflow-hidden z-0">
-        {loadError && (
-          <div className="w-full h-[500px] bg-neutral-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center">
-            <p className="text-red-500">Map failed to load</p>
+        <div className="h-px bg-neutral-100 dark:bg-neutral-800" />
+
+        <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 rounded-2xl overflow-hidden ring-1 ring-neutral-100 dark:ring-neutral-800 shadow-sm z-0">
+          <div className="rounded-2xl overflow-hidden z-0">
+            {loadError && (
+              <div className="w-full h-[400px] bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
+                <p className="text-sm text-red-500">Map failed to load</p>
+              </div>
+            )}
+            {!isLoaded && !loadError && (
+              <div className="w-full h-[400px] bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-400 border-t-transparent mb-2" />
+                  <p className="text-xs text-neutral-400 uppercase tracking-wide">Loading map…</p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        {!isLoaded && !loadError && (
-          <div className="w-full h-[500px] bg-neutral-100 dark:bg-neutral-800 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary-6000 border-t-transparent mb-2"></div>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">Loading map...</p>
-            </div>
-          </div>
-        )}
-
-
+          <iframe
+            width="100%"
+            height="100%"
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=${center?.lat},${center?.lng}&zoom=15`}
+          />
+        </div>
       </div>
-      <iframe
-    width="100%"
-    height="100%"
-    loading="lazy"
-    allowFullScreen
-    referrerPolicy="no-referrer-when-downgrade"
-    src={`https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=${center?.lat},${center?.lng}&zoom=15`}
-  ></iframe>
-    </div>
-  </div>
     );
   };
 
   const renderSection8 = () => {
     return (
-      <div className="listingSection__wrap ">
-        <div className="w-full md:flex">
-          {/* // TODO: Left Half */}
-          <div className=" w-full md:w-1/2">
-            {/* HEADING */}
-            <h2 className="text-2xl font-semibold">Things to know</h2>
+      <div className="listingSection__wrap">
+        <div className="space-y-1">
+          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-orange-500">Good to know</p>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Things to Know</h2>
+        </div>
 
-            {/* CONTENT */}
-            <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />
+        <div className="h-px bg-neutral-100 dark:bg-neutral-800" />
 
-            {/* CONTENT */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* ── Left column ── */}
+          <div className="space-y-6">
             {particularProperty?.rentalType === "Short Term" && (
-              <div className="">
-                <h4 className="text-lg font-semibold">Check-in time</h4>
-                <div className="mt-3 text-neutral-500 dark:text-neutral-400 max-w-md text-sm sm:text-base">
-                  <div className="flex space-x-10 justify-between p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
-                    <span>Check-in</span>
-                    <span>{particularProperty?.time[0]}:00</span>
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] font-semibold text-neutral-400 dark:text-neutral-500">Check-in / Check-out</p>
+                <div className="rounded-2xl border border-neutral-100 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800">
+                  <div className="flex items-center justify-between px-5 py-3.5 bg-neutral-50/80 dark:bg-neutral-900/50">
+                    <div className="flex items-center gap-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      <svg className="h-4 w-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" /><circle cx="12" cy="10" r="3" />
+                      </svg>
+                      Check-in
+                    </div>
+                    <span className="text-sm font-bold text-neutral-900 dark:text-white">{particularProperty?.time[0]}:00</span>
                   </div>
-                  <div className="flex space-x-10 justify-between p-3">
-                    <span>Check-out</span>
-                    <span>{particularProperty?.time[1]}:00</span>
+                  <div className="flex items-center justify-between px-5 py-3.5">
+                    <div className="flex items-center gap-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                      <svg className="h-4 w-4 text-orange-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      Check-out
+                    </div>
+                    <span className="text-sm font-bold text-neutral-900 dark:text-white">{particularProperty?.time[1]}:00</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {particularProperty?.rentalType === "Short Term" && (
-              <div className="w-14 border-b border-neutral-200 dark:border-neutral-700 mb-2" />
-            )}
-
-            {/* CONTENT */}
-            <div>
-              <h4 className="text-lg font-semibold">Special Note</h4>
-              <div className="prose sm:prose">
-                <ul className="mt-3 text-neutral-500 dark:text-neutral-400 space-y-2">
-                  {particularProperty?.additionalRules.map((rule, index) => {
-                    return <li key={index}>{rule}</li>;
-                  })}
+            {(particularProperty?.additionalRules?.length ?? 0) > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] font-semibold text-neutral-400 dark:text-neutral-500">Special Note</p>
+                <ul className="space-y-2.5">
+                  {particularProperty?.additionalRules?.map((rule, index) => (
+                    <li key={index} className="flex items-start gap-3 text-sm text-neutral-600 dark:text-neutral-400 leading-snug">
+                      <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-orange-400 flex-shrink-0" />
+                      {rule}
+                    </li>
+                  ))}
                 </ul>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className=" w-full md:w-1/2 md:ml-3">
+          {/* ── Right column ── */}
+          <div>
             {particularProperty?.rentalType === "Short Term" &&
-            particularProperty?.nearbyLocations?.nearbyLocationName?.length >
-              0 ? (
-              <>
-                {" "}
-                <h2 className=" my-2 flex items-center gap-x-2 font-bold text-2xl ">
-                  Nearby Locations <FaMapMarkerAlt className=" w-6 h-6" />
-                </h2>
-                <div className=" h-full max-h-64 overflow-y-auto scrollbar-thin">
-                  {/* {["Cafe", "Restaurant", "Mall"]?.map((item, ind) => ( */}
-                  {Array.from(
-                    new Set(
-                      particularProperty?.nearbyLocations?.nearbyLocationTag,
-                    ),
-                  )?.map((item, ind) =>
+            particularProperty?.nearbyLocations?.nearbyLocationName?.length > 0 ? (
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] font-semibold text-neutral-400 dark:text-neutral-500 flex items-center gap-1.5">
+                  <FaMapMarkerAlt className="text-orange-400 text-xs" />
+                  Nearby Locations
+                </p>
+                <div className="h-full max-h-72 overflow-y-auto scrollbar-thin space-y-1 pr-1">
+                  {Array.from(new Set(particularProperty?.nearbyLocations?.nearbyLocationTag))?.map((item, ind) =>
                     particularProperty?.nearbyLocations?.nearbyLocationName?.[
-                      particularProperty?.nearbyLocations?.nearbyLocationTag?.indexOf(
-                        item,
-                      )
+                      particularProperty?.nearbyLocations?.nearbyLocationTag?.indexOf(item)
                     ] ? (
-                      <div key={ind} className=" px-2">
-                        <h3
-                          className=" flex items-center gap-x-2 text-lg font-medium cursor-pointer"
+                      <div key={ind} className="rounded-xl border border-neutral-100 dark:border-neutral-800 overflow-hidden">
+                        <button
+                          type="button"
+                          className="w-full flex items-center justify-between px-4 py-3 bg-neutral-50 dark:bg-neutral-900/50 hover:bg-neutral-100 dark:hover:bg-neutral-800/60 transition text-left"
                           onClick={() => {
                             setNearbyAccordion((prev) => {
                               const newState = [...prev];
@@ -1039,135 +1187,73 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
                             });
                           }}
                         >
-                          {item}{" "}
-                          {nearbyAccordion[ind] ? (
-                            <IoIosArrowDropdownCircle />
-                          ) : (
-                            <IoIosArrowDroprightCircle />
-                          )}
-                        </h3>
-                        {nearbyAccordion[ind] &&
-                          particularProperty?.nearbyLocations?.nearbyLocationName?.map(
-                            (innerItem, index) =>
-                              item ===
-                                particularProperty?.nearbyLocations
-                                  ?.nearbyLocationTag[index] && (
-                                <div
-                                  key={index}
-                                  className=" flex justify-between text-sm text-neutral-500 px-2 font-medium"
-                                >
-                                  <div>
-                                    {particularProperty?.nearbyLocations
-                                      ?.nearbyLocationUrl?.[index] !=
-                                      undefined &&
-                                    particularProperty?.nearbyLocations
-                                      ?.nearbyLocationUrl?.[index] != "" ? (
-                                      <Link
-                                        href={
-                                          new URL(
-                                            particularProperty?.nearbyLocations
-                                              ?.nearbyLocationUrl?.[index],
-                                          )
-                                        }
-                                        target="_blank"
-                                      >
-                                        {" "}
-                                        {
-                                          particularProperty?.nearbyLocations
-                                            ?.nearbyLocationName[index]
-                                        }
-                                      </Link>
-                                    ) : (
-                                      <p>
-                                        {
-                                          particularProperty?.nearbyLocations
-                                            ?.nearbyLocationName[index]
-                                        }
-                                      </p>
-                                    )}
+                          <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">{item}</span>
+                          {nearbyAccordion[ind]
+                            ? <IoIosArrowDropdownCircle className="text-orange-400 text-lg flex-shrink-0" />
+                            : <IoIosArrowDroprightCircle className="text-neutral-400 text-lg flex-shrink-0" />}
+                        </button>
+                        {nearbyAccordion[ind] && (
+                          <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                            {particularProperty?.nearbyLocations?.nearbyLocationName?.map(
+                              (innerItem, index) =>
+                                item === particularProperty?.nearbyLocations?.nearbyLocationTag[index] && (
+                                  <div key={index} className="flex items-center justify-between px-4 py-2.5">
+                                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                                      {particularProperty?.nearbyLocations?.nearbyLocationUrl?.[index] &&
+                                      particularProperty?.nearbyLocations?.nearbyLocationUrl?.[index] !== "" ? (
+                                        <Link
+                                          href={new URL(particularProperty.nearbyLocations.nearbyLocationUrl[index])}
+                                          target="_blank"
+                                          className="text-orange-500 hover:underline"
+                                        >
+                                          {particularProperty.nearbyLocations.nearbyLocationName[index]}
+                                        </Link>
+                                      ) : (
+                                        <span>{particularProperty.nearbyLocations.nearbyLocationName[index]}</span>
+                                      )}
+                                    </div>
+                                    <span className="text-xs font-medium text-neutral-400 dark:text-neutral-500 ml-3 flex-shrink-0">
+                                      {particularProperty?.nearbyLocations?.nearbyLocationDistance[index] >= 1000
+                                        ? (particularProperty.nearbyLocations.nearbyLocationDistance[index] / 1000).toFixed(1) + " km"
+                                        : particularProperty?.nearbyLocations?.nearbyLocationDistance[index] + " m"}
+                                    </span>
                                   </div>
-                                  <div>
-                                    {particularProperty?.nearbyLocations
-                                      ?.nearbyLocationDistance[index] >= 1000
-                                      ? (
-                                          particularProperty?.nearbyLocations
-                                            ?.nearbyLocationDistance[index] /
-                                          1000
-                                        ).toFixed(1) + " km"
-                                      : particularProperty?.nearbyLocations
-                                          ?.nearbyLocationDistance[index] +
-                                        " m"}
-                                  </div>
-                                </div>
-                              ),
-                          )}
-
-                        <div className=" w-full h-0.5 bg-neutral-700 my-2"></div>
+                                )
+                            )}
+                          </div>
+                        )}
                       </div>
-                    ) : null,
+                    ) : null
                   )}
                 </div>
-              </>
-            ) : (
-              <div className=" ml-2">
-                {/* LONG TERM INFO */}
-
-                {particularProperty?.rentalType === "Long Term" && (
-                  <div className="mt-3 text-neutral-500 dark:text-neutral-400 space-y-2 w-full">
-                    <div className=" flex items-center gap-x-2">
-                      <MdApartment />
-                      Furnishing Status:{" "}
-                      {particularProperty?.propertyStyle || "Not specified"}
-                    </div>
-                    <div className=" flex items-center gap-x-2">
-                      <TbPawFilled />
-                      Pet Policy: {particularProperty?.pet || "Not specified"}
-                    </div>
-                    <div className=" flex items-center gap-x-2">
-                      <SiLevelsdotfyi />
-                      Number of Levels: {particularProperty?.levels}
-                    </div>
-                    <div className=" flex items-center justify-start gap-x-2">
-                      <MdHomeWork />
-                      Zones: {particularProperty?.zones}
-                    </div>
-
-                    <div className=" flex items-center gap-x-2 ">
-                      <PiStudentBold />
-                      This property is{" "}
-                      {particularProperty?.isSuitableForStudents
-                        ? ""
-                        : "not"}{" "}
-                      suitable for students
-                    </div>
-                    <div className=" flex items-center gap-x-2 ">
-                      <MdConstruction />
-                      Construction Year: {particularProperty?.constructionYear}
-                    </div>
-                    <div className=" flex items-center gap-x-2">
-                      <RiMoneyEuroCircleFill />
-                      Expected Monthly Expenses:{" "}
-                      {particularProperty?.monthlyExpenses}
-                    </div>
-                    <div className=" flex items-center gap-x-2">
-                      {" "}
-                      <FaHotTub />
-                      Type of Heating: {particularProperty?.heatingType}
-                    </div>
-                    <div className=" flex items-center gap-x-2">
-                      {" "}
-                      <IoMdFlame />
-                      Heating Medium: {particularProperty?.heatingMedium}
-                    </div>
-                    <div className=" flex items-center gap-x-2">
-                      {" "}
-                      <MdOutlineEnergySavingsLeaf /> Energy Class:{" "}
-                      {particularProperty?.energyClass}
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
+            ) : particularProperty?.rentalType === "Long Term" ? (
+              <div className="space-y-3">
+                <p className="text-xs uppercase tracking-[0.16em] font-semibold text-neutral-400 dark:text-neutral-500">Property Details</p>
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    { icon: <MdApartment className="text-orange-400 text-sm" />, label: "Furnishing Status", value: particularProperty?.propertyStyle || "Not specified" },
+                    { icon: <TbPawFilled className="text-orange-400 text-sm" />, label: "Pet Policy", value: particularProperty?.pet || "Not specified" },
+                    { icon: <SiLevelsdotfyi className="text-orange-400 text-sm" />, label: "Number of Levels", value: particularProperty?.levels },
+                    { icon: <MdHomeWork className="text-orange-400 text-sm" />, label: "Zones", value: particularProperty?.zones },
+                    { icon: <PiStudentBold className="text-orange-400 text-sm" />, label: "Suitable for Students", value: particularProperty?.isSuitableForStudents ? "Yes" : "No" },
+                    { icon: <MdConstruction className="text-orange-400 text-sm" />, label: "Construction Year", value: particularProperty?.constructionYear },
+                    { icon: <RiMoneyEuroCircleFill className="text-orange-400 text-sm" />, label: "Monthly Expenses", value: particularProperty?.monthlyExpenses ? `€ ${particularProperty.monthlyExpenses}` : undefined },
+                    { icon: <FaHotTub className="text-orange-400 text-sm" />, label: "Type of Heating", value: particularProperty?.heatingType },
+                    { icon: <IoMdFlame className="text-orange-400 text-sm" />, label: "Heating Medium", value: particularProperty?.heatingMedium },
+                    { icon: <MdOutlineEnergySavingsLeaf className="text-orange-400 text-sm" />, label: "Energy Class", value: particularProperty?.energyClass },
+                  ].filter(item => item.value).map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 rounded-xl border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 px-4 py-3">
+                      <div className="flex-shrink-0">{item.icon}</div>
+                      <div className="leading-none min-w-0">
+                        <p className="text-[10px] uppercase tracking-wide text-neutral-400 dark:text-neutral-500">{item.label}</p>
+                        <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mt-0.5">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -1990,7 +2076,7 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
             />
           )}
           {(commonProperties?.length || 0) > 1 && renderPortionCards()}
-          {renderSection5()}
+          {/* {renderSection5()} */}
           {/* {renderSection6()} */}
           {center && center?.lat != 0 && center?.lng != 0 && renderSection7()}
           {renderSection8()}

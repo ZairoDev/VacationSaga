@@ -56,8 +56,10 @@ const COLUMNS = [
     title: "Contact",
     links: [
       { label: "info@vacationsaga.com",  href: "mailto:info@vacationsaga.com" },
-      { label: "+44 (0) 800 1234",       href: "tel:+448001234" },
-      { label: "WhatsApp Chat",          href: "https://wa.me/message/vacationsaga" },
+      {
+        label: "+91 8960980806",
+        href: "https://wa.me/918960980806"
+      },
       { label: "Privacy Policy",         href: "/privacy-policy" },
       { label: "Terms & Conditions",     href: "/termsandconditions" },
     ],

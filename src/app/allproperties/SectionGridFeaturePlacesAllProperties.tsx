@@ -97,7 +97,7 @@ const SectionGridFeaturePlacesAllProperties: FC<
   );
 
   return (
-    <div className="max-w-7xl mx-auto w-full p-4">
+    <div className="max-w-7xl mx-auto w-full mt-8">
       <div className="nc-SectionGridFeaturePlaces relative">
         <HeaderFilter
           tabActive={"New York"}
@@ -106,28 +106,14 @@ const SectionGridFeaturePlacesAllProperties: FC<
           heading={heading}
         />
 
-        <div className="w-full -mt-20 mb-4 flex flex-col items-center">
-          <StaySearchForm />
+<div className="mb-8">
 
-          <div className=" flex items-center gap-x-2">
-            <span className="text-xl">Tap to Longterm</span>
-            <button
-              onClick={handleToggle}
-              className={`text-4xl flex items-center justify-center gap-x-2s ${
-                rentalType === "Long Term" ? "" : ""
-              }`}
-            >
-              {/* {rentalType === "Long Term" ? <FaToggleOn /> : <FaToggleOff />} */}
-              {rentalType === "Long Term" ? (
-                <PiToggleRightFill className=" text-5xl text-primary-6000" />
-              ) : (
-                <PiToggleLeftFill className=" text-5xl text-primary-6000" />
-              )}
-            </button>
-          </div>
-        </div>
+          <StaySearchForm />
+</div>
+
+   
         <div
-          className={`grid gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${gridClass}`}
+          className={`grid gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 ${gridClass}`}
         >
           {loading && fetchedData.length === 0
             ? [1, 2, 3, 4, 5, 6, 7, 8].map((n) => (

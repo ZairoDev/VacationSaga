@@ -1,7 +1,11 @@
+ "use client";
+
 import React from "react";
 import { TaxonomyType } from "@/data/types";
 import Image from "next/image";
 import Link from "next/link";
+import axios from "axios";
+import { FaWhatsapp } from "react-icons/fa";
 import {
   BoltIcon,
   HomeModernIcon,
@@ -104,16 +108,53 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
   gridClassName = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
 }) => {
   const uiCats = categories.slice(0, 8);
-  const PRICE_BY_NAME: Record<string, string> = {
-    Athens: "€1,150",
-    Thessaloniki: "€980",
-    Chania: "€1,250",
-    Corfu: "€1,300",
-    Iraklio: "€1,100",
-    Nikiti: "€990",
-    Cinisi: "€1,180",
-    Piraeus: "€950",
-  };
+  const [displayRentalType, setDisplayRentalType] = React.useState<
+    "Short Term" | "Long Term"
+  >("Long Term");
+  const [minPricesByCity, setMinPricesByCity] = React.useState<
+    Record<string, { shortTerm: number; longTerm: number }>
+  >({});
+  const [loadingPrices, setLoadingPrices] = React.useState(false);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchAll = async () => {
+      setLoadingPrices(true);
+      try {
+        const results = await Promise.all(
+          uiCats.map(async (c) => {
+            const place = (c.name || "").trim();
+            if (!place) return { place: c.name, shortTerm: 0, longTerm: 0 };
+            const res = await axios.get("/api/destination-min-prices", {
+              params: { place },
+            });
+            return {
+              place,
+              shortTerm: Number(res.data?.minShortTerm) || 0,
+              longTerm: Number(res.data?.minLongTerm) || 0,
+            };
+          })
+        );
+
+        if (!isMounted) return;
+        const next: Record<string, { shortTerm: number; longTerm: number }> = {};
+        results.forEach((r) => {
+          next[r.place] = { shortTerm: r.shortTerm, longTerm: r.longTerm };
+        });
+        setMinPricesByCity(next);
+      } catch (e) {
+        console.error("Failed to fetch city min prices:", e);
+      } finally {
+        if (isMounted) setLoadingPrices(false);
+      }
+    };
+
+    fetchAll();
+    return () => {
+      isMounted = false;
+    };
+  }, [categories]);
+
   const BADGE_BY_NAME: Record<string, { label: string; cls: string }> = {
     Athens: { label: "Popular", cls: "bg-orange-100 text-customOrange" },
     Chania: { label: "New", cls: "bg-emerald-100 text-emerald-700" },
@@ -135,7 +176,7 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-customOrange">
             <span className="inline-block h-2 w-2 rounded-full bg-customOrange" />
-            Monthly Rentals
+            {displayRentalType === "Long Term" ? "Monthly Rentals" : "Short Stays"}
           </div>
           <h2 className="mt-2 text-3xl font-semibold leading-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl">
             Stay Longer, Live Better
@@ -146,12 +187,37 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
           </p>
         </div>
 
-        <Link
-          href="/listing-stay"
-          className="inline-flex items-center gap-2 text-sm font-medium text-customOrange hover:text-customOrange/80"
-        >
-          View all monthly rentals <span aria-hidden="true">→</span>
-        </Link>
+        <div className="flex flex-col items-start gap-3 lg:items-end">
+          <Link
+            href="/listing-stay"
+            className="inline-flex items-center gap-2 text-sm font-medium text-customOrange hover:text-customOrange/80"
+          >
+            Visit monthly properties <span aria-hidden="true">→</span>
+          </Link>
+
+          <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 rounded-full p-1">
+            <button
+              onClick={() => setDisplayRentalType("Long Term")}
+              className={`px-5 text-sm font-medium py-2 rounded-full transition-all duration-200 ${
+                displayRentalType === "Long Term"
+                  ? "bg-white dark:bg-neutral-700 text-primary-6000 shadow-sm"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+              }`}
+            >
+              Long Term
+            </button>
+            <button
+              onClick={() => setDisplayRentalType("Short Term")}
+              className={`px-5 text-sm font-medium py-2 rounded-full transition-all duration-200 ${
+                displayRentalType === "Short Term"
+                  ? "bg-white dark:bg-neutral-700 text-primary-6000 shadow-sm"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-200"
+              }`}
+            >
+              Short Term
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="mb-6 grid gap-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900 sm:grid-cols-2 lg:grid-cols-4">
@@ -180,7 +246,11 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
       <div className={`grid ${gridClassName} gap-5 sm:gap-6 md:gap-7`}>
         {uiCats.map((item) => {
           const badge = BADGE_BY_NAME[item.name];
-          const price = PRICE_BY_NAME[item.name] || "€1,000";
+          const cityMin = minPricesByCity[item.name];
+          const shortFrom = cityMin?.shortTerm ?? 0;
+          const longFrom = cityMin?.longTerm ?? 0;
+          const fromValue = displayRentalType === "Long Term" ? longFrom : shortFrom;
+          const unit = displayRentalType === "Long Term" ? "/month" : "/night";
           return (
             <Link
               key={item.id}
@@ -226,10 +296,9 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-semibold text-customOrange">
-                      From {price}
-                    </p>
-                    <p className="text-[10px] text-orange-400">
-                      / month
+                      Starts from{" "}
+                      {loadingPrices ? "…" : `€${fromValue.toLocaleString()}`}
+                      <span className="text-orange-400 font-normal">{unit}</span>
                     </p>
                   </div>
                 </div>
@@ -269,12 +338,24 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
               </p>
             </div>
           </div>
-          <Link
-            href="/contact"
-            className="inline-flex h-10 items-center justify-center rounded-full bg-orange-400 px-5 text-sm font-semibold text-white"
-          >
-            Contact Us
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/contact"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-orange-400 px-5 text-sm font-semibold text-white"
+            >
+              Contact Us
+            </Link>
+            <Link
+              href="https://wa.me/918960980806?text=Hi%20VacationSaga%2C%20I%20need%20help%20finding%20a%20property."
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat on WhatsApp"
+              title="Chat on WhatsApp"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#25D366] text-white transition-colors hover:bg-[#1EBE5D]"
+            >
+              <FaWhatsapp className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

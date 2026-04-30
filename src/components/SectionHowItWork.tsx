@@ -1,6 +1,7 @@
 import React, { FC } from "react";
 import Image from "next/image";
 import { BanknotesIcon, LockClosedIcon, ShieldCheckIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 export interface SectionHowItWorkProps {
   className?: string;
@@ -53,12 +54,12 @@ const SectionHowItWork: FC<SectionHowItWorkProps> = ({ className = "" }) => {
               Perfect homes for remote workers, digital nomads, students and
               relocating professionals.
             </p>
-            <button
-              type="button"
+            <Link
+              href="/allproperties"
               className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-orange-400 px-5 text-sm font-semibold text-white transition-colors hover:bg-customOrange/90"
             >
               Explore monthly stays
-            </button>
+            </Link>
           </div>
           <div className="relative min-h-[170px] sm:min-h-[210px] lg:min-h-full lg:[-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_18%,black_100%)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_18%,black_100%)]">
             <Image

@@ -3,12 +3,10 @@ import { NextResponse } from "next/server";
 import { Property } from "@/models/listing";
 import { Properties } from "@/models/property";
 
-connectDb();
-
 export async function GET(req) {
+  await connectDb();
   const url = new URL(req.url);
   const pathNameList = url.pathname.split("/");
-  const referer = req.headers.get("referer");
   const guestsCount = 1;
   const searchedCountry = pathNameList[pathNameList.length - 1];
 
