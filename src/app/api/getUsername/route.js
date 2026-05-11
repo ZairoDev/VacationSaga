@@ -11,14 +11,26 @@ export async function POST(request) {
   }
 
   try {
-    let user;
-    if (email) {
-      user = await Users.findOne({ email: email });
+    // Always prefer the property owner's userId. Many listings can share the same
+    // email (support/admin), which would otherwise return the wrong "host".
+    let user = await Users.findById(userId);
+
+    if (!user && email) {
+      user = await Users.findOne({ email });
     }
+
     if (!user) {
-      user = await Users.findById(userId);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    return NextResponse.json(user);
+
+    const name =
+      user?.name ||
+      user?.username ||
+      user?.fullName ||
+      user?.firstName ||
+      null;
+
+    return NextResponse.json({ name });
   } catch (error) {
     return NextResponse.json({ error: "Error fetching user" }, { status: 500 });
   }
