@@ -46,6 +46,8 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
       oauth_state: "Security check failed. Please try again.",
       missing_oauth_cookie: "Google login timed out. Please try again.",
       missing_google_config: "Google login is not configured on the server.",
+      oauth_token_exchange:
+        "Google rejected the login request (redirect URI mismatch or expired code). Please try again.",
       oauth_failed: "Google login failed. Please try again.",
       oauth_role_mismatch:
         "This Google account is already registered with a different role. Use that role or another account.",

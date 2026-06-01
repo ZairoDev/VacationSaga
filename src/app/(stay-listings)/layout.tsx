@@ -11,17 +11,13 @@ const Layout = ({ children }: { children: ReactNode }) => {
     <div className={`nc-ListingStayPage relative `}>
       <BgGlassmorphism />
 
-      {/* SECTION HERO */}
-      <div className="container pt-10 pb-24 lg:pt-16 lg:pb-28">
-        <SectionHeroArchivePage currentPage="Short Term Rentals" currentTab="Short Term Rentals" />
-      </div>
-
+ 
       {children}
 
       <div className="container overflow-hidden">
         {/* SECTION 1 */}
         <div className="relative py-16">
-          <BackgroundSection />
+ 
           <SectionSliderNewCategories
             heading="Explore by types of stays"
             subHeading="Explore houses based on types of stays"
@@ -32,11 +28,11 @@ const Layout = ({ children }: { children: ReactNode }) => {
         </div>
 
         {/* SECTION */}
-        <SectionSubscribe2 className="py-24 lg:py-28" />
+        <SectionSubscribe2  />
 
         {/* SECTION */}
         <div className="relative py-16 mb-24 lg:mb-28">
-          <BackgroundSection className="bg-orange-50 dark:bg-black dark:bg-opacity-20 " />
+          {/* <BackgroundSection className="bg-orange-50 dark:bg-black dark:bg-opacity-20 " /> */}
           <SectionGridAuthorBox />
         </div>
       </div>

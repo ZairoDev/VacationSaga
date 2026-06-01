@@ -24,8 +24,8 @@ type Place = {
 
 const LocationInput: FC<LocationInputProps> = ({
   autoFocus = false,
-  placeHolder = "Location",
-  desc = "Where are you going?",
+  placeHolder = "Search city, region, country",
+  desc = "Where",
   className = "nc-flex-1.5",
   divHideVerticalLineClass = "left-10 -right-0.5",
 }) => {
@@ -166,12 +166,19 @@ const LocationInput: FC<LocationInputProps> = ({
         <div className="text-neutral-300 dark:text-neutral-400">
           <MapPinIcon className="w-5 h-5 lg:w-7 lg:h-7" />
         </div>
-        <div>
+        <div className="flex-grow text-left min-w-0">
+          <span className="block text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
+            {desc}
+          </span>
           <LoadScript
             googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
             libraries={["places"]}
           >
-            <PlacesAutocomplete onPlaceSelected={handlePlaceSelected} />
+            <PlacesAutocomplete
+              onPlaceSelected={handlePlaceSelected}
+              placeholder={placeHolder}
+              inputClassName="mt-1"
+            />
           </LoadScript>
         </div>
       </div>

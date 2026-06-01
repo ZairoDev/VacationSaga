@@ -34,28 +34,42 @@ const ExperiencesDateSingleInput: FC<ExperiencesDateSingleInputProps> = ({
   };
 
   const renderInput = () => {
+    const startText =
+      startDate?.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+      }) || "Add dates";
+    const endText =
+      endDate?.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+      }) || "Add dates";
+
     return (
       <>
         <div className="text-neutral-300 dark:text-neutral-400">
           <CalendarIcon className="w-5 h-5 lg:w-7 lg:h-7" />
         </div>
-        <div className="flex-grow text-left">
-          <span className="block xl:text-lg font-semibold">
-            {startDate?.toLocaleDateString("en-US", {
-              month: "short",
-              day: "2-digit",
-            }) || "Date"}
-            {endDate
-              ? " - " +
-                endDate?.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "2-digit",
-                })
-              : ""}
-          </span>
-          <span className="block mt-1 text-sm text-neutral-400 leading-none font-light">
-            {startDate ? "Date" : `Add dates`}
-          </span>
+        <div className="flex-grow min-w-0 text-left">
+          <div className="flex items-center">
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
+                Check-in
+              </span>
+              <span className="block mt-1 text-sm text-neutral-500 dark:text-neutral-400 truncate">
+                {startText}
+              </span>
+            </div>
+            <div className="mx-4 h-8 w-px bg-neutral-200/80 dark:bg-neutral-700" />
+            <div className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
+                Check-out
+              </span>
+              <span className="block mt-1 text-sm text-neutral-500 dark:text-neutral-400 truncate">
+                {endText}
+              </span>
+            </div>
+          </div>
         </div>
       </>
     );

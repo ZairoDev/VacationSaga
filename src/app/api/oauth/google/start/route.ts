@@ -28,7 +28,12 @@ export async function GET(request: NextRequest) {
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri ="https://vacationsaga.com/api/oauth/google/callback";
+  // Use the env-configured redirect URI so local dev (localhost) and production
+  // each use their own registered URI. Fallback keeps prod working if the var is absent.
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ||
+    "https://vacationsaga.com/api/oauth/google/callback";
+
   if (!clientId || !redirectUri) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("role", roleParam);

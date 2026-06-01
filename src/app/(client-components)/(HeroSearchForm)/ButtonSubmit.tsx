@@ -7,9 +7,16 @@ interface Props {
   place?: string;
   guests?: number;
   rentalType?: string;
+  monthlyStays?: boolean;
 }
 
-const ButtonSubmit: FC<Props> = ({ href = "/listing-stay", place, guests, rentalType }) => {
+const ButtonSubmit: FC<Props> = ({
+  href = "/listing-stay",
+  place,
+  guests,
+  rentalType,
+  monthlyStays,
+}) => {
   const queryParams: Record<string, string | number | undefined> = {
     place: place,
     guests: guests
@@ -18,6 +25,10 @@ const ButtonSubmit: FC<Props> = ({ href = "/listing-stay", place, guests, rental
   // Add rentalType to query params if provided
   if (rentalType) {
     queryParams.rentalType = rentalType;
+  }
+
+  if (monthlyStays !== undefined) {
+    queryParams.monthlyStays = monthlyStays ? "1" : "0";
   }
   
   return (
@@ -28,23 +39,9 @@ const ButtonSubmit: FC<Props> = ({ href = "/listing-stay", place, guests, rental
         query: queryParams
       }}
       type="button"
-      className="h-10 md:h-16 w-full md:w-16 rounded-full bg-primary-6000 hover:bg-primary-700 flex items-center justify-center text-neutral-50 focus:outline-none"
+      className="h-11 sm:h-12 lg:h-14 px-5 sm:px-6 rounded-full bg-primary-6000 hover:bg-primary-700 flex items-center justify-center text-white font-medium focus:outline-none whitespace-nowrap"
     >
-      <span className="ml-1 mr-2 text-sm md:hidden">Search</span>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-6 w-6"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-        />
-      </svg>
+      <span className="text-sm sm:text-base">Search stays</span>
     </Link>
   );
 };

@@ -9,6 +9,7 @@ import { PathName } from "@/routers/types";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import { GuestsObject } from "../type";
 import { SearchInputContext } from "@/context/SearchInput";
+import { Switch } from "@headlessui/react";
 
 export interface GuestsInputProps {
   fieldClassName?: string;
@@ -16,6 +17,8 @@ export interface GuestsInputProps {
   buttonSubmitHref?: PathName;
   hasButtonSubmit?: boolean;
   rentalType?: string;
+  monthlyStays?: boolean;
+  onMonthlyStaysChange?: (value: boolean) => void;
 }
 
 const GuestsInput: FC<GuestsInputProps> = ({
@@ -24,13 +27,26 @@ const GuestsInput: FC<GuestsInputProps> = ({
   buttonSubmitHref = "/listing-stay-map" as PathName,
   hasButtonSubmit = true,
   rentalType,
+  monthlyStays,
+  onMonthlyStaysChange,
 }) => {
   const context = useContext(SearchInputContext);
+  const [monthlyStaysInternal, setMonthlyStaysInternal] = useState<boolean>(
+    monthlyStays ?? false
+  );
+
+  const monthlyStaysValue = monthlyStays ?? monthlyStaysInternal;
+  const setMonthlyStaysValue = (value: boolean) => {
+    if (onMonthlyStaysChange) {
+      onMonthlyStaysChange(value);
+      return;
+    }
+    setMonthlyStaysInternal(value);
+  };
 
   const [guestAdultsInputValue, setGuestAdultsInputValue] = useState(1);
   const [guestChildrenInputValue, setGuestChildrenInputValue] = useState(0);
   const [guestInfantsInputValue, setGuestInfantsInputValue] = useState(0);
-
   if (!context) {
     return null;
   }
@@ -77,11 +93,11 @@ const GuestsInput: FC<GuestsInputProps> = ({
                 <UserPlusIcon className="w-5 h-5 lg:w-7 lg:h-7" />
               </div>
               <div className="flex-grow">
-                <span className="block xl:text-lg font-semibold">
-                  {totalGuests || ""} Guests
+                <span className="block text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
+                  Guests
                 </span>
-                <span className="block mt-1 text-sm text-neutral-400 leading-none font-light">
-                  {totalGuests ? "Guests" : "Add guests"}
+                <span className="block mt-1 text-sm text-neutral-500 dark:text-neutral-400 leading-none">
+                  {totalGuests ? `${totalGuests} guests` : "Add guests"}
                 </span>
               </div>
 
@@ -97,10 +113,39 @@ const GuestsInput: FC<GuestsInputProps> = ({
               )}
             </Popover.Button>
 
+            {/* Monthly stays toggle + submit */}
+            <div className="hidden lg:flex items-center gap-3 pr-2 xl:pr-4">
+              <span className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
+                Monthly stays
+              </span>
+              <Switch
+                checked={monthlyStaysValue}
+                onChange={setMonthlyStaysValue}
+                className={`${
+                  monthlyStaysValue
+                    ? "bg-primary-6000"
+                    : "bg-neutral-200 dark:bg-neutral-700"
+                } relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`${
+                    monthlyStaysValue ? "translate-x-5" : "translate-x-0"
+                  } pointer-events-none inline-block h-[14px] w-[14px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                />
+              </Switch>
+            </div>
+
             {/* BUTTON SUBMIT OF FORM */}
             {hasButtonSubmit && (
               <div className="pr-2 xl:pr-4">
-                <ButtonSubmit href={buttonSubmitHref} place={place} guests={guests} rentalType={rentalType} />
+                <ButtonSubmit
+                  href={buttonSubmitHref}
+                  place={place}
+                  guests={guests}
+                  rentalType={monthlyStaysValue ? "Long Term" : "Short Term"}
+                  monthlyStays={monthlyStaysValue}
+                />
               </div>
             )}
           </div>

@@ -117,6 +117,7 @@ const SectionGridFilterCard: FC<SectionGridFilterCardProps> = ({
           <StayCard2 key={stay.id} data={stay} />
         ))}
       </div> */}
+
       <SectionGridFeaturePlaces value ={tabfilterValue} />
       {/* <div className="flex mt-16 justify-center items-center">
         <Pagination />
