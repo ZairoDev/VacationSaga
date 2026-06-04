@@ -69,7 +69,7 @@ import LikeSaveBtns from "@/components/LikeSaveBtns";
 
 
 import ButtonSecondary from "@/shared/ButtonSecondary";
-import { useLoadScript } from "@react-google-maps/api";
+import { Circle, GoogleMap, useLoadScript } from "@react-google-maps/api";
 import { Dialog, Transition } from "@headlessui/react";
 import type { EventInterface } from "@/app/editproperty/page";
 import CommentListing from "@/components/CommentListing";
@@ -109,6 +109,15 @@ interface CenterDataType {
   lat: number;
   lng: number;
 }
+
+const MAP_CONTAINER_STYLE = {
+  width: "100%",
+  height: "100%",
+  minHeight: "400px",
+};
+
+/** Approximate area shown on the map (no exact pin). */
+const LOCATION_RADIUS_METERS = 800;
 
 const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }) => {
   // const { user } = useAuth();
@@ -1078,31 +1087,52 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
 
         <div className="h-px bg-neutral-100 dark:bg-neutral-800" />
 
-        <div className="aspect-w-5 aspect-h-5 sm:aspect-h-3 rounded-2xl overflow-hidden ring-1 ring-neutral-100 dark:ring-neutral-800 shadow-sm z-0">
-          <div className="rounded-2xl overflow-hidden z-0">
-            {loadError && (
-              <div className="w-full h-[400px] bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
-                <p className="text-sm text-red-500">Map failed to load</p>
+        <div className="rounded-2xl overflow-hidden ring-1 ring-neutral-100 dark:ring-neutral-800 shadow-sm z-0 min-h-[400px]">
+          {loadError && (
+            <div className="w-full h-[400px] bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
+              <p className="text-sm text-red-500">Map failed to load</p>
+            </div>
+          )}
+          {!isLoaded && !loadError && (
+            <div className="w-full h-[400px] bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-400 border-t-transparent mb-2" />
+                <p className="text-xs text-neutral-400 uppercase tracking-wide">Loading map…</p>
               </div>
-            )}
-            {!isLoaded && !loadError && (
-              <div className="w-full h-[400px] bg-neutral-100 dark:bg-neutral-800 rounded-2xl flex items-center justify-center">
-                <div className="text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-400 border-t-transparent mb-2" />
-                  <p className="text-xs text-neutral-400 uppercase tracking-wide">Loading map…</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <iframe
-            width="100%"
-            height="100%"
-            loading="lazy"
-            allowFullScreen
-            referrerPolicy="no-referrer-when-downgrade"
-            src={`https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&center=${center?.lat},${center?.lng}&zoom=15`}
-          />
+            </div>
+          )}
+          {isLoaded && !loadError && center && (
+            <GoogleMap
+              mapContainerStyle={MAP_CONTAINER_STYLE}
+              center={center}
+              zoom={14}
+              options={{
+                disableDefaultUI: true,
+                zoomControl: true,
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false,
+                clickableIcons: false,
+              }}
+            >
+              <Circle
+                center={center}
+                radius={LOCATION_RADIUS_METERS}
+                options={{
+                  fillColor: "#EA580C",
+                  fillOpacity: 0.2,
+                  strokeColor: "#EA580C",
+                  strokeOpacity: 0.45,
+                  strokeWeight: 2,
+                  clickable: false,
+                }}
+              />
+            </GoogleMap>
+          )}
         </div>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500">
+          The map shows the approximate area. The exact address is shared after booking.
+        </p>
       </div>
     );
   };
