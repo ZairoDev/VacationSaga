@@ -15,6 +15,10 @@ import { UserDataType } from "@/data/types";
 import { Bookings } from "@/models/bookings";
 import { Properties } from "@/models/property";
 import { getDataFromToken } from "@/helper/getDataFromToken";
+import {
+  getUnavailableDateKeysForProperty,
+  rangeOverlapsUnavailable,
+} from "@/lib/ical-sync";
 
 connectDb();
 
@@ -63,9 +67,9 @@ export async function POST(request: NextRequest) {
       );
     }
     const property = await Properties.findById(propertyId);
-    if (!property) {
+    if (!property || property.isLive !== true) {
       return NextResponse.json(
-        { error: "Property not found" },
+        { error: "Property not found or not available for booking" },
         { status: 404 }
       );
     }
@@ -76,6 +80,31 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    const bookingStart = new Date(startDate);
+    const bookingEnd = new Date(endDate);
+    if (
+      Number.isNaN(bookingStart.getTime()) ||
+      Number.isNaN(bookingEnd.getTime()) ||
+      bookingEnd <= bookingStart
+    ) {
+      return NextResponse.json(
+        { error: "Invalid booking dates" },
+        { status: 400 },
+      );
+    }
+
+    const unavailable = await getUnavailableDateKeysForProperty(property);
+    if (rangeOverlapsUnavailable(bookingStart, bookingEnd, unavailable)) {
+      return NextResponse.json(
+        {
+          error:
+            "Those dates are not available. They may be booked elsewhere, blocked, or already reserved on Vacation Saga.",
+        },
+        { status: 409 },
+      );
+    }
+
     const booking = await Bookings.create({
       propertyId,
       ownerId,

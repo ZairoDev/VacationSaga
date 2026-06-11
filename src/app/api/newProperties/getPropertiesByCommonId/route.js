@@ -5,14 +5,18 @@ import { NextResponse } from "next/server";
 connectDb();
 
 export async function POST(request) {
-  const { commonId } = await request.json();
+  const { commonId, requireLive } = await request.json();
 
   if (!commonId) {
     return NextResponse.json({ error: "Common Id not found" }, { status: 400 });
   }
 
   try {
-    const commonIdProperties = await Properties.find({ commonId });
+    const filter = { commonId };
+    if (requireLive === true) {
+      filter.isLive = true;
+    }
+    const commonIdProperties = await Properties.find(filter);
 
     if (!commonIdProperties) {
       return NextResponse.json(

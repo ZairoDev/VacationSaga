@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import User from "@/models/user";
 import { connectDb } from "@/helper/db";
 import { withAuthCookie, signAppToken } from "@/helper/authToken";
+import { Properties } from "@/models/property";
+import { ownerRequiresOnboarding } from "@/lib/owner-onboarding";
 
 type OAuthStartPayload = {
   state: string;
@@ -176,7 +178,27 @@ export async function GET(request: NextRequest) {
 
     await user.save();
 
-    const redirectTarget = payload.redirect || "/";
+    let redirectTarget = payload.redirect || "/";
+
+    if (
+      payload.role === "Owner" &&
+      (!payload.redirect || payload.redirect === "/")
+    ) {
+      const draftProperties = await Properties.find({
+        userId: user._id.toString(),
+        listingSource: "short_term_owner_sheet",
+        isLive: { $ne: true },
+      }).lean();
+
+      if (
+        ownerRequiresOnboarding(
+          user.toObject(),
+          draftProperties as Parameters<typeof ownerRequiresOnboarding>[1],
+        )
+      ) {
+        redirectTarget = "/owner-onboarding";
+      }
+    }
 
     // Mobile deep-link redirect: custom scheme (e.g. myapp://) can't receive cookies.
     // Only enter this branch for non-http(s) schemes like myapp://, vacationsaga://, etc.

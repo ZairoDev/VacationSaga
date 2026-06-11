@@ -112,10 +112,11 @@ const EditPropertyPage: React.FC<PageProps> = ({ params }) => {
 
   useEffect(() => {
     const canAccess = searchParams.get("canAccess");
-    if (!canAccess) {
+    const fromOnboarding = searchParams.get("fromOnboarding");
+    if (!canAccess && !fromOnboarding) {
       router.push("/");
     }
-  }, []);
+  }, [router, searchParams]);
 
   useEffect(() => {
     const fetchPropertiesByCommonId = async () => {

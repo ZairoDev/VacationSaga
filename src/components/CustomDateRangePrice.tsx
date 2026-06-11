@@ -44,7 +44,7 @@ const CustomDateRangePrice: FC<StayDatesRangeInputProps> = ({
 
   useEffect(() => {
     setCurrentBookedDates([...bookedDates, ...externalBookedDates]);
-  }, []);
+  }, [bookedDates, externalBookedDates]);
 
   const isAnyDateBooked = (start: Date, end: Date) => {
     let date = new Date(start);

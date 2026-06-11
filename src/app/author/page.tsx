@@ -39,6 +39,8 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
     useState<string>("Short Term");
   const [filteredProperties, setFilteredProperties] =
     useState<PropertiesDataType[]>();
+  const [onboardingPending, setOnboardingPending] = useState(false);
+  const [profileNeedsCompletion, setProfileNeedsCompletion] = useState(false);
 
   const fetchProperties = async () => {
     if (token?._id) {
@@ -79,6 +81,20 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
   useEffect(() => {
     fetchProperties();
   }, []);
+
+  useEffect(() => {
+    if (token?.role !== "Owner") return;
+    axios
+      .get("/api/owner-onboarding/status")
+      .then((res) => {
+        setOnboardingPending(Boolean(res.data?.requiresOnboarding));
+        setProfileNeedsCompletion(!res.data?.ownerProfileCompletedAt);
+      })
+      .catch(() => {
+        setOnboardingPending(false);
+        setProfileNeedsCompletion(false);
+      });
+  }, [token?.role]);
 
   useEffect(() => {
     filterOutProperties();
@@ -346,6 +362,24 @@ const AuthorPage: FC<AuthorPageProps> = ({}) => {
           <div className="lg:sticky lg:top-24">{renderSidebar()}</div>
         </div>
         <div className="w-full lg:w-3/5 xl:w-2/3 space-y-8 lg:space-y-10 lg:pl-10 flex-shrink-0">
+          {onboardingPending && (
+            <div className="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 px-5 py-4 space-y-2">
+              <p className="font-semibold text-amber-900 dark:text-amber-200">
+                Your listing is not public yet
+              </p>
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                {profileNeedsCompletion
+                  ? "Start by completing your profile and payout details, then accept the agreements. You can optionally connect your calendar to avoid double bookings."
+                  : "Accept the agreements to continue. Connecting your Airbnb or Booking.com calendar is optional but recommended."}
+              </p>
+              <Link
+                href="/owner-onboarding"
+                className="inline-block text-sm font-medium text-primary-6000 underline"
+              >
+                {profileNeedsCompletion ? "Complete your profile" : "Continue onboarding"}
+              </Link>
+            </div>
+          )}
           {renderSection1()}
         </div>
       </main>

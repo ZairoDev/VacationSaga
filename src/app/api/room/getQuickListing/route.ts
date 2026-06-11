@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let property = await Properties.findById(propertyId);
+    let property = await Properties.findOne({ _id: propertyId, isLive: true });
 
     if (!property) {
       property = await quicklisting.findById(propertyId);

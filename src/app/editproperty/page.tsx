@@ -50,10 +50,11 @@ const EditPropertyPage: React.FC = () => {
 
   useEffect(() => {
     const canAccess = searchParams.get("canAccess");
-    if (!canAccess) {
+    const fromOnboarding = searchParams.get("fromOnboarding");
+    if (!canAccess && !fromOnboarding) {
       router.push("/");
     }
-  }, []);
+  }, [router, searchParams]);
 
   useEffect(() => {
     if (id && user?._id) {
@@ -63,9 +64,23 @@ const EditPropertyPage: React.FC = () => {
             userId: user._id,
           });
           // console.log(response.data);
-          const fetchedProperty = response.data.properties.find(
+          let fetchedProperty = response.data.properties.find(
             (prop: Properties) => prop._id === id
           );
+          if (!fetchedProperty) {
+            try {
+              const draftRes = await axios.post(
+                "/api/newProperties/getPropertyById",
+                { propertyId: id },
+              );
+              const draft = draftRes.data?.property;
+              if (draft && String(draft.userId) === String(user._id)) {
+                fetchedProperty = draft;
+              }
+            } catch {
+              /* draft not found */
+            }
+          }
           setProperty(fetchedProperty || null);
           setNumberOfPortions(fetchedProperty?.numberOfPortions || 1);
         } catch (error) {
@@ -208,11 +223,21 @@ const EditPropertyPage: React.FC = () => {
       return;
     }
     try {
-      await axios.post("/api/user/edituserproperty", {
-        propertyId: id,
-        updatedData: formData,
-        userId: user._id,
-      });
+      if (
+        (property as { listingSource?: string } | null)?.listingSource ===
+        "short_term_owner_sheet"
+      ) {
+        await axios.post("/api/newProperties/updateOwnerProperty", {
+          propertyId: id,
+          updatedData: formData,
+        });
+      } else {
+        await axios.post("/api/user/edituserproperty", {
+          propertyId: id,
+          updatedData: formData,
+          userId: user._id,
+        });
+      }
       // router.push("/author");
       // alert("Property updated successfully");
       toast.success("Property updated successfully");

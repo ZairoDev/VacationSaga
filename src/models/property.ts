@@ -144,6 +144,24 @@ const PropertySchema: Schema = new Schema(
       type: String,
       default: "Available",
     },
+    sourceOwnerSheetId: {
+      type: String,
+      default: "",
+    },
+    listingSource: {
+      type: String,
+      enum: ["standard", "short_term_owner_sheet"],
+      default: "standard",
+    },
+    ownerOnboarding: {
+      serviceAgreementAcceptedAt: { type: Date, default: null },
+      partnerAgreementAcceptedAt: { type: Date, default: null },
+      icalSkippedAt: { type: Date, default: null },
+    },
+    ownerOnboardingComplete: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

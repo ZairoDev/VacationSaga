@@ -38,7 +38,8 @@ export function middleware(request: NextRequest) {
     path.startsWith("/account") ||
     path.startsWith("/editproperty") ||
     path.startsWith("/add-listing") ||
-    path.startsWith("/author");
+    path.startsWith("/author") ||
+    path.startsWith("/owner-onboarding");
 
   const token = request.cookies.get("token")?.value || "";
 

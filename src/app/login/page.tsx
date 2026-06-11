@@ -81,13 +81,25 @@ const PageLogin: FC<PageLoginProps> = ({}) => {
         // Keep an optional client-readable copy under a different key if needed.
         localStorage.setItem("app_jwt", response.data.token);
         setToken(response.data.tokenData);
-        
-        // Redirect to the intended page if provided, otherwise go to home
+
         if (redirectPath) {
           router.push(decodeURIComponent(redirectPath) as any);
-        } else {
-          router.push("/");
+          return;
         }
+
+        if (role === "Owner") {
+          try {
+            const onboardingRes = await axios.get("/api/owner-onboarding/status");
+            if (onboardingRes.data?.requiresOnboarding) {
+              router.push("/owner-onboarding");
+              return;
+            }
+          } catch {
+            // fall through to home
+          }
+        }
+
+        router.push("/");
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.error) {

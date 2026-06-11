@@ -160,7 +160,7 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
 
   useEffect(() => {
     setCurrentBookedDates([...bookedDates, ...externalBookedDates]);
-  }, []);
+  }, [bookedDates, externalBookedDates]);
 
   const getPriceForDate = (date: Date) => {
     const month = date.getMonth(); // 0 = January, 11 = December

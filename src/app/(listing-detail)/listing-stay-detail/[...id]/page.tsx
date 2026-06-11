@@ -225,61 +225,28 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
     };
     navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
   }, []);
-  const fetchAndParseICal = async (url: string) => {
+  const loadUnavailableDates = async (propertyId: string) => {
     try {
-      const response = await axios.post("/api/ical", { url });
-      const parsedData = response.data.data;
-      const bookings = [];
-      for (const eventId in parsedData) {
-        const event = parsedData[eventId];
-        if (event.type === "VEVENT") {
-          const startDate = event.start ? new Date(event.start) : undefined;
-          const endDate = event.end ? new Date(event.end) : undefined;
-
-          bookings.push({
-            startDate,
-            endDate,
-          });
-        }
-      }
-      return bookings;
+      const response = await axios.post(
+        "/api/newProperties/unavailable-dates",
+        { propertyId },
+      );
+      const dates = (response.data?.data ?? []).map(
+        (d: string) => new Date(d),
+      );
+      setAlreadyBookedDates(dates);
+      setBookedDates(
+        dates.map((d: Date) => ({
+          start: dateParser(d.toLocaleDateString()),
+          end: dateParser(d.toLocaleDateString()),
+          title: "Booked",
+        })),
+      );
     } catch (error) {
-      console.log("Error: ", error);
-    }
-  };
-
-  const fetchBookedDates = async (url: string) => {
-    if (!url) {
+      console.log("Error loading unavailable dates: ", error);
+    } finally {
       setBookedState(true);
-      return;
     }
-    const airbnbBookings = await fetchAndParseICal(url);
-    // console.log("airbnbBookings", airbnbBookings, airbnbBookings?.length);
-    const eventsFromAirbnb: EventInterface[] = [];
-    airbnbBookings?.forEach((event) => {
-      const stdt = dateParser(event.startDate?.toLocaleString() || "");
-      const nddt = dateParser(event.endDate?.toLocaleString() || "");
-
-      const newObj: EventInterface = {
-        start: stdt,
-        end: nddt,
-        title: "Booked",
-      };
-      eventsFromAirbnb.push(newObj);
-      setBookedDates(eventsFromAirbnb);
-      //! adding events from airbnb to already booked dates
-      eventsFromAirbnb.forEach((event) => {
-        const newDates: Date[] = [];
-        const currDt = new Date(event.start || new Date());
-        while (currDt < new Date(event.end || new Date())) {
-          newDates.push(currDt);
-          currDt.setDate(currDt.getDate() + 1);
-        }
-        // console.log("newDates: ", newDates);
-        setAlreadyBookedDates((prev) => [...prev, ...newDates]);
-      });
-    });
-    setBookedState(true);
   };
 
   useEffect(() => {
@@ -290,7 +257,8 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
           { propertyId: param }
         );
         if (response.data) {
-          fetchBookedDates(response.data?.property?.icalLinks?.["Airbnb"]);
+          const pid = response.data?.property?._id;
+          if (pid) void loadUnavailableDates(String(pid));
           setParticularProperty(response?.data?.property);
           setUserIdOfProperty(response?.data?.property?.userId);
           setUserEmail(response?.data?.property?.email);
@@ -301,6 +269,7 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
               "/api/newProperties/getPropertiesByCommonId",
               {
                 commonId: response.data.property.commonId,
+                requireLive: true,
               }
             );
             if (commonPropertyResponse.data.commonIdProperties) {
@@ -342,23 +311,8 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
       }
     };
 
-    const getBookedDates = async () => {
-      if (!isValidParams || !param) return;
-      try {
-        const response = await axios.post(
-          "/api/newProperties/getBlockedDates",
-          { propertyId: param }
-        );
-
-        setAlreadyBookedDates((prev) => [...prev, ...response?.data?.data]);
-      } catch (err: any) {
-        console.log("error in fetching blocked dates");
-      }
-    };
-
     if (isValidParams && param) {
       getProperties();
-      getBookedDates();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isValidParams, param]);

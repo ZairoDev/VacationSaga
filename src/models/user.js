@@ -28,8 +28,10 @@ const userSchema = new mongoose.Schema(
       default: "English",
     },
     bankDetails: {
-      type: Object,
-      default: "",
+      accountHolderName: { type: String, default: "" },
+      iban: { type: String, default: "" },
+      bankName: { type: String, default: "" },
+      swiftBic: { type: String, default: "" },
     },
     phone: {
       type: String,
@@ -91,6 +93,14 @@ const userSchema = new mongoose.Schema(
     forgotPasswordTokenExpiry: Date,
     verifyToken: String,
     verifyTokenExpiry: Date,
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
+    },
+    ownerProfileCompletedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

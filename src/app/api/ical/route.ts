@@ -1,35 +1,54 @@
 import { connectDb } from "@/helper/db";
+import { getDataFromToken } from "@/helper/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
-import ical from "ical";
+import {
+  expandEventsToDateKeys,
+  parseIcalFromUrl,
+  validateIcalUrl,
+} from "@/lib/ical-sync";
 
 connectDb();
 
 export async function POST(request: NextRequest) {
-  const { url } = await request.json();
-  console.log("url: ", url);
   try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const userId = getDataFromToken(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    console.log("response data: ", response);
-    const data = await response.text();
-    console.log("******\n data: ", data, "******");
 
-    const parsedData = ical.parseICS(data);
-    console.log("parsedData: ", parsedData);
+    const { url } = await request.json();
+    const validation = validateIcalUrl(url);
+    if (!validation.valid || !validation.url) {
+      return NextResponse.json(
+        { error: validation.error ?? "Invalid calendar URL" },
+        { status: 400 },
+      );
+    }
+
+    const events = await parseIcalFromUrl(validation.url);
+    const blockedDateKeys = Array.from(expandEventsToDateKeys(events));
 
     return NextResponse.json({
-      message: "ical data fetched successfully",
-      data: parsedData,
+      message: "Calendar fetched successfully",
+      eventCount: events.length,
+      blockedNightCount: blockedDateKeys.length,
+      blockedDateKeys,
+      events: events.map((e) => ({
+        start: e.start.toISOString(),
+        end: e.end.toISOString(),
+        summary: e.summary,
+      })),
     });
   } catch (error) {
-    console.error(error);
-    // res.status(500).json({ error: "Failed to fetch ICS data" });
+    console.error("ical fetch:", error);
     return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 400 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch calendar data",
+      },
+      { status: 400 },
     );
   }
 }

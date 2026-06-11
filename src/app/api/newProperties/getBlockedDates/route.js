@@ -8,7 +8,14 @@ export async function POST(req) {
   try {
     const { propertyId } = await req.json();
 
-    const property = await Properties.findOne({ _id: propertyId });
+    const property = await Properties.findOne({ _id: propertyId, isLive: true });
+
+    if (!property) {
+      return NextResponse.json(
+        { error: "Property not found or not available" },
+        { status: 404 }
+      );
+    }
 
     let blockedDates = [];
 

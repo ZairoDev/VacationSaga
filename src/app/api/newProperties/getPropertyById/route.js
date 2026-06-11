@@ -15,11 +15,14 @@ export async function POST(request) {
   }
 
   try {
-    const property = await Properties.findById(propertyId);
+    const property = await Properties.findOne({
+      _id: propertyId,
+      isLive: true,
+    });
 
     if (!property) {
       return NextResponse.json(
-        { error: "Property not found" },
+        { error: "Property not found or not available" },
         { status: 404 }
       );
     }
