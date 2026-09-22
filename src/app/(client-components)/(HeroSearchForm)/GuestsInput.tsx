@@ -114,28 +114,30 @@ const GuestsInput: FC<GuestsInputProps> = ({
             </Popover.Button>
 
             {/* Monthly stays toggle + submit */}
-            <div className="hidden lg:flex items-center gap-3 pr-2 xl:pr-4">
-              <span className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
-                Monthly stays
-              </span>
-              <Switch
-                checked={monthlyStaysValue}
-                onChange={setMonthlyStaysValue}
-                className={`${
-                  monthlyStaysValue
-                    ? "bg-primary-6000"
-                    : "bg-neutral-200 dark:bg-neutral-700"
-                } relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
-              >
-                <span
-                  aria-hidden="true"
+            {/* implementing a toglle on top  thats why commenting it out */}
+            {/* {rentalType === "Short Term" && (
+              <div className="hidden lg:flex items-center gap-3 pr-2 xl:pr-4">
+                <span className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
+                  Monthly stays
+                </span>
+                <Switch
+                  checked={monthlyStaysValue}
+                  onChange={setMonthlyStaysValue}
                   className={`${
-                    monthlyStaysValue ? "translate-x-5" : "translate-x-0"
-                  } pointer-events-none inline-block h-[14px] w-[14px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                />
-              </Switch>
-            </div>
-
+                    monthlyStaysValue
+                      ? "bg-primary-6000"
+                      : "bg-neutral-200 dark:bg-neutral-700"
+                  } relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`${
+                      monthlyStaysValue ? "translate-x-5" : "translate-x-0"
+                    } pointer-events-none inline-block h-[14px] w-[14px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                  />
+                </Switch>
+              </div>
+            )} */}
             {/* BUTTON SUBMIT OF FORM */}
             {hasButtonSubmit && (
               <div className="pr-2 xl:pr-4">
