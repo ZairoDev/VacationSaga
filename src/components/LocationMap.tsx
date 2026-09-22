@@ -2,6 +2,8 @@
 import React from "react";
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
+const LIBRARIES: ("places")[] = ["places"];
+
 interface MapProps {
   latitude: number;
   longitude: number;
@@ -15,6 +17,7 @@ const containerStyle = {
 const Map: React.FC<MapProps> = ({ latitude, longitude }) => {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: LIBRARIES,
   });
 
   const center = {
