@@ -32,7 +32,7 @@ const StaySearchForm: FC<StaySearchFormProps> = ({
             <StayDatesRangeInput className="flex-1" />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <GuestsInput
-              className="flex-1"
+              className="flex-[1.5]"
               rentalType={rentalType}
               monthlyStays={monthlyStays}
               onMonthlyStaysChange={onMonthlyStaysChange}
@@ -52,7 +52,7 @@ const StaySearchForm: FC<StaySearchFormProps> = ({
           <StayDatesRangeInput className="flex-1" />
           <div className="self-center h-10 w-px bg-neutral-200/80 dark:bg-neutral-700" />
           <GuestsInput
-            className="flex-1"
+            className="flex-[1.5]"
             rentalType={rentalType}
             monthlyStays={monthlyStays}
             onMonthlyStaysChange={onMonthlyStaysChange}
