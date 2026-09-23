@@ -34,14 +34,18 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
   const country = params.get("place") || params.get("location") || "Greece";
   const pType = params.get("propertyType") || "";
   const urlRentalType = params.get("rentalType");
+  const urlGuests    = parseInt(params.get("guests")    || "1");
+  const urlBedrooms  = parseInt(params.get("bedrooms")  || "0");
+  const urlBathrooms = parseInt(params.get("bathrooms") || "0");
   const recordPerPage = 12;
 
   const [rentalForm, setRentalForm] = useState<string>("");
   const [rentalType, setRentalType] = useState<string>(urlRentalType || "Short Term");
-  const [propertyType, setPropertyType] = useState<string>("");
+  const [propertyType, setPropertyType] = useState<string>(pType); // seed from URL
   const [beds, setBeds] = useState<number>(0);
-  const [bedrooms, setBedRooms] = useState<number>(0);
-  const [bathrooms, setBathrooms] = useState<number>(0);
+  const [bedrooms, setBedRooms] = useState<number>(urlBedrooms);
+  const [bathrooms, setBathrooms] = useState<number>(urlBathrooms);
+  const [guests, setGuests] = useState<number>(urlGuests);
   const [minPrice, setMinPrice] = useState<number>(0);
   const [maxPrice, setMaxPrice] = useState<number>(999999);
   const [houserool, setHouseRool] = useState<string>("");
@@ -49,44 +53,26 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
   const isInitialMount = useRef(true);
 
   const fetchProperties = async (page: number = 1) => {
-    console.log(page, currentPage);
     setLoading(true);
     try {
-      if (!pType) {
-        console.log("without property type");
-        const response = await axios.get(
-          `/api/countryspecificproperties/${country}`,
-          {
-            params: {
-              limit: recordPerPage,
-              page,
-            },
-          }
-        );
-        if (page === 1) {
-          setFetchedData(response.data);
-        } else {
-          setFetchedData((prevData) => [...prevData, ...response.data]);
-        }
-        setHasMore(response.data.length === recordPerPage);
-      } else {
-        console.log("with property type");
-        const response = await axios.post(`/api/getSpecificPropertyType`, {
-          propertyType: pType,
-          country: country,
+      const response = await axios.get(
+        `/api/countryspecificproperties/${country}`,
+        {
           params: {
             limit: recordPerPage,
-            page: currentPage,
+            page,
+            guests,
+            bedrooms,
+            bathrooms,
           },
-        });
-        console.log("response: ", page, response);
-        console.log(fetchedData.length);
-        if (page === 1) {
-          setFetchedData(response.data);
-        } else {
-          setFetchedData((prevData) => [...prevData, ...response.data]);
         }
+      );
+      if (page === 1) {
+        setFetchedData(response.data);
+      } else {
+        setFetchedData((prevData) => [...prevData, ...response.data]);
       }
+      setHasMore(response.data.length === recordPerPage);
     } catch (error) {
       console.error("Error fetching properties:", error);
     } finally {
@@ -97,11 +83,6 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
   useEffect(() => {
     fetchProperties(currentPage);
   }, [currentPage, country]);
-
-  useEffect(() => {
-    setFetchedData([]);
-    fetchProperties(currentPage);
-  }, [pType]);
 
   // Update rentalType when URL param changes
   useEffect(() => {
@@ -124,6 +105,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
         beds,
         bedrooms,
         bathrooms,
+        guests,
         minPrice,
         maxPrice,
         country,
@@ -146,7 +128,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [rentalForm, propertyType, beds, bedrooms, bathrooms, minPrice, maxPrice, country, rentalType, houserool, recordPerPage]);
+  }, [rentalForm, propertyType, beds, bedrooms, bathrooms, guests, minPrice, maxPrice, country, rentalType, houserool, recordPerPage]);
 
   const handleRentalType = (type: string) => {
     setRentalType(type);
@@ -160,6 +142,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
     setBeds(0);
     setBedRooms(0);
     setBathrooms(0);
+    setGuests(1);
     setMinPrice(0);
     setMaxPrice(999999);
     setHouseRool("");
@@ -169,12 +152,12 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
     fetchProperties(1);
   };
 
-  // Auto-apply filters when they change (skip initial mount unless rentalType from URL)
+  // Auto-apply filters when they change (skip initial mount unless params from URL)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      // If rentalType comes from URL, apply filters immediately
-      if (urlRentalType) {
+      // If any search params came from URL, go straight to filter path
+      if (urlRentalType || pType || urlBedrooms > 0 || urlBathrooms > 0 || urlGuests > 1) {
         const timeoutId = setTimeout(() => {
           handleFilters();
         }, 300);
@@ -182,13 +165,13 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
       }
       return;
     }
-    
+
     const timeoutId = setTimeout(() => {
       handleFilters();
-    }, 500); // Debounce for 500ms
-    
+    }, 500);
+
     return () => clearTimeout(timeoutId);
-  }, [rentalType, rentalForm, propertyType, beds, bedrooms, bathrooms, minPrice, maxPrice, houserool, handleFilters]);
+  }, [rentalType, rentalForm, propertyType, beds, bedrooms, bathrooms, guests, minPrice, maxPrice, houserool, handleFilters]);
 
   const loadMore = () => {
     if (filtersApplied) {
