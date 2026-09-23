@@ -1,67 +1,62 @@
 import { NextResponse } from "next/server";
-
 import { Properties } from "@/models/property";
-
 import { connectDb } from "../../../helper/db";
-
-connectDb();
 
 export async function POST(request) {
   try {
+    await connectDb();
+
     const filters = await request.json();
 
-    // Get pagination parameters
-    const page = parseInt(filters.page) || 1;
+    const page  = parseInt(filters.page)  || 1;
     const limit = parseInt(filters.limit) || 12;
-    const skip = (page - 1) * limit;
-
-    // console.log("filterCriteria: ", filters);
+    const skip  = (page - 1) * limit;
 
     const query = { isLive: true };
 
-    if (filters.beds) query["beds"] = { $gte: filters.beds };
-    if (filters.rentalForm) query["rentalForm"] = filters.rentalForm;
-    if (filters.bedrooms) query["bedrooms"] = { $gte: filters.bedrooms };
-    if (filters.bathroom) query["bathroom"] = { $gte: filters.bathroom };
-    if (filters.propertyType) query["propertyType"] = filters.propertyType;
+    // --- Location ---
     if (filters.country && filters.country.trim()) {
       query["$or"] = [
-        { city: new RegExp(filters.country, "i") },
-        { state: new RegExp(filters.country, "i") },
+        { city:    new RegExp(filters.country, "i") },
+        { state:   new RegExp(filters.country, "i") },
         { country: new RegExp(filters.country, "i") },
       ];
     }
 
-    // Only apply rentalType filter if it's explicitly provided
+    // --- Capacity (from hero search form) ---
+    if (filters.guests    && filters.guests    > 0) query["guests"]    = { $gte: filters.guests    };
+    if (filters.bedrooms  && filters.bedrooms  > 0) query["bedrooms"]  = { $gte: filters.bedrooms  };
+    if (filters.bathrooms && filters.bathrooms > 0) query["bathroom"]  = { $gte: filters.bathrooms }; // schema field is "bathroom"
+
+    // --- Tab filter fields ---
+    if (filters.rentalForm)   query["rentalForm"]   = filters.rentalForm;
+    if (filters.propertyType) query["propertyType"] = filters.propertyType;
+    if (filters.houserool)    query["houserool"]     = filters.houserool;
+
+    // --- Rental type + price (fix: build price range object properly) ---
     if (filters.rentalType) {
       query["rentalType"] = filters.rentalType;
-      
-      // Apply price filters based on rental type
-      if (filters.rentalType === "Long Term") {
-        if (filters.minPrice) query["basePriceLongTerm"] = { $gte: filters.minPrice };
-        if (filters.maxPrice) query["basePriceLongTerm"] = { $lte: filters.maxPrice };
-      } else if (filters.rentalType === "Short Term") {
-        if (filters.minPrice) query["basePrice"] = { $gte: filters.minPrice };
-        if (filters.maxPrice) query["basePrice"] = { $lte: filters.maxPrice };
-      }
+
+      const priceField = filters.rentalType === "Long Term" ? "basePriceLongTerm" : "basePrice";
+      const priceQuery = {};
+      if (filters.minPrice && filters.minPrice > 0)       priceQuery["$gte"] = filters.minPrice;
+      if (filters.maxPrice && filters.maxPrice < 999999)  priceQuery["$lte"] = filters.maxPrice;
+      if (Object.keys(priceQuery).length > 0) query[priceField] = priceQuery;
     } else {
-      // If no rentalType specified, apply to basePrice (short term default)
-      if (filters.minPrice) query["basePrice"] = { $gte: filters.minPrice };
-      if (filters.maxPrice) query["basePrice"] = { $lte: filters.maxPrice };
+      const priceQuery = {};
+      if (filters.minPrice && filters.minPrice > 0)       priceQuery["$gte"] = filters.minPrice;
+      if (filters.maxPrice && filters.maxPrice < 999999)  priceQuery["$lte"] = filters.maxPrice;
+      if (Object.keys(priceQuery).length > 0) query["basePrice"] = priceQuery;
     }
 
-    console.log("Applied filter:", query);
-    console.log("Page:", page, "Limit:", limit);
-    
-    // Apply pagination
-    const results = await Properties.find(query)
-      .skip(skip)
-      .limit(limit);
+    console.log("Applied filter:", JSON.stringify(query, null, 2));
 
-    console.log("results: ", results.length);
+    const results = await Properties.find(query).skip(skip).limit(limit);
+
+    console.log("Results:", results.length);
     return NextResponse.json(results);
   } catch (error) {
-    console.error("Error filtering properties: ", error);
+    console.error("Filter error:", error);
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
       { status: 500 }
