@@ -5,7 +5,7 @@ import StaySearchForm from "./(stay-search-form)/StaySearchForm";
 import ExperiencesSearchForm from "./(experiences-search-form)/ExperiencesSearchForm";
 import RentalCarSearchForm from "./(car-search-form)/RentalCarSearchForm";
 import FlightSearchForm from "./(flight-search-form)/FlightSearchForm";
-
+import MonthlyStayToggle from "./(monthly-toggle-form)/MonthlyStayToggle";
 // Backwards-compat export: used by Header3.
 export type SearchTab = "Short Term Rentals" | "Long Term Rentals";
 
@@ -26,9 +26,10 @@ const HeroSearchForm: FC<HeroSearchFormProps> = ({
   const [monthlyStays, setMonthlyStays] = useState<boolean>(defaultMonthlyStays);
 
   return (
-    <div
-      className={`nc-HeroSearchForm w-full max-w-6xl ${className}`}
-    >
+    <div className={`nc-HeroSearchForm w-full max-w-6xl ${className}`}>
+      <div className="flex justify-center pb-2">
+        <MonthlyStayToggle value={monthlyStays} onChange={setMonthlyStays} />
+      </div>
       {monthlyStays ? (
         <ExperiencesSearchForm
           rentalType="Long Term"

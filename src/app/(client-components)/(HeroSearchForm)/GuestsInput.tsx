@@ -1,15 +1,12 @@
 "use client";
 
-import React, { Fragment, useEffect, useState, useContext, FC } from "react";
+import React, { Fragment, useState, useContext, FC } from "react";
 import { Popover, Transition } from "@headlessui/react";
-import NcInputNumber from "@/components/NcInputNumber";
+import { UsersIcon, MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClearDataButton from "./ClearDataButton";
 import ButtonSubmit from "./ButtonSubmit";
 import { PathName } from "@/routers/types";
-import { UserPlusIcon } from "@heroicons/react/24/outline";
-import { GuestsObject } from "../type";
 import { SearchInputContext } from "@/context/SearchInput";
-import { Switch } from "@headlessui/react";
 
 export interface GuestsInputProps {
   fieldClassName?: string;
@@ -21,12 +18,48 @@ export interface GuestsInputProps {
   onMonthlyStaysChange?: (value: boolean) => void;
 }
 
+interface StepperProps {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (val: number) => void;
+}
+
+const Stepper: FC<StepperProps> = ({ label, value, min, max, onChange }) => (
+  <div className="flex items-center justify-between py-3 border-b border-neutral-100 dark:border-neutral-700 last:border-0">
+    <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+      {label}
+    </span>
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        disabled={value <= min}
+        onClick={() => onChange(Math.max(min, value - 1))}
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 disabled:opacity-30 hover:border-neutral-900 dark:hover:border-neutral-300 transition-colors"
+      >
+        <MinusIcon className="h-3.5 w-3.5" />
+      </button>
+      <span className="w-5 text-center text-sm font-semibold text-neutral-900 dark:text-white">
+        {value}
+      </span>
+      <button
+        type="button"
+        disabled={value >= max}
+        onClick={() => onChange(Math.min(max, value + 1))}
+        className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300 disabled:opacity-30 hover:border-neutral-900 dark:hover:border-neutral-300 transition-colors"
+      >
+        <PlusIcon className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  </div>
+);
+
 const GuestsInput: FC<GuestsInputProps> = ({
   fieldClassName = "[ nc-hero-field-padding ]",
   className = "[ nc-flex-1 ]",
-  buttonSubmitHref = "/listing-stay-map" as PathName,
+  buttonSubmitHref = "/listing-stay" as PathName,
   hasButtonSubmit = true,
-  rentalType,
   monthlyStays,
   onMonthlyStaysChange,
 }) => {
@@ -44,38 +77,18 @@ const GuestsInput: FC<GuestsInputProps> = ({
     setMonthlyStaysInternal(value);
   };
 
-  const [guestAdultsInputValue, setGuestAdultsInputValue] = useState(1);
-  const [guestChildrenInputValue, setGuestChildrenInputValue] = useState(0);
-  const [guestInfantsInputValue, setGuestInfantsInputValue] = useState(0);
-  if (!context) {
-    return null;
-  }
+  if (!context) return null;
 
-  const { place, setPlace, date, setDate, guests, setGuests } = context;
+  const { place, guests, setGuests, bedrooms, setBedrooms, bathrooms, setBathrooms } = context;
 
-  const handleChangeData = (value: number, type: keyof GuestsObject) => {
-    let newValue = {
-      guestAdults: guestAdultsInputValue,
-      guestChildren: guestChildrenInputValue,
-      guestInfants: guestInfantsInputValue,
-    };
-    if (type === "guestAdults") {
-      setGuestAdultsInputValue(value);
-      newValue.guestAdults = value;
-    }
-    if (type === "guestChildren") {
-      setGuestChildrenInputValue(value);
-      newValue.guestChildren = value;
-    }
-    if (type === "guestInfants") {
-      setGuestInfantsInputValue(value);
-      newValue.guestInfants = value;
-    }
-    setGuests(newValue.guestAdults + newValue.guestChildren + newValue.guestInfants);
-  };
+  // Single-line summary — stays on one line regardless of values
+  const summareParts: string[] = [];
+  summareParts.push(`${guests} guest${guests !== 1 ? "s" : ""}`);
+  if (bedrooms > 0) summareParts.push(`${bedrooms} br`);
+  if (bathrooms > 0) summareParts.push(`${bathrooms} bath`);
+  const summary = summareParts.join(" · ");
 
-  const totalGuests =
-    guestChildrenInputValue + guestAdultsInputValue + guestInfantsInputValue;
+  const hasNonDefault = bedrooms > 0 || bathrooms > 0;
 
   return (
     <Popover className={`flex relative ${className}`}>
@@ -86,65 +99,49 @@ const GuestsInput: FC<GuestsInputProps> = ({
               open ? "nc-hero-field-focused" : ""
             }`}
           >
+            {/* Trigger — identical height structure to LocationInput */}
             <Popover.Button
               className={`relative z-10 flex-1 flex text-left items-center ${fieldClassName} space-x-3 focus:outline-none`}
             >
-              <div className="text-neutral-300 dark:text-neutral-400">
-                <UserPlusIcon className="w-5 h-5 lg:w-7 lg:h-7" />
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  open
+                    ? "bg-primary-6000/10 text-primary-6000"
+                    : "bg-neutral-100 text-neutral-400 dark:bg-neutral-700 dark:text-neutral-400"
+                }`}
+              >
+                <UsersIcon className="h-4 w-4 lg:h-5 lg:w-5" />
               </div>
-              <div className="flex-grow">
-                <span className="block text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
-                  Guests
+
+              <div className="flex-grow min-w-0">
+                <span className="block text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                  Guests & rooms
                 </span>
-                <span className="block mt-1 text-sm text-neutral-500 dark:text-neutral-400 leading-none">
-                  {totalGuests ? `${totalGuests} guests` : "Add guests"}
+                <span className="mt-0.5 block truncate text-sm font-medium text-neutral-800 dark:text-neutral-100">
+                  {summary}
                 </span>
               </div>
 
-              {!!totalGuests && open && (
+              {hasNonDefault && open && (
                 <ClearDataButton
                   onClick={() => {
-                    setGuestAdultsInputValue(0);
-                    setGuestChildrenInputValue(0);
-                    setGuestInfantsInputValue(0);
-                    setGuests(0);
+                    setGuests(1);
+                    setBedrooms(0);
+                    setBathrooms(0);
                   }}
                 />
               )}
             </Popover.Button>
 
-            {/* Monthly stays toggle + submit */}
-            {/* implementing a toglle on top  thats why commenting it out */}
-            {/* {rentalType === "Short Term" && (
-              <div className="hidden lg:flex items-center gap-3 pr-2 xl:pr-4">
-                <span className="text-sm text-neutral-700 dark:text-neutral-200 whitespace-nowrap">
-                  Monthly stays
-                </span>
-                <Switch
-                  checked={monthlyStaysValue}
-                  onChange={setMonthlyStaysValue}
-                  className={`${
-                    monthlyStaysValue
-                      ? "bg-primary-6000"
-                      : "bg-neutral-200 dark:bg-neutral-700"
-                  } relative inline-flex h-[22px] w-[42px] shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-200 ease-in-out focus:outline-none`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`${
-                      monthlyStaysValue ? "translate-x-5" : "translate-x-0"
-                    } pointer-events-none inline-block h-[14px] w-[14px] transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
-                  />
-                </Switch>
-              </div>
-            )} */}
-            {/* BUTTON SUBMIT OF FORM */}
+            {/* Submit */}
             {hasButtonSubmit && (
               <div className="pr-2 xl:pr-4">
                 <ButtonSubmit
                   href={buttonSubmitHref}
                   place={place}
                   guests={guests}
+                  bedrooms={bedrooms}
+                  bathrooms={bathrooms}
                   rentalType={monthlyStaysValue ? "Long Term" : "Short Term"}
                   monthlyStays={monthlyStaysValue}
                 />
@@ -153,8 +150,9 @@ const GuestsInput: FC<GuestsInputProps> = ({
           </div>
 
           {open && (
-            <div className="h-8 absolute self-center top-1/2 -translate-y-1/2 z-0 -left-0.5 right-0.5 bg-white dark:bg-neutral-800"></div>
+            <div className="h-8 absolute self-center top-1/2 -translate-y-1/2 z-0 -left-0.5 right-0.5 bg-white dark:bg-neutral-800" />
           )}
+
           <Transition
             as={Fragment}
             enter="transition ease-out duration-200"
@@ -164,32 +162,27 @@ const GuestsInput: FC<GuestsInputProps> = ({
             leaveFrom="opacity-100 translate-y-0"
             leaveTo="opacity-0 translate-y-1"
           >
-            <Popover.Panel className="absolute right-0 z-10 w-full sm:min-w-[340px] max-w-sm bg-white dark:bg-neutral-800 top-full mt-3 py-5 sm:py-6 px-4 sm:px-8 rounded-3xl shadow-xl">
-              <NcInputNumber
-                className="w-full"
-                defaultValue={guestAdultsInputValue}
-                onChange={(value) => handleChangeData(value, "guestAdults")}
-                max={10}
+            <Popover.Panel className="absolute right-0 z-10 w-full sm:min-w-[300px] max-w-xs bg-white dark:bg-neutral-800 top-full mt-3 px-5 py-4 rounded-3xl shadow-xl">
+              <Stepper
+                label="Guests"
+                value={guests}
                 min={1}
-                label="Adults"
-                desc="Ages 13 or above"
+                max={20}
+                onChange={setGuests}
               />
-              <NcInputNumber
-                className="w-full mt-6"
-                defaultValue={guestChildrenInputValue}
-                onChange={(value) => handleChangeData(value, "guestChildren")}
-                max={4}
-                label="Children"
-                desc="Ages 2–12"
+              <Stepper
+                label="Bedrooms"
+                value={bedrooms}
+                min={0}
+                max={10}
+                onChange={setBedrooms}
               />
-
-              <NcInputNumber
-                className="w-full mt-6"
-                defaultValue={guestInfantsInputValue}
-                onChange={(value) => handleChangeData(value, "guestInfants")}
-                max={4}
-                label="Infants"
-                desc="Ages 0–2"
+              <Stepper
+                label="Bathrooms"
+                value={bathrooms}
+                min={0}
+                max={10}
+                onChange={setBathrooms}
               />
             </Popover.Panel>
           </Transition>
