@@ -26,13 +26,14 @@
 
 // export default ExperiencesSearchForm;
 
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
 import LocationInput from "../LocationInput";
 import GuestsInput from "../GuestsInput";
 import ExperiencesDateSingleInput from "./ExperiencesDateSingleInput";
 import { SearchInputContext, SearchInputProvider } from "@/context/SearchInput";
 import { useMedia } from "react-use";
-
+import MonthlyWhenInput from "../(monthly-toggle-form)/MonthlyWhenInput";
+import { MonthlyStayDate } from "../(monthly-toggle-form)/MonthlyMonthPicker";
 export interface ExperiencesSearchFormProps {
   rentalType?: string;
   formClassName?: string;
@@ -46,6 +47,10 @@ const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({
   monthlyStays = true,
   onMonthlyStaysChange,
 }) => {
+
+  const [monthlyStayDates, setMonthlyStayDates] = useState<MonthlyStayDate[]>(
+    [],
+  );
   const isMobile = useMedia("(max-width: 640px)", true);
   const renderForm = () => {
 
@@ -57,10 +62,15 @@ const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({
           >
             <LocationInput className="flex-[1.5]" />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
-            <ExperiencesDateSingleInput className="flex-1" />
+            {/* <ExperiencesDateSingleInput className="flex-1" /> */}
+            <MonthlyWhenInput
+            className="flex-1"
+            value={monthlyStayDates}
+            onChange={setMonthlyStayDates}
+          />
             {/* <div className="self-center border-r border-slate-200 dark:border-slate-700 h-8"></div> */}
             <GuestsInput
-              className="flex-1"
+              className="flex-[1.5]"
               rentalType={rentalType}
               monthlyStays={monthlyStays}
               onMonthlyStaysChange={onMonthlyStaysChange}
@@ -77,10 +87,14 @@ const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({
         >
           <LocationInput className="flex-[1.5]" />
           <div className="self-center h-10 w-px bg-neutral-200/80 dark:bg-neutral-700" />
-          <ExperiencesDateSingleInput className="flex-1" />
+          <MonthlyWhenInput
+            className="flex-1"
+            value={monthlyStayDates}
+            onChange={setMonthlyStayDates}
+          />
           <div className="self-center h-10 w-px bg-neutral-200/80 dark:bg-neutral-700" />
           <GuestsInput
-            className="flex-1"
+            className="flex-[1.5]"
             rentalType={rentalType}
             monthlyStays={monthlyStays}
             onMonthlyStaysChange={onMonthlyStaysChange}
