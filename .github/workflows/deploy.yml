@@ -58,12 +58,37 @@ jobs:
             REPO_URL="https://github.com/ZairoDev/VacationSaga.git"
             DEPLOY_BRANCH="main"
 
+            # Robust delete: chmod then rm -rf; never abort the script on cleanup alone.
+            safe_rm() {
+              local target="$1"
+              if [ ! -e "${target}" ]; then
+                return 0
+              fi
+              sudo chmod -R u+w "${target}" 2>/dev/null || true
+              sudo rm -rf "${target}" 2>/dev/null || true
+              if [ -e "${target}" ]; then
+                echo "WARN: could not fully remove ${target}; forcing with find"
+                sudo find "${target}" -mindepth 1 -delete 2>/dev/null || true
+                sudo rm -rf "${target}" 2>/dev/null || true
+              fi
+              if [ -e "${target}" ]; then
+                echo "WARN: ${target} still exists after cleanup"
+              fi
+            }
+
+            fail_and_cleanup() {
+              local msg="$1"
+              echo "::error::${msg}"
+              safe_rm "${NEW_BUILD_DIR}"
+              exit 1
+            }
+
             echo "Current status:"
             pm2 list | grep "${PM2_APP_NAME}" || echo "App not running"
 
             echo ""
             echo "Preparing new build..."
-            sudo rm -rf "${NEW_BUILD_DIR}"
+            safe_rm "${NEW_BUILD_DIR}"
             sudo mkdir -p "${NEW_BUILD_DIR}"
             sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
 
@@ -83,18 +108,19 @@ jobs:
 
             echo ""
             echo "Installing dependencies..."
-            npm ci || { echo "Install failed"; sudo rm -rf "${NEW_BUILD_DIR}"; exit 1; }
+            npm ci || fail_and_cleanup "Install failed (npm ci)"
 
             echo ""
             echo "Building..."
             export NEXT_TELEMETRY_DISABLED=1
             sudo rm -rf .next
-            npm run build || { echo "Build failed"; sudo rm -rf "${NEW_BUILD_DIR}"; exit 1; }
+            # Keep full build logs; on failure print a clear marker before cleanup.
+            if ! npm run build; then
+              fail_and_cleanup "Build failed (npm run build). Scroll up for Next.js / TypeScript errors."
+            fi
 
             if [ ! -d ".next" ]; then
-              echo "Build output missing (.next)"
-              sudo rm -rf "${NEW_BUILD_DIR}"
-              exit 1
+              fail_and_cleanup "Build output missing (.next)"
             fi
 
             sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
@@ -102,10 +128,9 @@ jobs:
 
             echo ""
             echo "Swapping release..."
-            # Keep previous process until swap; restart after files are in place.
             pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
 
-            sudo rm -rf "${TEMP_OLD}"
+            safe_rm "${TEMP_OLD}"
             sudo mv "${DEPLOY_DIR}" "${TEMP_OLD}" 2>/dev/null || true
             sudo mv "${NEW_BUILD_DIR}" "${DEPLOY_DIR}"
             sudo chown -R jenkins:jenkins "${DEPLOY_DIR}"
@@ -127,7 +152,6 @@ jobs:
               sleep 10
               if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
                 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APP_PORT}/" || echo "000")
-                # Accept 2xx/3xx as healthy (redirects are OK for Next apps).
                 case "${HTTP_CODE}" in
                   2*|3*) HEALTH_OK=true ;;
                 esac
@@ -135,13 +159,13 @@ jobs:
             fi
 
             if [ "${HEALTH_OK}" = false ]; then
-              echo "Health check failed (PM2 or HTTP ${HTTP_CODE} on port ${APP_PORT})"
+              echo "::error::Health check failed (PM2 or HTTP ${HTTP_CODE} on port ${APP_PORT})"
               pm2 logs "${PM2_APP_NAME}" --lines 50 --nostream || true
 
               if [ -d "${TEMP_OLD}" ]; then
                 echo "Rolling back to previous release..."
                 pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
-                sudo rm -rf "${DEPLOY_DIR}"
+                safe_rm "${DEPLOY_DIR}"
                 sudo mv "${TEMP_OLD}" "${DEPLOY_DIR}"
                 cd "${DEPLOY_DIR}"
                 export PORT="${APP_PORT}"
@@ -154,7 +178,7 @@ jobs:
 
             echo ""
             echo "Cleaning up previous release..."
-            sudo rm -rf "${TEMP_OLD}"
+            safe_rm "${TEMP_OLD}"
 
             echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
