@@ -156,6 +156,9 @@ jobs:
             echo ""
             echo "Swapping release..."
             pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+            # Kill any orphaned process still holding APP_PORT (e.g. from old lowercase path).
+            fuser -k ${APP_PORT}/tcp 2>/dev/null || true
+            sleep 2
 
             safe_rm "${TEMP_OLD}"
             sudo mv "${DEPLOY_DIR}" "${TEMP_OLD}" 2>/dev/null || true
