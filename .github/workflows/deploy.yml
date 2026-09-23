@@ -125,8 +125,8 @@ jobs:
             echo ""
             echo "Building..."
             export NEXT_TELEMETRY_DISABLED=1
-            # Cap Node heap so the Linux OOM killer is less likely mid-build.
-            export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=1536"
+            # Next.js needs >1.5GB heap; VPS has ~8GB RAM — use 4GB and keep swap as backup.
+            export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=4096"
             sudo rm -rf .next
             # Keep full build logs; on failure print a clear marker before cleanup.
             if ! npm run build; then
