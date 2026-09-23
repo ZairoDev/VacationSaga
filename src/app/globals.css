@@ -83,3 +83,115 @@
     animation: none;
   }
 }
+
+
+/* ─── Google Maps Places Autocomplete — Modern UI ─────────────────────────── */
+
+/* Dropdown card */
+.pac-container {
+  margin-top: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.14),
+              0 8px 24px -6px rgba(0, 0, 0, 0.07);
+  padding: 8px;
+  background: #ffffff;
+  font-family: inherit;
+  overflow: hidden;
+}
+
+/* Hide "powered by Google" footer */
+.pac-container::after {
+  display: none !important;
+  height: 0 !important;
+}
+
+/* Each suggestion row */
+.pac-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background: #fff4e8;
+}
+
+/* Hide Google's sprite icon completely */
+.pac-icon {
+  display: none !important;
+}
+
+/* Inject a custom map-pin SVG icon via ::before on each row */
+.pac-item::before {
+  content: "";
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background-color: #f3f4f6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F7951D' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 13-8 13S4 16 4 10a8 8 0 1 1 16 0Z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+  background-size: 18px 18px;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-right: 12px;
+}
+
+/* Primary text (place name) */
+.pac-item-query {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  padding-right: 0;
+  display: block;
+}
+
+/* Matched typed characters — brand orange */
+.pac-matched {
+  color: #F7951D;
+  font-weight: 700;
+}
+
+/* Secondary text (city, region etc.) */
+.pac-item > span:not(.pac-icon):not(.pac-item-query) {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-left: 4px;
+}
+
+/* dark mode (class-based, matching your app's darkMode: "class") */
+.dark .pac-container {
+  background: #1f2937;
+  border-color: #374151;
+  box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.5);
+}
+
+.dark .pac-item {
+  color: #d1d5db;
+}
+
+.dark .pac-item:hover,
+.dark .pac-item-selected {
+  background: #374151;
+}
+
+.dark .pac-item::before {
+  background-color: #374151;
+}
+
+.dark .pac-item-query {
+  color: #f9fafb;
+}
+
+.dark .pac-item > span:not(.pac-icon):not(.pac-item-query) {
+  color: #6b7280;
+}
