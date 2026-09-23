@@ -50,8 +50,8 @@ jobs:
             echo "Starting deployment"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            DEPLOY_DIR="/var/www/vacationsaga"
-            NEW_BUILD_DIR="/var/www/vacationsaga_new_build"
+            DEPLOY_DIR="/var/www/VacationSaga"
+            NEW_BUILD_DIR="/var/www/VacationSaga_new_build"
             TEMP_OLD="${DEPLOY_DIR}_old"
             PM2_APP_NAME="vacationsaga"
             APP_PORT=3002
