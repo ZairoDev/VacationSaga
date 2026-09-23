@@ -1,17 +1,40 @@
 name: Deploy to VPS (Zero-Downtime)
 
 on:
-  push:
+  # Deploy only after CI succeeds on main (avoids shipping broken builds).
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Manual runs always allowed; workflow_run only when CI succeeded.
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
 
     steps:
+      - name: Verify deploy secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          missing=0
+          [ -z "$VPS_HOST" ] && echo "::error::Missing secret VPS_HOST" && missing=1
+          [ -z "$VPS_USERNAME" ] && echo "::error::Missing secret VPS_USERNAME" && missing=1
+          [ -z "$VPS_SSH_KEY" ] && echo "::error::Missing secret VPS_SSH_KEY" && missing=1
+          exit $missing
+
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
@@ -19,30 +42,32 @@ jobs:
           port: 22
           command_timeout: 30m
           script: |
-            set -e
+            set -euo pipefail
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "Starting zero-downtime deployment"
+            echo "Starting deployment"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
             DEPLOY_DIR="/var/www/vacationsaga"
             NEW_BUILD_DIR="/var/www/vacationsaga_new_build"
+            TEMP_OLD="${DEPLOY_DIR}_old"
             PM2_APP_NAME="vacationsaga"
             APP_PORT=3002
             REPO_URL="https://github.com/ZairoDev/VacationSaga.git"
+            DEPLOY_BRANCH="main"
 
             echo "Current status:"
-            pm2 list | grep ${PM2_APP_NAME} || echo "App not running"
+            pm2 list | grep "${PM2_APP_NAME}" || echo "App not running"
 
             echo ""
             echo "Preparing new build..."
-            sudo rm -rf ${NEW_BUILD_DIR}
-            sudo mkdir -p ${NEW_BUILD_DIR}
-            sudo chown -R jenkins:jenkins ${NEW_BUILD_DIR}
+            sudo rm -rf "${NEW_BUILD_DIR}"
+            sudo mkdir -p "${NEW_BUILD_DIR}"
+            sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
 
-            cd ${NEW_BUILD_DIR}
-            git clone --depth 1 --branch main ${REPO_URL} .
-            sudo chown -R jenkins:jenkins ${NEW_BUILD_DIR}
+            cd "${NEW_BUILD_DIR}"
+            git clone --depth 1 --branch "${DEPLOY_BRANCH}" "${REPO_URL}" .
+            sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
 
             if [ -f "${DEPLOY_DIR}/.env.production" ]; then
               cp "${DEPLOY_DIR}/.env.production" .
@@ -56,34 +81,35 @@ jobs:
 
             echo ""
             echo "Installing dependencies..."
-            npm ci || { echo "Install failed"; sudo rm -rf ${NEW_BUILD_DIR}; exit 1; }
+            npm ci || { echo "Install failed"; sudo rm -rf "${NEW_BUILD_DIR}"; exit 1; }
 
             echo ""
             echo "Building..."
+            export NEXT_TELEMETRY_DISABLED=1
             sudo rm -rf .next
-            npm run build || { echo "Build failed"; sudo rm -rf ${NEW_BUILD_DIR}; exit 1; }
+            npm run build || { echo "Build failed"; sudo rm -rf "${NEW_BUILD_DIR}"; exit 1; }
 
             if [ ! -d ".next" ]; then
               echo "Build output missing (.next)"
-              sudo rm -rf ${NEW_BUILD_DIR}
+              sudo rm -rf "${NEW_BUILD_DIR}"
               exit 1
             fi
 
-            sudo chown -R jenkins:jenkins ${NEW_BUILD_DIR}
+            sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
             echo "Build size: $(du -sh .next | cut -f1)"
 
             echo ""
             echo "Swapping release..."
-            pm2 delete ${PM2_APP_NAME} 2>/dev/null || true
+            # Keep previous process until swap; restart after files are in place.
+            pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
 
-            TEMP_OLD="${DEPLOY_DIR}_old"
-            sudo rm -rf ${TEMP_OLD}
-            sudo mv ${DEPLOY_DIR} ${TEMP_OLD} 2>/dev/null || true
-            sudo mv ${NEW_BUILD_DIR} ${DEPLOY_DIR}
-            sudo chown -R jenkins:jenkins ${DEPLOY_DIR}
+            sudo rm -rf "${TEMP_OLD}"
+            sudo mv "${DEPLOY_DIR}" "${TEMP_OLD}" 2>/dev/null || true
+            sudo mv "${NEW_BUILD_DIR}" "${DEPLOY_DIR}"
+            sudo chown -R jenkins:jenkins "${DEPLOY_DIR}"
 
-            cd ${DEPLOY_DIR}
-            pm2 start npm --name ${PM2_APP_NAME} --update-env -- start
+            cd "${DEPLOY_DIR}"
+            pm2 start npm --name "${PM2_APP_NAME}" --update-env -- start
             pm2 save
 
             echo ""
@@ -91,29 +117,43 @@ jobs:
             sleep 15
 
             HEALTH_OK=false
+            HTTP_CODE="000"
 
-            if pm2 describe ${PM2_APP_NAME} | grep -q "status.*online"; then
+            if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
               sleep 10
-              if pm2 describe ${PM2_APP_NAME} | grep -q "status.*online"; then
-                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APP_PORT}" || echo "000")
-                if [ "${HTTP_CODE}" != "000" ]; then
-                  HEALTH_OK=true
-                fi
+              if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APP_PORT}/" || echo "000")
+                # Accept 2xx/3xx as healthy (redirects are OK for Next apps).
+                case "${HTTP_CODE}" in
+                  2*|3*) HEALTH_OK=true ;;
+                esac
               fi
             fi
 
             if [ "${HEALTH_OK}" = false ]; then
-              echo "Health check failed (PM2 or HTTP on port ${APP_PORT})"
+              echo "Health check failed (PM2 or HTTP ${HTTP_CODE} on port ${APP_PORT})"
+              pm2 logs "${PM2_APP_NAME}" --lines 50 --nostream || true
+
+              if [ -d "${TEMP_OLD}" ]; then
+                echo "Rolling back to previous release..."
+                pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+                sudo rm -rf "${DEPLOY_DIR}"
+                sudo mv "${TEMP_OLD}" "${DEPLOY_DIR}"
+                cd "${DEPLOY_DIR}"
+                pm2 start npm --name "${PM2_APP_NAME}" --update-env -- start
+                pm2 save
+                echo "Rollback complete"
+              fi
               exit 1
             fi
 
             echo ""
             echo "Cleaning up previous release..."
-            sudo rm -rf ${TEMP_OLD}
+            sudo rm -rf "${TEMP_OLD}"
 
             echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "Deployment successful"
+            echo "Deployment successful (HTTP ${HTTP_CODE})"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "Time: $(date)"
             pm2 list

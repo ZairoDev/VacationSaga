@@ -34,4 +34,4 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+# next-env.d.ts is committed so CI typecheck gets Next image module types
