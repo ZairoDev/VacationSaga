@@ -24,7 +24,7 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "" }) => {
       {/* Full-bleed hero background */}
       <div className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden">
         <div
-          className="relative min-h-[520px] sm:min-h-[600px] lg:min-h-[680px] bg-[url('/daylight.png')] dark:bg-[url('/night.png')] bg-cover bg-center"
+          className="relative min-h-[520px] sm:min-h-[600px] lg:min-h-[680px] bg-[url('/hero_image_mobile_version.png')] sm:bg-[url('/daylight.png')] dark:bg-[url('/night.png')] sm:dark:bg-[url('/night.png')] bg-cover bg-center"
         >
           {/* Overlay for readability */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-black/10" />
@@ -71,10 +71,10 @@ const SectionHero: FC<SectionHeroProps> = ({ className = "" }) => {
       </div>
 
       {/* Search bar overlaps hero (half in photo, half out) */}
-      <div className="relative z-30 -mt-10 sm:-mt-12 lg:-mt-16">
-        <div className="container">
+      <div className="relative z-30 -mt-12 lg:-mt-16">
+        <div className="px-0 sm:px-4 sm:container">
           <div className="mx-auto w-full max-w-6xl">
-            <HeroSearchForm className="px-2 sm:px-0" formClassName="mt-0" defaultMonthlyStays />
+            <HeroSearchForm className="sm:px-0" formClassName="mt-0" defaultMonthlyStays />
           </div>
         </div>
       </div>

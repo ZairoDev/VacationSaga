@@ -1,7 +1,12 @@
 export interface GuestsObject {
+  // Short-stay / flight guest pickers
   guestAdults?: number;
   guestChildren?: number;
   guestInfants?: number;
+  // Monthly / rooms filters (HeroSearchForm)
+  guests?: number;
+  bedrooms?: number;
+  bathrooms?: number;
 }
 
 export type StaySearchFormFields = "location" | "guests" | "dates";
