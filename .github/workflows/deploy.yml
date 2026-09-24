@@ -58,7 +58,10 @@ jobs:
             REPO_URL="https://github.com/ZairoDev/VacationSaga.git"
             DEPLOY_BRANCH="main"
 
-            # Robust delete: chmod then rm -rf; never abort the script on cleanup alone.
+            # ---------------------------------------------------------
+            # Helper functions
+            # ---------------------------------------------------------
+
             safe_rm() {
               local target="$1"
               if [ ! -e "${target}" ]; then
@@ -83,8 +86,33 @@ jobs:
               exit 1
             }
 
+            # ---------------------------------------------------------
+            # Initial status
+            # ---------------------------------------------------------
+
+            echo ""
             echo "Current status:"
             pm2 list | grep "${PM2_APP_NAME}" || echo "App not running"
+
+            echo ""
+            echo "Current port status:"
+            echo "APP_PORT=${APP_PORT}"
+
+            echo "--- Processes listening on port ${APP_PORT} ---"
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+              echo "No process currently listening on port ${APP_PORT}"
+
+            echo "--- Port owner using fuser ---"
+            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
+              echo "No process currently owns port ${APP_PORT}"
+
+            echo ""
+            echo "Current Node processes:"
+            ps -ef | grep '[n]ode' || echo "No Node processes found"
+
+            # ---------------------------------------------------------
+            # Prepare new build
+            # ---------------------------------------------------------
 
             echo ""
             echo "Preparing new build..."
@@ -93,10 +121,17 @@ jobs:
             sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
 
             cd "${NEW_BUILD_DIR}"
-            git clone --depth 1 --branch "${DEPLOY_BRANCH}" "${REPO_URL}" .
+            git clone \
+              --depth 1 \
+              --branch "${DEPLOY_BRANCH}" \
+              "${REPO_URL}" .
+
             sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
 
-            # Next build loads .env / .env.local / .env.production — copy all from live release.
+            # ---------------------------------------------------------
+            # Copy environment files
+            # ---------------------------------------------------------
+
             echo ""
             echo "Copying env files from live release..."
             for envfile in .env .env.local .env.production .env.production.local; do
@@ -114,20 +149,37 @@ jobs:
               echo "  created .env.local from .env"
             fi
 
-            # Fail fast: next build prerenders some API routes and needs MONGO_DB_URL.
-            if ! grep -qhE '^[[:space:]]*MONGO_DB_URL=.+' .env .env.local .env.production .env.production.local 2>/dev/null; then
-              fail_and_cleanup "MONGO_DB_URL missing. Put it in ${DEPLOY_DIR}/.env.production (or .env / .env.local) on the VPS, then re-run Deploy."
+            # ---------------------------------------------------------
+            # Verify required environment variable
+            # ---------------------------------------------------------
+
+            if ! grep -qhE \
+              '^[[:space:]]*MONGO_DB_URL=.+' \
+              .env .env.local .env.production .env.production.local \
+              2>/dev/null
+            then
+              fail_and_cleanup \
+                "MONGO_DB_URL missing. Put it in ${DEPLOY_DIR}/.env.production (or .env / .env.local) on the VPS, then re-run Deploy."
             fi
+
+            # ---------------------------------------------------------
+            # Install dependencies
+            # ---------------------------------------------------------
 
             echo ""
             echo "Installing dependencies..."
             npm ci || fail_and_cleanup "Install failed (npm ci)"
 
+            # ---------------------------------------------------------
+            # Ensure swap
+            # ---------------------------------------------------------
+
             echo ""
             echo "Ensuring swap (Next.js builds need RAM; OOM shows as 'Killed')..."
             if ! swapon --show | grep -q .; then
               if [ ! -f /swapfile ]; then
-                sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+                sudo fallocate -l 2G /swapfile || \
+                  sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
                 sudo chmod 600 /swapfile
                 sudo mkswap /swapfile
               fi
@@ -135,15 +187,19 @@ jobs:
             fi
             free -h || true
 
+            # ---------------------------------------------------------
+            # Build
+            # ---------------------------------------------------------
+
             echo ""
             echo "Building..."
             export NEXT_TELEMETRY_DISABLED=1
-            # Next.js needs >1.5GB heap; VPS has ~8GB RAM — use 4GB and keep swap as backup.
+            # Next.js needs >1.5GB heap; VPS has ~8GB RAM.
             export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=4096"
             sudo rm -rf .next
-            # Keep full build logs; on failure print a clear marker before cleanup.
             if ! npm run build; then
-              fail_and_cleanup "Build failed (npm run build). Check above for MONGO_DB_URL / Killed / Type errors."
+              fail_and_cleanup \
+                "Build failed (npm run build). Check above for MONGO_DB_URL / Killed / Type errors."
             fi
 
             if [ ! -d ".next" ]; then
@@ -151,22 +207,185 @@ jobs:
             fi
 
             sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
+
             echo "Build size: $(du -sh .next | cut -f1)"
+
+            # ---------------------------------------------------------
+            # PRE-SWAP DIAGNOSTICS
+            # ---------------------------------------------------------
+
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "PRE-SWAP PORT / PM2 DIAGNOSTICS"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            echo "APP_PORT=${APP_PORT}"
+            echo "PM2_APP_NAME=${PM2_APP_NAME}"
+            echo "DEPLOY_DIR=${DEPLOY_DIR}"
+            echo "NEW_BUILD_DIR=${NEW_BUILD_DIR}"
+            echo "TEMP_OLD=${TEMP_OLD}"
+
+            echo ""
+            echo "--- PM2 application ---"
+            pm2 describe "${PM2_APP_NAME}" 2>/dev/null || \
+              echo "PM2 app ${PM2_APP_NAME} does not currently exist"
+
+            echo ""
+            echo "--- Port ${APP_PORT} before PM2 delete ---"
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+              echo "Nothing listening on port ${APP_PORT}"
+
+            echo ""
+            echo "--- Port owner before PM2 delete ---"
+            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
+              echo "No process owns port ${APP_PORT}"
+
+            echo ""
+            echo "--- Node processes before PM2 delete ---"
+            ps -ef | grep '[n]ode' || \
+              echo "No Node processes found"
+
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            # ---------------------------------------------------------
+            # Stop current PM2 application
+            # ---------------------------------------------------------
+
+            echo ""
+            echo "Stopping current PM2 application..."
+            pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+            sleep 2
+
+            # ---------------------------------------------------------
+            # DIAGNOSTICS AFTER PM2 DELETE
+            # ---------------------------------------------------------
+
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "POST-PM2-DELETE PORT DIAGNOSTICS"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            echo "--- PM2 list ---"
+            pm2 list | grep "${PM2_APP_NAME}" || \
+              echo "PM2 app ${PM2_APP_NAME} is no longer registered"
+
+            echo ""
+            echo "--- Port ${APP_PORT} after PM2 delete ---"
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+              echo "Nothing listening on port ${APP_PORT}"
+
+            echo ""
+            echo "--- Port owner after PM2 delete ---"
+            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
+              echo "No process owns port ${APP_PORT}"
+
+            echo ""
+            echo "--- Node processes after PM2 delete ---"
+            ps -ef | grep '[n]ode' || \
+              echo "No Node processes found"
+
+            # ---------------------------------------------------------
+            # Kill orphaned process holding application port
+            #
+            # This is intentionally logged before and after so the next
+            # deployment tells us exactly what was occupying APP_PORT.
+            # ---------------------------------------------------------
+
+            echo ""
+            echo "Checking for orphaned process on port ${APP_PORT}..."
+
+            if sudo fuser -v "${APP_PORT}/tcp" 2>&1 | grep -q .; then
+              echo "WARNING: Something is still holding port ${APP_PORT}."
+              echo "Attempting to release port ${APP_PORT}..."
+
+              sudo fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
+
+              sleep 2
+            else
+              echo "Port ${APP_PORT} is already free."
+            fi
+
+            echo ""
+            echo "--- Port ${APP_PORT} after orphan cleanup ---"
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+              echo "Port ${APP_PORT} is free"
+
+            echo ""
+            echo "--- Port owner after orphan cleanup ---"
+            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
+              echo "No process owns port ${APP_PORT}"
+
+            # ---------------------------------------------------------
+            # Swap release directories
+            # ---------------------------------------------------------
 
             echo ""
             echo "Swapping release..."
-            pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
 
             safe_rm "${TEMP_OLD}"
+
             sudo mv "${DEPLOY_DIR}" "${TEMP_OLD}" 2>/dev/null || true
+
             sudo mv "${NEW_BUILD_DIR}" "${DEPLOY_DIR}"
+
             sudo chown -R jenkins:jenkins "${DEPLOY_DIR}"
 
+            # ---------------------------------------------------------
+            # Start new release
+            # ---------------------------------------------------------
+
             cd "${DEPLOY_DIR}"
+
             export PORT="${APP_PORT}"
-            # next start defaults to 3000 unless -p / PORT is set; health check uses APP_PORT.
-            pm2 start npm --name "${PM2_APP_NAME}" --update-env -- start -- -p "${APP_PORT}"
+
+            echo ""
+            echo "Starting new release..."
+            echo "PM2_APP_NAME=${PM2_APP_NAME}"
+            echo "APP_PORT=${APP_PORT}"
+            echo "PORT=${PORT}"
+            echo "DEPLOY_DIR=${DEPLOY_DIR}"
+
+            pm2 start npm \
+              --name "${PM2_APP_NAME}" \
+              --update-env \
+              -- start -- -p "${APP_PORT}"
+
             pm2 save
+
+            # ---------------------------------------------------------
+            # POST-START DIAGNOSTICS
+            # ---------------------------------------------------------
+
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "POST-START DIAGNOSTICS"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            echo "--- PM2 status ---"
+            pm2 describe "${PM2_APP_NAME}" || true
+
+            echo ""
+            echo "--- Port ${APP_PORT} after start ---"
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+              echo "Nothing listening on port ${APP_PORT}"
+
+            echo ""
+            echo "--- Port owner after start ---"
+            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
+              echo "No process owns port ${APP_PORT}"
+
+            echo ""
+            echo "--- Node processes after start ---"
+            ps -ef | grep '[n]ode' || \
+              echo "No Node processes found"
+
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            # ---------------------------------------------------------
+            # Health check
+            # ---------------------------------------------------------
 
             echo ""
             echo "Health check..."
@@ -178,39 +397,115 @@ jobs:
             if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
               sleep 10
               if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
-                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${APP_PORT}/" || echo "000")
+                HTTP_CODE=$(
+                  curl \
+                    -s \
+                    -o /dev/null \
+                    -w "%{http_code}" \
+                    "http://localhost:${APP_PORT}/" ||
+                  echo "000"
+                )
+
                 case "${HTTP_CODE}" in
-                  2*|3*) HEALTH_OK=true ;;
+                  2*|3*)
+                    HEALTH_OK=true
+                    ;;
                 esac
               fi
             fi
 
+            # ---------------------------------------------------------
+            # Health check failure
+            # ---------------------------------------------------------
+
             if [ "${HEALTH_OK}" = false ]; then
+
               echo "::error::Health check failed (PM2 or HTTP ${HTTP_CODE} on port ${APP_PORT})"
+
+              echo ""
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "HEALTH CHECK FAILURE DIAGNOSTICS"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+              echo "--- PM2 status ---"
+              pm2 describe "${PM2_APP_NAME}" || true
+
+              echo ""
+              echo "--- Port ${APP_PORT} ---"
+              sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+                echo "Nothing listening on port ${APP_PORT}"
+
+              echo ""
+              echo "--- Port owner ---"
+              sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
+                echo "No process owns port ${APP_PORT}"
+
+              echo ""
+              echo "--- Node processes ---"
+              ps -ef | grep '[n]ode' || \
+                echo "No Node processes found"
+
+              echo ""
+              echo "--- PM2 logs ---"
               pm2 logs "${PM2_APP_NAME}" --lines 50 --nostream || true
 
+              echo ""
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+              # -------------------------------------------------------
+              # Rollback
+              # -------------------------------------------------------
+
               if [ -d "${TEMP_OLD}" ]; then
+
+                echo ""
                 echo "Rolling back to previous release..."
                 pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
                 safe_rm "${DEPLOY_DIR}"
                 sudo mv "${TEMP_OLD}" "${DEPLOY_DIR}"
                 cd "${DEPLOY_DIR}"
                 export PORT="${APP_PORT}"
-                pm2 start npm --name "${PM2_APP_NAME}" --update-env -- start -- -p "${APP_PORT}"
+
+                pm2 start npm \
+                  --name "${PM2_APP_NAME}" \
+                  --update-env \
+                  -- start -- -p "${APP_PORT}"
+
                 pm2 save
+
                 echo "Rollback complete"
+
+              else
+                echo "WARNING: No previous release found. Cannot rollback."
               fi
+
               exit 1
             fi
 
+            # ---------------------------------------------------------
+            # Successful deployment
+            # ---------------------------------------------------------
+
             echo ""
             echo "Cleaning up previous release..."
+
             safe_rm "${TEMP_OLD}"
 
             echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "Deployment successful (HTTP ${HTTP_CODE})"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
             echo "Time: $(date)"
+
+            echo ""
+            echo "Final PM2 status:"
             pm2 list
+
+            echo ""
+            echo "Final port status:"
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
+              echo "WARNING: Nothing listening on port ${APP_PORT}"
+
+            echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
