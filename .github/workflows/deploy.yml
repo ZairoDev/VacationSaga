@@ -154,7 +154,7 @@ jobs:
             echo "::error::MONGO_DB_URL missing in fetched VPS env. Put it in /var/www/VacationSaga/.env.production on the VPS, then re-run Deploy."
             exit 1
           fi
-          echo "MONGO_DB_URL is present in production env"
+          echo "MONGO_DB_URL is present in production env."
 
       - name: Install dependencies
         run: npm ci
