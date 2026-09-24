@@ -8,501 +8,457 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Newest deploy wins; cancel an older in-progress deploy.
 concurrency:
-  group: deploy-vps
-  cancel-in-progress: false
+  group: deploy-production
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    # Use Environment secrets (Settings → Environments → Production).
+    timeout-minutes: 30
+    # Environment secrets (Settings → Environments → Production).
     environment: Production
-    # Manual runs always allowed; workflow_run only when CI succeeded.
     if: >
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
 
     steps:
-      - name: Verify deploy secrets
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USERNAME: ${{ secrets.VPS_USERNAME }}
-          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-        run: |
-          missing=0
-          [ -z "$VPS_HOST" ] && echo "::error::Missing secret VPS_HOST" && missing=1
-          [ -z "$VPS_USERNAME" ] && echo "::error::Missing secret VPS_USERNAME" && missing=1
-          [ -z "$VPS_SSH_KEY" ] && echo "::error::Missing secret VPS_SSH_KEY" && missing=1
-          exit $missing
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # workflow_run: deploy the commit CI actually built.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Deploy to VPS
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Configure SSH
+        run: |
+          set -euo pipefail
+
+          log() { echo "[ssh-setup] $*"; }
+          fail() { echo "[ssh-setup] ERROR: $*" >&2; exit 1; }
+
+          log "=== SSH setup diagnostics ==="
+
+          VPS_HOST="${{ secrets.VPS_HOST }}"
+          VPS_USER="${{ secrets.VPS_USERNAME }}"
+          VPS_KEY="${{ secrets.VPS_SSH_KEY }}"
+
+          if [ -z "${VPS_HOST}" ]; then fail "VPS_HOST secret is missing or empty"; fi
+          if [ -z "${VPS_USER}" ]; then fail "VPS_USERNAME secret is missing or empty"; fi
+          if [ -z "${VPS_KEY}" ]; then fail "VPS_SSH_KEY secret is missing or empty"; fi
+
+          log "Target host: ${VPS_HOST}"
+          log "Target user: ${VPS_USER}"
+          log "SSH port: 22"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # printf preserves PEM/OpenSSH key newlines (echo can corrupt keys).
+          printf '%s\n' "${VPS_KEY}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          if ssh-keygen -l -f ~/.ssh/deploy_key >/tmp/key_info 2>&1; then
+            log "Deploy key loaded: $(head -1 /tmp/key_info)"
+          else
+            cat /tmp/key_info >&2
+            fail "VPS_SSH_KEY is invalid or malformed"
+          fi
+
+          log "--- DNS lookup ---"
+          getent hosts "${VPS_HOST}" 2>&1 || true
+          host "${VPS_HOST}" 2>&1 || true
+
+          log "--- TCP reachability (port 22) ---"
+          PORT_OK=false
+          if command -v nc >/dev/null 2>&1; then
+            if nc -z -w 15 "${VPS_HOST}" 22; then
+              PORT_OK=true
+              log "Port 22 is reachable from GitHub runner"
+            else
+              log "Port 22 is NOT reachable from GitHub runner (timeout/refused/filtered)"
+            fi
+          elif timeout 15 bash -c "echo > /dev/tcp/${VPS_HOST}/22" 2>/dev/null; then
+            PORT_OK=true
+            log "Port 22 is reachable from GitHub runner"
+          else
+            log "Could not verify port 22 (nc unavailable and /dev/tcp check failed)"
+          fi
+
+          if [ "${PORT_OK}" = false ]; then
+            fail "Cannot reach ${VPS_HOST}:22 — check VPS firewall, security group, and that sshd is listening"
+          fi
+
+          log "--- Host key collection (ssh-keyscan) ---"
+          if ssh-keyscan -T 15 -p 22 -H "${VPS_HOST}" >> ~/.ssh/known_hosts 2>/tmp/keyscan.err; then
+            log "ssh-keyscan succeeded"
+          else
+            log "ssh-keyscan failed (non-fatal, using StrictHostKeyChecking=no):"
+            cat /tmp/keyscan.err >&2 || true
+          fi
+
+          log "--- SSH authentication test ---"
+          if ssh -i ~/.ssh/deploy_key \
+            -p 22 \
+            -o BatchMode=yes \
+            -o ConnectTimeout=20 \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o LogLevel=INFO \
+            "${VPS_USER}@${VPS_HOST}" \
+            "echo connected; hostname; whoami; pwd"; then
+            log "SSH authentication successful"
+          else
+            fail "SSH auth failed for ${VPS_USER}@${VPS_HOST} — verify VPS_SSH_KEY is in ~/.ssh/authorized_keys on the server"
+          fi
+
+          log "=== SSH setup complete ==="
+
+      - name: Fetch production env from VPS
+        run: |
+          set -euo pipefail
+
+          log() { echo "[fetch-env] $*"; }
+          fail() { echo "[fetch-env] ERROR: $*" >&2; exit 1; }
+
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=20 -o BatchMode=yes"
+          REMOTE="${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}"
+
+          log "Fetching production env from ${REMOTE}"
+
+          for REMOTE_ENV in \
+            /var/www/VacationSaga/.env.production \
+            /var/www/VacationSaga/.env.local \
+            /var/www/VacationSaga/.env; do
+            log "Trying ${REMOTE_ENV} ..."
+            if scp ${SSH_OPTS} "${REMOTE}:${REMOTE_ENV}" .env.production; then
+              cp .env.production .env.local
+              log "Using env from ${REMOTE_ENV}"
+              exit 0
+            fi
+            log "Not found or not readable: ${REMOTE_ENV}"
+          done
+
+          fail "Could not fetch .env.production / .env.local / .env from /var/www/VacationSaga on the VPS"
+
+      - name: Verify required env
+        run: |
+          set -euo pipefail
+          if ! grep -qhE '^[[:space:]]*MONGO_DB_URL=.+' .env.production .env.local 2>/dev/null; then
+            echo "::error::MONGO_DB_URL missing in fetched VPS env. Put it in /var/www/VacationSaga/.env.production on the VPS, then re-run Deploy."
+            exit 1
+          fi
+          echo "MONGO_DB_URL is present in production env"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Prepare production dependencies
+        run: |
+          rm -rf node_modules
+          npm ci --omit=dev
+
+      - name: Package release
+        run: |
+          set -euo pipefail
+
+          # Include only paths that exist (repo layout may omit optional files).
+          INCLUDE=(
+            .next
+            node_modules
+            public
+            src
+            package.json
+            package-lock.json
+            next.config.js
+            tsconfig.json
+            postcss.config.js
+            tailwind.config.js
+            components.json
+            next-env.d.ts
+          )
+
+          ARGS=()
+          for path in "${INCLUDE[@]}"; do
+            if [ -e "${path}" ]; then
+              ARGS+=("${path}")
+            else
+              echo "Skipping missing path: ${path}"
+            fi
+          done
+
+          tar -czf release.tar.gz \
+            --exclude='.next/cache' \
+            --exclude='node_modules/.cache' \
+            "${ARGS[@]}"
+
+          echo "Package size: $(du -h release.tar.gz | cut -f1)"
+
+      - name: Upload release to VPS
+        run: |
+          set -euo pipefail
+
+          log() { echo "[upload] $*"; }
+
+          RELEASE_ID="$(date -u +%Y%m%d_%H%M%S)_${GITHUB_SHA::7}"
+          echo "RELEASE_ID=${RELEASE_ID}" >> "${GITHUB_ENV}"
+
+          ARCHIVE_SIZE="$(du -h release.tar.gz | cut -f1)"
+          log "Uploading release ${RELEASE_ID} (${ARCHIVE_SIZE}) to VPS ..."
+
+          scp -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
+            -o BatchMode=yes \
+            release.tar.gz \
+            "${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/vacationsaga_${RELEASE_ID}.tar.gz"
+
+          log "Upload complete: /tmp/vacationsaga_${RELEASE_ID}.tar.gz"
+
+      - name: Activate release on VPS
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          RELEASE_ID: ${{ env.RELEASE_ID }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
-          command_timeout: 30m
+          command_timeout: 15m
+          script_stop: false
+          envs: RELEASE_ID
           script: |
             set -euo pipefail
 
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "Starting deployment"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
             DEPLOY_DIR="/var/www/VacationSaga"
-            NEW_BUILD_DIR="/var/www/VacationSaga_new_build"
-            TEMP_OLD="${DEPLOY_DIR}_old"
+            RELEASES_DIR="/var/www/VacationSaga_releases"
             PM2_APP_NAME="vacationsaga"
             APP_PORT=3002
-            REPO_URL="https://github.com/ZairoDev/VacationSaga.git"
-            DEPLOY_BRANCH="main"
+            ARCHIVE="/tmp/vacationsaga_${RELEASE_ID}.tar.gz"
+            NEW_RELEASE="${RELEASES_DIR}/${RELEASE_ID}"
+            RUN_USER="$(whoami)"
+            RUN_GROUP="$(id -gn)"
 
-            # ---------------------------------------------------------
-            # Helper functions
-            # ---------------------------------------------------------
-
-            safe_rm() {
-              local target="$1"
-              if [ ! -e "${target}" ]; then
-                return 0
-              fi
-              sudo chmod -R u+w "${target}" 2>/dev/null || true
-              sudo rm -rf "${target}" 2>/dev/null || true
-              if [ -e "${target}" ]; then
-                echo "WARN: could not fully remove ${target}; forcing with find"
-                sudo find "${target}" -mindepth 1 -delete 2>/dev/null || true
-                sudo rm -rf "${target}" 2>/dev/null || true
-              fi
-              if [ -e "${target}" ]; then
-                echo "WARN: ${target} still exists after cleanup"
-              fi
-            }
-
-            fail_and_cleanup() {
-              local msg="$1"
-              echo "::error::${msg}"
-              safe_rm "${NEW_BUILD_DIR}"
-              exit 1
-            }
-
-            # ---------------------------------------------------------
-            # Initial status
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Current status:"
-            pm2 list | grep "${PM2_APP_NAME}" || echo "App not running"
-
-            echo ""
-            echo "Current port status:"
-            echo "APP_PORT=${APP_PORT}"
-
-            echo "--- Processes listening on port ${APP_PORT} ---"
-            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-              echo "No process currently listening on port ${APP_PORT}"
-
-            echo "--- Port owner using fuser ---"
-            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
-              echo "No process currently owns port ${APP_PORT}"
-
-            echo ""
-            echo "Current Node processes:"
-            ps -ef | grep '[n]ode' || echo "No Node processes found"
-
-            # ---------------------------------------------------------
-            # Prepare new build
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Preparing new build..."
-            safe_rm "${NEW_BUILD_DIR}"
-            sudo mkdir -p "${NEW_BUILD_DIR}"
-            sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
-
-            cd "${NEW_BUILD_DIR}"
-            git clone \
-              --depth 1 \
-              --branch "${DEPLOY_BRANCH}" \
-              "${REPO_URL}" .
-
-            sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
-
-            # ---------------------------------------------------------
-            # Copy environment files
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Copying env files from live release..."
-            for envfile in .env .env.local .env.production .env.production.local; do
-              if [ -f "${DEPLOY_DIR}/${envfile}" ]; then
-                cp "${DEPLOY_DIR}/${envfile}" .
-                echo "  copied ${envfile}"
-              fi
-            done
-            if [ ! -f ".env.local" ] && [ -f ".env.production" ]; then
-              cp .env.production .env.local
-              echo "  created .env.local from .env.production"
-            fi
-            if [ ! -f ".env.local" ] && [ -f ".env" ]; then
-              cp .env .env.local
-              echo "  created .env.local from .env"
-            fi
-
-            # ---------------------------------------------------------
-            # Verify required environment variable
-            # ---------------------------------------------------------
-
-            if ! grep -qhE \
-              '^[[:space:]]*MONGO_DB_URL=.+' \
-              .env .env.local .env.production .env.production.local \
-              2>/dev/null
-            then
-              fail_and_cleanup \
-                "MONGO_DB_URL missing. Put it in ${DEPLOY_DIR}/.env.production (or .env / .env.local) on the VPS, then re-run Deploy."
-            fi
-
-            # ---------------------------------------------------------
-            # Install dependencies
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Installing dependencies..."
-            npm ci || fail_and_cleanup "Install failed (npm ci)"
-
-            # ---------------------------------------------------------
-            # Ensure swap
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Ensuring swap (Next.js builds need RAM; OOM shows as 'Killed')..."
-            if ! swapon --show | grep -q .; then
-              if [ ! -f /swapfile ]; then
-                sudo fallocate -l 2G /swapfile || \
-                  sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
-                sudo chmod 600 /swapfile
-                sudo mkswap /swapfile
-              fi
-              sudo swapon /swapfile || true
-            fi
-            free -h || true
-
-            # ---------------------------------------------------------
-            # Build
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Building..."
-            export NEXT_TELEMETRY_DISABLED=1
-            # Next.js needs >1.5GB heap; VPS has ~8GB RAM.
-            export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=4096"
-            sudo rm -rf .next
-            if ! npm run build; then
-              fail_and_cleanup \
-                "Build failed (npm run build). Check above for MONGO_DB_URL / Killed / Type errors."
-            fi
-
-            if [ ! -d ".next" ]; then
-              fail_and_cleanup "Build output missing (.next)"
-            fi
-
-            sudo chown -R jenkins:jenkins "${NEW_BUILD_DIR}"
-
-            echo "Build size: $(du -sh .next | cut -f1)"
-
-            # ---------------------------------------------------------
-            # PRE-SWAP DIAGNOSTICS
-            # ---------------------------------------------------------
-
-            echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "PRE-SWAP PORT / PM2 DIAGNOSTICS"
+            echo "Activating release: ${RELEASE_ID}"
+            echo "SSH user: ${RUN_USER} (uid=$(id -u), group=${RUN_GROUP})"
+            echo "App port: ${APP_PORT}"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-            echo "APP_PORT=${APP_PORT}"
-            echo "PM2_APP_NAME=${PM2_APP_NAME}"
-            echo "DEPLOY_DIR=${DEPLOY_DIR}"
-            echo "NEW_BUILD_DIR=${NEW_BUILD_DIR}"
-            echo "TEMP_OLD=${TEMP_OLD}"
+            health_check() {
+              local attempt=1
+              local max_attempts=30
+              local HTTP_CODE="000"
+              local APP_STATUS="unknown"
 
-            echo ""
-            echo "--- PM2 application ---"
-            pm2 describe "${PM2_APP_NAME}" 2>/dev/null || \
-              echo "PM2 app ${PM2_APP_NAME} does not currently exist"
+              while [ "${attempt}" -le "${max_attempts}" ]; do
+                APP_STATUS="$(pm2 jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];print(m[0]['pm2_env']['status'] if m else 'missing')" 2>/dev/null || echo "error")"
 
-            echo ""
-            echo "--- Port ${APP_PORT} before PM2 delete ---"
-            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-              echo "Nothing listening on port ${APP_PORT}"
+                if [ "${APP_STATUS}" = "online" ]; then
+                  HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" \
+                    --max-time 5 "http://localhost:${APP_PORT}/" 2>/dev/null || true)"
+                  HTTP_CODE="${HTTP_CODE:-000}"
 
-            echo ""
-            echo "--- Port owner before PM2 delete ---"
-            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
-              echo "No process owns port ${APP_PORT}"
+                  if [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" -ge 200 ] && [ "${HTTP_CODE}" -lt 500 ]; then
+                    echo "Health check passed (HTTP ${HTTP_CODE}) on attempt ${attempt}"
+                    return 0
+                  fi
+                fi
 
-            echo ""
-            echo "--- Node processes before PM2 delete ---"
-            ps -ef | grep '[n]ode' || \
-              echo "No Node processes found"
-
-            echo ""
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-            # ---------------------------------------------------------
-            # Stop current PM2 application
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Stopping current PM2 application..."
-            pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
-            sleep 2
-
-            # ---------------------------------------------------------
-            # DIAGNOSTICS AFTER PM2 DELETE
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "POST-PM2-DELETE PORT DIAGNOSTICS"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-            echo "--- PM2 list ---"
-            pm2 list | grep "${PM2_APP_NAME}" || \
-              echo "PM2 app ${PM2_APP_NAME} is no longer registered"
-
-            echo ""
-            echo "--- Port ${APP_PORT} after PM2 delete ---"
-            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-              echo "Nothing listening on port ${APP_PORT}"
-
-            echo ""
-            echo "--- Port owner after PM2 delete ---"
-            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
-              echo "No process owns port ${APP_PORT}"
-
-            echo ""
-            echo "--- Node processes after PM2 delete ---"
-            ps -ef | grep '[n]ode' || \
-              echo "No Node processes found"
-
-            # ---------------------------------------------------------
-            # Kill orphaned process holding application port
-            #
-            # This is intentionally logged before and after so the next
-            # deployment tells us exactly what was occupying APP_PORT.
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Checking for orphaned process on port ${APP_PORT}..."
-
-            # Free the port and wait until it is actually free.
-            # `pm2 start npm` used to leave orphan next-server children behind.
-            for i in 1 2 3 4 5; do
-              if sudo ss -ltnp 2>/dev/null | grep -q ":${APP_PORT}"; then
-                echo "WARNING: Port ${APP_PORT} still in use (attempt ${i}/5). Killing..."
-                sudo fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
+                echo "Attempt ${attempt}/${max_attempts}: status=${APP_STATUS} http=${HTTP_CODE:-pending}"
                 sleep 2
-              else
-                echo "Port ${APP_PORT} is free."
-                break
+                attempt=$((attempt + 1))
+              done
+
+              echo "Health check failed after ${max_attempts} attempts"
+              return 1
+            }
+
+            start_or_reload_app() {
+              cd "${DEPLOY_DIR}"
+              export PORT="${APP_PORT}"
+
+              if [ ! -x "./node_modules/.bin/next" ]; then
+                echo "ERROR: next binary missing at ${DEPLOY_DIR}/node_modules/.bin/next"
+                return 1
               fi
-            done
 
-            if sudo ss -ltnp 2>/dev/null | grep -q ":${APP_PORT}"; then
-              fail_and_cleanup "Could not free port ${APP_PORT} before start"
+              # Prefer reload for zero-downtime. Recreate if the process was
+              # started with a different script (e.g. old `pm2 start npm`).
+              if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
+                if pm2 reload "${PM2_APP_NAME}" --update-env; then
+                  pm2 save
+                  return 0
+                fi
+                echo "WARN: pm2 reload failed — recreating process with next binary"
+                pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+                sleep 1
+              fi
+
+              # Start Next.js directly — do NOT use `pm2 start npm`.
+              pm2 start ./node_modules/.bin/next \
+                --name "${PM2_APP_NAME}" \
+                --cwd "${DEPLOY_DIR}" \
+                --update-env \
+                -- start -p "${APP_PORT}"
+              pm2 save
+            }
+
+            ensure_release_layout() {
+              sudo mkdir -p "${RELEASES_DIR}"
+
+              if [ -d "${DEPLOY_DIR}" ] && [ ! -L "${DEPLOY_DIR}" ]; then
+                echo "One-time migration to release symlink layout..."
+                MIGRATED="${RELEASES_DIR}/migrated_$(date +%Y%m%d_%H%M%S)"
+                sudo mv "${DEPLOY_DIR}" "${MIGRATED}"
+                sudo ln -s "${MIGRATED}" "${DEPLOY_DIR}"
+                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+                sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${MIGRATED}"
+
+                start_or_reload_app || true
+              fi
+
+              if [ ! -e "${DEPLOY_DIR}" ]; then
+                sudo mkdir -p "${RELEASES_DIR}/bootstrap"
+                sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${RELEASES_DIR}/bootstrap"
+                sudo ln -s "${RELEASES_DIR}/bootstrap" "${DEPLOY_DIR}"
+                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+              fi
+            }
+
+            copy_runtime_env() {
+              local source_dir="$1"
+              local target_dir="$2"
+
+              for ENV_FILE in .env.production .env.local .env; do
+                if [ -f "${source_dir}/${ENV_FILE}" ]; then
+                  cp "${source_dir}/${ENV_FILE}" "${target_dir}/${ENV_FILE}"
+                fi
+              done
+
+              if [ ! -f "${target_dir}/.env.local" ] && [ -f "${target_dir}/.env.production" ]; then
+                cp "${target_dir}/.env.production" "${target_dir}/.env.local"
+              fi
+              if [ ! -f "${target_dir}/.env.local" ] && [ -f "${target_dir}/.env" ]; then
+                cp "${target_dir}/.env" "${target_dir}/.env.local"
+              fi
+            }
+
+            rollback_to() {
+              local previous_release="$1"
+
+              if [ -n "${previous_release}" ] && [ -d "${previous_release}" ]; then
+                echo "Rolling back to ${previous_release}"
+                sudo ln -sfn "${previous_release}" "${DEPLOY_DIR}"
+                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+                start_or_reload_app
+              else
+                echo "WARNING: No valid previous release to roll back to (${previous_release})"
+              fi
+            }
+
+            cleanup_old_releases() {
+              local live_release idx target dir
+
+              live_release="$(readlink -f "${DEPLOY_DIR}" 2>/dev/null || echo "")"
+              echo "Cleaning up old releases as ${RUN_USER} (keeping last 5, live=${live_release})..."
+
+              idx=0
+              for dir in $(ls -1dt "${RELEASES_DIR}"/*/ 2>/dev/null || true); do
+                [ -d "${dir}" ] || continue
+                idx=$((idx + 1))
+                [ "${idx}" -le 5 ] && continue
+                target="${dir%/}"
+                if [ "${target}" = "${live_release}" ]; then
+                  echo "Skipping live release: ${target}"
+                  continue
+                fi
+                echo "Removing ${target}"
+                sudo rm -rf "${target}" || echo "WARN: failed to remove ${target}"
+              done
+
+              for dir in $(ls -1dt /var/www/VacationSaga_old /var/www/VacationSaga_new_build /var/www/VacationSaga_rollback_* 2>/dev/null || true); do
+                [ -e "${dir}" ] || continue
+                echo "Removing legacy path ${dir}"
+                sudo rm -rf "${dir}" || echo "WARN: failed to remove ${dir}"
+              done
+
+              echo "Cleanup complete"
+            }
+
+            # ── main ─────────────────────────────────────────────────────────
+
+            ensure_release_layout
+
+            if [ ! -f "${ARCHIVE}" ]; then
+              echo "Release archive not found: ${ARCHIVE}"
+              exit 1
             fi
 
-            # ---------------------------------------------------------
-            # Swap release directories
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Swapping release..."
-
-            safe_rm "${TEMP_OLD}"
-
-            sudo mv "${DEPLOY_DIR}" "${TEMP_OLD}" 2>/dev/null || true
-
-            sudo mv "${NEW_BUILD_DIR}" "${DEPLOY_DIR}"
-
-            sudo chown -R jenkins:jenkins "${DEPLOY_DIR}"
-
-            # ---------------------------------------------------------
-            # Start new release
-            # ---------------------------------------------------------
-
-            cd "${DEPLOY_DIR}"
-
-            export PORT="${APP_PORT}"
-
-            echo ""
-            echo "Starting new release..."
-            echo "PM2_APP_NAME=${PM2_APP_NAME}"
-            echo "APP_PORT=${APP_PORT}"
-            echo "PORT=${PORT}"
-            echo "DEPLOY_DIR=${DEPLOY_DIR}"
-
-            # Start Next.js directly — do NOT use `pm2 start npm`.
-            # Starting via npm creates an orphan next-server child that keeps
-            # holding APP_PORT after PM2 restarts npm → EADDRINUSE crash loop.
-            if [ ! -x "./node_modules/.bin/next" ]; then
-              fail_and_cleanup "next binary missing at ${DEPLOY_DIR}/node_modules/.bin/next"
+            PREVIOUS_RELEASE=""
+            if [ -L "${DEPLOY_DIR}" ]; then
+              PREVIOUS_RELEASE="$(readlink -f "${DEPLOY_DIR}")"
             fi
 
-            pm2 start ./node_modules/.bin/next \
-              --name "${PM2_APP_NAME}" \
-              --cwd "${DEPLOY_DIR}" \
-              --update-env \
-              -- start -p "${APP_PORT}"
+            echo "Extracting release to ${NEW_RELEASE}..."
+            sudo rm -rf "${NEW_RELEASE}"
+            sudo mkdir -p "${NEW_RELEASE}"
+            sudo tar -xzf "${ARCHIVE}" -C "${NEW_RELEASE}"
+            sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${NEW_RELEASE}"
+            rm -f "${ARCHIVE}"
 
-            pm2 save
+            copy_runtime_env "${PREVIOUS_RELEASE}" "${NEW_RELEASE}"
 
-            # ---------------------------------------------------------
-            # POST-START DIAGNOSTICS
-            # ---------------------------------------------------------
+            if [ ! -f "${NEW_RELEASE}/.env.local" ] && [ ! -f "${NEW_RELEASE}/.env.production" ]; then
+              echo "ERROR: No runtime env in new release after copy"
+              sudo rm -rf "${NEW_RELEASE}"
+              exit 1
+            fi
 
-            echo ""
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "POST-START DIAGNOSTICS"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "Switching live symlink..."
+            sudo ln -sfn "${NEW_RELEASE}" "${DEPLOY_DIR}"
+            sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
 
-            echo "--- PM2 status ---"
-            pm2 describe "${PM2_APP_NAME}" || true
+            start_or_reload_app
 
-            echo ""
-            echo "--- Port ${APP_PORT} after start ---"
-            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-              echo "Nothing listening on port ${APP_PORT}"
-
-            echo ""
-            echo "--- Port owner after start ---"
-            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
-              echo "No process owns port ${APP_PORT}"
-
-            echo ""
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-            # ---------------------------------------------------------
-            # Health check (based on HTTP, not only PM2 status)
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Health check..."
-
-            HEALTH_OK=false
-            HTTP_CODE="000"
-
-            # Give Next.js time to boot, then poll HTTP.
-            for i in 1 2 3 4 5 6 7 8 9 10; do
-              sleep 3
-              HTTP_CODE=$(
-                curl -s -o /dev/null -w "%{http_code}" \
-                  "http://localhost:${APP_PORT}/" 2>/dev/null || echo "000"
-              )
-              echo "  attempt ${i}/10 → HTTP ${HTTP_CODE}"
-              case "${HTTP_CODE}" in
-                2*|3*)
-                  HEALTH_OK=true
-                  break
-                  ;;
-              esac
-            done
-
-            # ---------------------------------------------------------
-            # Health check failure
-            # ---------------------------------------------------------
-
-            if [ "${HEALTH_OK}" = false ]; then
-
-              echo "::error::Health check failed (PM2 or HTTP ${HTTP_CODE} on port ${APP_PORT})"
-
-              echo ""
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "HEALTH CHECK FAILURE DIAGNOSTICS"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-              echo "--- PM2 status ---"
-              pm2 describe "${PM2_APP_NAME}" || true
-
-              echo ""
-              echo "--- Port ${APP_PORT} ---"
-              sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-                echo "Nothing listening on port ${APP_PORT}"
-
-              echo ""
-              echo "--- Port owner ---"
-              sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
-                echo "No process owns port ${APP_PORT}"
-
-              echo ""
-              echo "--- Node processes ---"
-              ps -ef | grep '[n]ode' || \
-                echo "No Node processes found"
-
-              echo ""
+            echo "Running health checks..."
+            if ! health_check; then
+              echo "Health check failed — initiating rollback"
               echo "--- PM2 logs ---"
               pm2 logs "${PM2_APP_NAME}" --lines 50 --nostream || true
-
-              echo ""
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-              # -------------------------------------------------------
-              # Rollback
-              # -------------------------------------------------------
-
-              if [ -d "${TEMP_OLD}" ]; then
-
-                echo ""
-                echo "Rolling back to previous release..."
-                pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
-                sudo fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
-                sleep 2
-                safe_rm "${DEPLOY_DIR}"
-                sudo mv "${TEMP_OLD}" "${DEPLOY_DIR}"
-                cd "${DEPLOY_DIR}"
-                export PORT="${APP_PORT}"
-
-                pm2 start ./node_modules/.bin/next \
-                  --name "${PM2_APP_NAME}" \
-                  --cwd "${DEPLOY_DIR}" \
-                  --update-env \
-                  -- start -p "${APP_PORT}"
-
-                pm2 save
-
-                echo "Rollback complete"
-
-              else
-                echo "WARNING: No previous release found. Cannot rollback."
-              fi
-
+              rollback_to "${PREVIOUS_RELEASE}"
+              sudo rm -rf "${NEW_RELEASE}"
               exit 1
             fi
 
-            # ---------------------------------------------------------
-            # Successful deployment
-            # ---------------------------------------------------------
-
-            echo ""
-            echo "Cleaning up previous release..."
-
-            safe_rm "${TEMP_OLD}"
+            # Disable errexit for cleanup — deploy already succeeded.
+            set +e
+            cleanup_old_releases
+            CLEANUP_RC=$?
+            set -euo pipefail
+            if [ "${CLEANUP_RC}" -ne 0 ]; then
+              echo "WARN: cleanup exited with ${CLEANUP_RC} (deploy is still live)"
+            fi
 
             echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "Deployment successful (HTTP ${HTTP_CODE})"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
+            echo "DEPLOYMENT SUCCESSFUL"
+            echo "Release: ${RELEASE_ID}"
             echo "Time: $(date)"
-
-            echo ""
-            echo "Final PM2 status:"
-            pm2 list
-
-            echo ""
-            echo "Final port status:"
-            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-              echo "WARNING: Nothing listening on port ${APP_PORT}"
-
-            echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            pm2 list || true
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || true
+            exit 0
