@@ -295,26 +295,22 @@ jobs:
             echo ""
             echo "Checking for orphaned process on port ${APP_PORT}..."
 
-            if sudo fuser -v "${APP_PORT}/tcp" 2>&1 | grep -q .; then
-              echo "WARNING: Something is still holding port ${APP_PORT}."
-              echo "Attempting to release port ${APP_PORT}..."
+            # Free the port and wait until it is actually free.
+            # `pm2 start npm` used to leave orphan next-server children behind.
+            for i in 1 2 3 4 5; do
+              if sudo ss -ltnp 2>/dev/null | grep -q ":${APP_PORT}"; then
+                echo "WARNING: Port ${APP_PORT} still in use (attempt ${i}/5). Killing..."
+                sudo fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
+                sleep 2
+              else
+                echo "Port ${APP_PORT} is free."
+                break
+              fi
+            done
 
-              sudo fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
-
-              sleep 2
-            else
-              echo "Port ${APP_PORT} is already free."
+            if sudo ss -ltnp 2>/dev/null | grep -q ":${APP_PORT}"; then
+              fail_and_cleanup "Could not free port ${APP_PORT} before start"
             fi
-
-            echo ""
-            echo "--- Port ${APP_PORT} after orphan cleanup ---"
-            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || \
-              echo "Port ${APP_PORT} is free"
-
-            echo ""
-            echo "--- Port owner after orphan cleanup ---"
-            sudo fuser -v "${APP_PORT}/tcp" 2>&1 || \
-              echo "No process owns port ${APP_PORT}"
 
             # ---------------------------------------------------------
             # Swap release directories
@@ -346,10 +342,18 @@ jobs:
             echo "PORT=${PORT}"
             echo "DEPLOY_DIR=${DEPLOY_DIR}"
 
-            pm2 start npm \
+            # Start Next.js directly — do NOT use `pm2 start npm`.
+            # Starting via npm creates an orphan next-server child that keeps
+            # holding APP_PORT after PM2 restarts npm → EADDRINUSE crash loop.
+            if [ ! -x "./node_modules/.bin/next" ]; then
+              fail_and_cleanup "next binary missing at ${DEPLOY_DIR}/node_modules/.bin/next"
+            fi
+
+            pm2 start ./node_modules/.bin/next \
               --name "${PM2_APP_NAME}" \
+              --cwd "${DEPLOY_DIR}" \
               --update-env \
-              -- start -- -p "${APP_PORT}"
+              -- start -p "${APP_PORT}"
 
             pm2 save
 
@@ -376,43 +380,33 @@ jobs:
               echo "No process owns port ${APP_PORT}"
 
             echo ""
-            echo "--- Node processes after start ---"
-            ps -ef | grep '[n]ode' || \
-              echo "No Node processes found"
-
-            echo ""
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
             # ---------------------------------------------------------
-            # Health check
+            # Health check (based on HTTP, not only PM2 status)
             # ---------------------------------------------------------
 
             echo ""
             echo "Health check..."
-            sleep 15
 
             HEALTH_OK=false
             HTTP_CODE="000"
 
-            if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
-              sleep 10
-              if pm2 describe "${PM2_APP_NAME}" | grep -q "status.*online"; then
-                HTTP_CODE=$(
-                  curl \
-                    -s \
-                    -o /dev/null \
-                    -w "%{http_code}" \
-                    "http://localhost:${APP_PORT}/" ||
-                  echo "000"
-                )
-
-                case "${HTTP_CODE}" in
-                  2*|3*)
-                    HEALTH_OK=true
-                    ;;
-                esac
-              fi
-            fi
+            # Give Next.js time to boot, then poll HTTP.
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              sleep 3
+              HTTP_CODE=$(
+                curl -s -o /dev/null -w "%{http_code}" \
+                  "http://localhost:${APP_PORT}/" 2>/dev/null || echo "000"
+              )
+              echo "  attempt ${i}/10 → HTTP ${HTTP_CODE}"
+              case "${HTTP_CODE}" in
+                2*|3*)
+                  HEALTH_OK=true
+                  break
+                  ;;
+              esac
+            done
 
             # ---------------------------------------------------------
             # Health check failure
@@ -461,15 +455,18 @@ jobs:
                 echo ""
                 echo "Rolling back to previous release..."
                 pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+                sudo fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
+                sleep 2
                 safe_rm "${DEPLOY_DIR}"
                 sudo mv "${TEMP_OLD}" "${DEPLOY_DIR}"
                 cd "${DEPLOY_DIR}"
                 export PORT="${APP_PORT}"
 
-                pm2 start npm \
+                pm2 start ./node_modules/.bin/next \
                   --name "${PM2_APP_NAME}" \
+                  --cwd "${DEPLOY_DIR}" \
                   --update-env \
-                  -- start -- -p "${APP_PORT}"
+                  -- start -p "${APP_PORT}"
 
                 pm2 save
 
