@@ -1,0 +1,336 @@
+name: Deploy to QA VPS
+
+on:
+  # Deploy only after CI succeeds on dev (typecheck + lint gate this).
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-qa
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Environment secrets (Settings → Environments → QA).
+    environment: QA
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Configure SSH
+        run: |
+          set -euo pipefail
+
+          log() { echo "[ssh-setup] $*"; }
+          fail() { echo "[ssh-setup] ERROR: $*" >&2; exit 1; }
+
+          log "=== SSH setup diagnostics ==="
+
+          VPS_HOST="${{ secrets.VPS_HOST }}"
+          VPS_USER="${{ secrets.VPS_USERNAME }}"
+          VPS_KEY="${{ secrets.VPS_SSH_KEY }}"
+
+          if [ -z "${VPS_HOST}" ]; then fail "VPS_HOST secret is missing or empty"; fi
+          if [ -z "${VPS_USER}" ]; then fail "VPS_USERNAME secret is missing or empty"; fi
+          if [ -z "${VPS_KEY}" ]; then fail "VPS_SSH_KEY secret is missing or empty"; fi
+
+          log "Target host: ${VPS_HOST}"
+          log "Target user: ${VPS_USER}"
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${VPS_KEY}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          if ssh-keygen -l -f ~/.ssh/deploy_key >/tmp/key_info 2>&1; then
+            log "Deploy key loaded: $(head -1 /tmp/key_info)"
+          else
+            cat /tmp/key_info >&2
+            fail "VPS_SSH_KEY is invalid or malformed"
+          fi
+
+          log "--- TCP reachability (port 22) ---"
+          if command -v nc >/dev/null 2>&1 && nc -z -w 15 "${VPS_HOST}" 22; then
+            log "Port 22 is reachable"
+          elif timeout 15 bash -c "echo > /dev/tcp/${VPS_HOST}/22" 2>/dev/null; then
+            log "Port 22 is reachable"
+          else
+            fail "Cannot reach ${VPS_HOST}:22 — check QA VPS firewall and sshd"
+          fi
+
+          ssh-keyscan -T 15 -p 22 -H "${VPS_HOST}" >> ~/.ssh/known_hosts 2>/tmp/keyscan.err || true
+
+          if ssh -i ~/.ssh/deploy_key -p 22 -o BatchMode=yes -o ConnectTimeout=20 \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "${VPS_USER}@${VPS_HOST}" "echo connected; hostname; whoami; pwd"; then
+            log "SSH authentication successful"
+          else
+            fail "SSH auth failed for ${VPS_USER}@${VPS_HOST}"
+          fi
+
+      # Mirrors prod: env lives only on the QA VPS itself, fetched over SSH.
+      # Nothing QA-related is ever read from prod, and no extra GitHub secrets needed.
+      - name: Fetch QA env from VPS
+        run: |
+          set -euo pipefail
+
+          log() { echo "[fetch-env] $*"; }
+          fail() { echo "[fetch-env] ERROR: $*" >&2; exit 1; }
+
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=20 -o BatchMode=yes"
+          REMOTE="${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}"
+
+          log "Fetching QA env from ${REMOTE}"
+
+          for REMOTE_ENV in \
+            /var/www/vacationsaga-qa-env/.env.production \
+            /var/www/VacationSaga-QA/.env.production \
+            /var/www/VacationSaga-QA/.env.local; do
+            log "Trying ${REMOTE_ENV} ..."
+            if scp ${SSH_OPTS} "${REMOTE}:${REMOTE_ENV}" .env.production; then
+              cp .env.production .env.local
+              log "Using env from ${REMOTE_ENV}"
+              exit 0
+            fi
+            log "Not found or not readable: ${REMOTE_ENV}"
+          done
+
+          fail "Could not fetch .env.production from the QA VPS. Create /var/www/vacationsaga-qa-env/.env.production there first."
+
+      - name: Verify required env
+        run: |
+          set -euo pipefail
+          if ! grep -qhE '^[[:space:]]*MONGO_DB_URL=.+' .env.production; then
+            echo "::error::MONGO_DB_URL secret is missing/empty in the QA environment."
+            exit 1
+          fi
+          echo "MONGO_DB_URL is present in QA env."
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Prepare production dependencies
+        run: |
+          rm -rf node_modules
+          npm ci --omit=dev
+
+      - name: Package release
+        run: |
+          set -euo pipefail
+          INCLUDE=(
+            .next
+            node_modules
+            public
+            src
+            package.json
+            package-lock.json
+            next.config.js
+            tsconfig.json
+            postcss.config.js
+            tailwind.config.js
+            components.json
+            next-env.d.ts
+            .env.production
+            .env.local
+          )
+          ARGS=()
+          for path in "${INCLUDE[@]}"; do
+            if [ -e "${path}" ]; then
+              ARGS+=("${path}")
+            else
+              echo "Skipping missing path: ${path}"
+            fi
+          done
+          tar -czf release.tar.gz \
+            --exclude='.next/cache' \
+            --exclude='node_modules/.cache' \
+            "${ARGS[@]}"
+          echo "Package size: $(du -h release.tar.gz | cut -f1)"
+
+      - name: Upload release to VPS
+        run: |
+          set -euo pipefail
+          RELEASE_ID="$(date -u +%Y%m%d_%H%M%S)_${GITHUB_SHA::7}"
+          echo "RELEASE_ID=${RELEASE_ID}" >> "${GITHUB_ENV}"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o BatchMode=yes \
+            release.tar.gz \
+            "${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }}:/tmp/vacationsaga_qa_${RELEASE_ID}.tar.gz"
+
+      - name: Activate release on QA VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          RELEASE_ID: ${{ env.RELEASE_ID }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          command_timeout: 15m
+          script_stop: false
+          envs: RELEASE_ID
+          script: |
+            set -euo pipefail
+
+            DEPLOY_DIR="/var/www/VacationSaga-QA"
+            RELEASES_DIR="/var/www/VacationSaga-QA_releases"
+            PM2_APP_NAME="vacationsaga-qa"
+            APP_PORT=3006
+            ARCHIVE="/tmp/vacationsaga_qa_${RELEASE_ID}.tar.gz"
+            NEW_RELEASE="${RELEASES_DIR}/${RELEASE_ID}"
+            RUN_USER="$(whoami)"
+            RUN_GROUP="$(id -gn)"
+
+            echo "Activating QA release: ${RELEASE_ID} on port ${APP_PORT}"
+
+            health_check() {
+              local attempt=1 max_attempts=30 HTTP_CODE="000" APP_STATUS="unknown"
+              while [ "${attempt}" -le "${max_attempts}" ]; do
+                APP_STATUS="$(pm2 jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];print(m[0]['pm2_env']['status'] if m else 'missing')" 2>/dev/null || echo "error")"
+                if [ "${APP_STATUS}" = "online" ]; then
+                  HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${APP_PORT}/" 2>/dev/null || true)"
+                  HTTP_CODE="${HTTP_CODE:-000}"
+                  if [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" -ge 200 ] && [ "${HTTP_CODE}" -lt 500 ]; then
+                    echo "Health check passed (HTTP ${HTTP_CODE}) on attempt ${attempt}"
+                    return 0
+                  fi
+                fi
+                echo "Attempt ${attempt}/${max_attempts}: status=${APP_STATUS} http=${HTTP_CODE:-pending}"
+                sleep 2
+                attempt=$((attempt + 1))
+              done
+              echo "Health check failed after ${max_attempts} attempts"
+              return 1
+            }
+
+            start_or_reload_app() {
+              cd "${DEPLOY_DIR}"
+              export PORT="${APP_PORT}"
+              if [ ! -x "./node_modules/.bin/next" ]; then
+                echo "ERROR: next binary missing at ${DEPLOY_DIR}/node_modules/.bin/next"
+                return 1
+              fi
+              if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
+                if pm2 reload "${PM2_APP_NAME}" --update-env; then
+                  pm2 save
+                  return 0
+                fi
+                echo "WARN: pm2 reload failed — recreating"
+                pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+                sleep 1
+              fi
+              pm2 start ./node_modules/.bin/next \
+                --name "${PM2_APP_NAME}" \
+                --cwd "${DEPLOY_DIR}" \
+                --update-env \
+                -- start -p "${APP_PORT}"
+              pm2 save
+            }
+
+            ensure_release_layout() {
+              sudo mkdir -p "${RELEASES_DIR}"
+              if [ ! -e "${DEPLOY_DIR}" ]; then
+                sudo mkdir -p "${RELEASES_DIR}/bootstrap"
+                sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${RELEASES_DIR}/bootstrap"
+                sudo ln -s "${RELEASES_DIR}/bootstrap" "${DEPLOY_DIR}"
+                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+              fi
+            }
+
+            rollback_to() {
+              local previous_release="$1"
+              if [ -n "${previous_release}" ] && [ -d "${previous_release}" ]; then
+                echo "Rolling back to ${previous_release}"
+                sudo ln -sfn "${previous_release}" "${DEPLOY_DIR}"
+                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+                start_or_reload_app
+              else
+                echo "WARNING: no valid previous release to roll back to"
+              fi
+            }
+
+            cleanup_old_releases() {
+              local live_release idx target dir
+              live_release="$(readlink -f "${DEPLOY_DIR}" 2>/dev/null || echo "")"
+              idx=0
+              for dir in $(ls -1dt "${RELEASES_DIR}"/*/ 2>/dev/null || true); do
+                [ -d "${dir}" ] || continue
+                idx=$((idx + 1))
+                [ "${idx}" -le 3 ] && continue
+                target="${dir%/}"
+                [ "${target}" = "${live_release}" ] && continue
+                echo "Removing ${target}"
+                sudo rm -rf "${target}" || echo "WARN: failed to remove ${target}"
+              done
+            }
+
+            ensure_release_layout
+
+            if [ ! -f "${ARCHIVE}" ]; then
+              echo "Release archive not found: ${ARCHIVE}"
+              exit 1
+            fi
+
+            PREVIOUS_RELEASE=""
+            if [ -L "${DEPLOY_DIR}" ]; then
+              PREVIOUS_RELEASE="$(readlink -f "${DEPLOY_DIR}")"
+            fi
+
+            echo "Extracting release to ${NEW_RELEASE}..."
+            sudo rm -rf "${NEW_RELEASE}"
+            sudo mkdir -p "${NEW_RELEASE}"
+            sudo tar -xzf "${ARCHIVE}" -C "${NEW_RELEASE}"
+            sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${NEW_RELEASE}"
+            rm -f "${ARCHIVE}"
+
+            if [ ! -f "${NEW_RELEASE}/.env.local" ] && [ ! -f "${NEW_RELEASE}/.env.production" ]; then
+              echo "ERROR: No runtime env in new release"
+              sudo rm -rf "${NEW_RELEASE}"
+              exit 1
+            fi
+
+            sudo ln -sfn "${NEW_RELEASE}" "${DEPLOY_DIR}"
+            sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+
+            start_or_reload_app
+
+            echo "Running health checks..."
+            if ! health_check; then
+              echo "Health check failed — rolling back"
+              pm2 logs "${PM2_APP_NAME}" --lines 50 --nostream || true
+              rollback_to "${PREVIOUS_RELEASE}"
+              sudo rm -rf "${NEW_RELEASE}"
+              exit 1
+            fi
+
+            set +e
+            cleanup_old_releases
+            set -euo pipefail
+
+            echo "QA DEPLOYMENT SUCCESSFUL — ${RELEASE_ID}"
+            pm2 list || true
+            sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || true
+            exit 0
