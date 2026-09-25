@@ -10,7 +10,10 @@ export interface ExperiencesSearchFormProps {}
 const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({}) => {
   const renderForm = () => {
     return (
-      <form className="w-full relative flex flex-row rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="w-full relative flex flex-row rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
+      >
         <LocationInput
           // onInputDone={() => setDateFocused(true)}
           className="flex-[1.5]"

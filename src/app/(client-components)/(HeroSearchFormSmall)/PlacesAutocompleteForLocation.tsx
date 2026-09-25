@@ -44,6 +44,14 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
     []
   );
 
+  // Enter inside a <form> would native-submit and refresh the page.
+  const keyDownHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const onPlaceChanged = useCallback(() => {
     if (autocompleteRef.current !== null) {
       const place = autocompleteRef.current.getPlace();
@@ -93,6 +101,7 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
           placeholder={placeholder}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
+          onKeyDown={keyDownHandler}
           className={inputClass}
         />
         <span className="mt-0.5 block text-[11px] text-red-400">
@@ -112,6 +121,7 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
           placeholder={placeholder}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
+          onKeyDown={keyDownHandler}
           className={inputClass}
         />
         <span className="mt-0.5 block text-[11px] text-neutral-400 animate-pulse">
@@ -128,6 +138,7 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
         <input
           type="text"
           placeholder={placeholder}
+          onKeyDown={keyDownHandler}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           className={inputClass}

@@ -11,7 +11,10 @@ export interface StaySearchFormProps {
 const StaySearchForm: FC<StaySearchFormProps> = ({ defaultFieldFocus }) => {
   const renderForm = () => {
     return (
-      <form className="relative flex rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="relative flex rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
+      >
         <LocationInput
           // onInputDone={() => setDateFocused("startDate")}
           className="flex-[1.5]"

@@ -318,7 +318,7 @@ const MonthlyMonthPicker: FC<MonthlyMonthPickerProps> = ({
               ? "Select start month"
               : pendingMonths.length === 1
                 ? "Select end month"
-                : "Selected date range"}
+                : "Selected month range"}
           </p>
 
           <p className="mt-1 text-sm font-medium">
@@ -333,7 +333,7 @@ const MonthlyMonthPicker: FC<MonthlyMonthPickerProps> = ({
                         },
                       )} ${month.year}`,
                   )
-                  .join(", ")
+                  .join(" to ")
               : "No months selected"}
           </p>
         </div>
