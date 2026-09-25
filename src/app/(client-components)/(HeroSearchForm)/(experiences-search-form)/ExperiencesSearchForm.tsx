@@ -58,6 +58,7 @@ const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({
       return (
         <SearchInputProvider>
           <form
+            onSubmit={(e) => e.preventDefault()}
             className={`w-full relative mt-8 flex flex-col shadow-xl dark:shadow-2xl rounded-lg bg-white dark:bg-neutral-800 ${formClassName}`}
           >
             <LocationInput className="flex-[1.5]" />
@@ -83,6 +84,7 @@ const ExperiencesSearchForm: FC<ExperiencesSearchFormProps> = ({
     return (
       <SearchInputProvider>
         <form
+          onSubmit={(e) => e.preventDefault()}
           className={`w-full relative mt-8 flex items-center rounded-full shadow-xl dark:shadow-2xl bg-white dark:bg-neutral-800 ${formClassName}`}
         >
           <LocationInput className="flex-[1.5]" />
