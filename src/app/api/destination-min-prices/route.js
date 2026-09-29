@@ -2,9 +2,10 @@ import { connectDb } from "@/helper/db";
 import { NextResponse } from "next/server";
 import { Properties } from "@/models/property";
 
-export async function GET(req) {
-  await connectDb();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
+export async function GET(req) {
   const url = new URL(req.url);
   const place = (url.searchParams.get("place") || "").trim();
 
@@ -20,6 +21,7 @@ export async function GET(req) {
   const MIN_EUR = 10;
 
   try {
+    await connectDb();
     const [result] = await Properties.aggregate([
       {
         $match: {

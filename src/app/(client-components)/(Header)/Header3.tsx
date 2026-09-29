@@ -190,21 +190,30 @@ const Header3: FC<Header3Props> = ({ className = "" }) => {
                 )}
 
                 <div
-                  className={`flex flex-col gap-y-4 bg-[#142431] rounded-xl p-4 absolute top-24 right-0 transition-all ${
-                    showLogin ? "opacity-100 scale-100" : "opacity-0 scale-50"
+                  className={`flex flex-col gap-y-4 bg-[#142431] rounded-xl p-4 absolute top-24 right-0 z-50 transition-all origin-top-right ${
+                    showLogin
+                      ? "opacity-100 scale-100 pointer-events-auto visible"
+                      : "opacity-0 scale-50 pointer-events-none invisible"
                   }`}
                   ref={loginRef}
+                  aria-hidden={!showLogin}
                 >
                   <Link
                     href={{ pathname: "/login", query: { role: "Traveller" } }}
+                    tabIndex={showLogin ? 0 : -1}
+                    onClick={() => setShowLogin(false)}
                   >
-                    <ButtonPrimary className="w-52 flex justify-between">
+                    <ButtonPrimary type="button" className="w-52 flex justify-between">
                       Login as Traveller{" "}
                       <IoExitOutline className="text-xl font-extrabold" />
                     </ButtonPrimary>
                   </Link>
-                  <Link href={{ pathname: "/login", query: { role: "Owner" } }}>
-                    <ButtonPrimary className="w-52 flex justify-between">
+                  <Link
+                    href={{ pathname: "/login", query: { role: "Owner" } }}
+                    tabIndex={showLogin ? 0 : -1}
+                    onClick={() => setShowLogin(false)}
+                  >
+                    <ButtonPrimary type="button" className="w-52 flex justify-between">
                       Login as Owner{" "}
                       <IoExitOutline className="text-xl font-extrabold" />
                     </ButtonPrimary>
