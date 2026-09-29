@@ -64,6 +64,12 @@ export interface RentalType {
   setMaxPrice: (value: number) => void;
   setMinPrice: (value: number) => void;
   setHouseRool: (value: string) => void;
+  /** Seed Rooms & Beds UI from URL / parent (home → search). */
+  initialBeds?: number;
+  initialBedrooms?: number;
+  initialBathrooms?: number;
+  initialGuests?: number;
+  setGuests?: (value: number) => void;
 }
 
 const TabFilters: FC<RentalType> = ({
@@ -75,15 +81,29 @@ const TabFilters: FC<RentalType> = ({
   setPropertyType,
   setMaxPrice,
   setMinPrice,
+  initialBeds = 0,
+  initialBedrooms = 0,
+  initialBathrooms = 0,
+  initialGuests = 1,
+  setGuests,
 }) => {
   const [isOpenMoreFilter, setisOpenMoreFilter] = useState(false);
   const [isOpenMoreFilterMobile, setisOpenMoreFilterMobile] = useState(false);
   const [rangePrices, setRangePrices] = useState([0, 5000]);
   const [selectedValue, setSelectedValue] = useState<string>("");
-  const [bedsValue, setBedsValue] = useState(0);
-  const [bedroomsValue, setBedroomsValue] = useState(0);
-  const [bathroomsValue, setBathroomsValue] = useState(0);
+  const [bedsValue, setBedsValue] = useState(initialBeds);
+  const [bedroomsValue, setBedroomsValue] = useState(initialBedrooms);
+  const [bathroomsValue, setBathroomsValue] = useState(initialBathrooms);
+  const [guestsValue, setGuestsValue] = useState(initialGuests);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
+
+  // Keep filter chips in sync when parent/URL values change (e.g. home → search, clear).
+  useEffect(() => {
+    setBedsValue(initialBeds);
+    setBedroomsValue(initialBedrooms);
+    setBathroomsValue(initialBathrooms);
+    setGuestsValue(initialGuests);
+  }, [initialBeds, initialBedrooms, initialBathrooms, initialGuests]);
 
   const handleRadioChange = (value: string) => {
     setSelectedValue(value);
@@ -189,7 +209,30 @@ const TabFilters: FC<RentalType> = ({
   };
 
   const renderTabsRoomAndBeds = () => {
-    const hasRoomFilters = bedsValue > 0 || bedroomsValue > 0 || bathroomsValue > 0;
+    const hasRoomFilters =
+      bedsValue > 0 ||
+      bedroomsValue > 0 ||
+      bathroomsValue > 0 ||
+      guestsValue > 1;
+    const summaryParts: string[] = [];
+    if (guestsValue > 0) {
+      summaryParts.push(
+        `${guestsValue} guest${guestsValue > 1 ? "s" : ""}`
+      );
+    }
+    if (bedroomsValue > 0) {
+      summaryParts.push(
+        `${bedroomsValue} bedroom${bedroomsValue > 1 ? "s" : ""}`
+      );
+    }
+    if (bathroomsValue > 0) {
+      summaryParts.push(
+        `${bathroomsValue} bath${bathroomsValue > 1 ? "s" : ""}`
+      );
+    }
+    if (bedsValue > 0) {
+      summaryParts.push(`${bedsValue} bed${bedsValue > 1 ? "s" : ""}`);
+    }
     return (
       <Popover className="relative">
         {({ open, close }) => (
@@ -202,9 +245,7 @@ const TabFilters: FC<RentalType> = ({
               } ${open ? "!border-primary-500 " : ""} focus:outline-none`}
             >
               <span>
-                {hasRoomFilters
-                  ? `${bedsValue > 0 ? bedsValue + " bed" + (bedsValue > 1 ? "s" : "") : ""}${bedsValue > 0 && bedroomsValue > 0 ? ", " : ""}${bedroomsValue > 0 ? bedroomsValue + " room" + (bedroomsValue > 1 ? "s" : "") : ""}`
-                  : "Rooms & Beds"}
+                {hasRoomFilters ? summaryParts.join(" · ") : "Rooms & Beds"}
               </span>
               <i className="las la-angle-down ml-2"></i>
             </Popover.Button>
@@ -220,6 +261,16 @@ const TabFilters: FC<RentalType> = ({
               <Popover.Panel className="absolute z-10 w-screen max-w-sm px-4 mt-3 left-0 sm:px-0 lg:max-w-md">
                 <div className="overflow-hidden rounded-2xl shadow-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700">
                   <div className="relative flex flex-col px-5 py-6 space-y-5">
+                    <NcInputNumber
+                      label="Guests"
+                      min={1}
+                      max={20}
+                      defaultValue={guestsValue}
+                      onChange={(value) => {
+                        setGuestsValue(value);
+                        setGuests?.(value);
+                      }}
+                    />
                     <NcInputNumber
                       label="Beds"
                       max={10}
@@ -681,9 +732,43 @@ const TabFilters: FC<RentalType> = ({
                       <div className="py-7">
                         <h3 className="text-xl font-medium">Rooms and beds</h3>
                         <div className="mt-6 relative flex flex-col space-y-5">
-                          <NcInputNumber label="Beds" max={10} />
-                          <NcInputNumber label="Bedrooms" max={10} />
-                          <NcInputNumber label="Bathrooms" max={10} />
+                          <NcInputNumber
+                            label="Guests"
+                            min={1}
+                            max={20}
+                            defaultValue={guestsValue}
+                            onChange={(value) => {
+                              setGuestsValue(value);
+                              setGuests?.(value);
+                            }}
+                          />
+                          <NcInputNumber
+                            label="Beds"
+                            max={10}
+                            defaultValue={bedsValue}
+                            onChange={(value) => {
+                              setBedsValue(value);
+                              setBeds(value);
+                            }}
+                          />
+                          <NcInputNumber
+                            label="Bedrooms"
+                            max={10}
+                            defaultValue={bedroomsValue}
+                            onChange={(value) => {
+                              setBedroomsValue(value);
+                              setBedRooms(value);
+                            }}
+                          />
+                          <NcInputNumber
+                            label="Bathrooms"
+                            max={10}
+                            defaultValue={bathroomsValue}
+                            onChange={(value) => {
+                              setBathroomsValue(value);
+                              setBathrooms(value);
+                            }}
+                          />
                         </div>
                       </div>
                       <div className="py-7">

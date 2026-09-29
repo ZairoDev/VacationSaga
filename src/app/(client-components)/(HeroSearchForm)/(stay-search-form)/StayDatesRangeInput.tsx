@@ -61,7 +61,7 @@ const StayDatesRangeInput: FC<StayDatesRangeInputProps> = ({
               </span>
             </div>
             <div className="mx-4 h-8 w-px bg-neutral-200/80 dark:bg-neutral-700" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1.1">
               <span className="block text-sm font-medium text-neutral-800 dark:text-neutral-100 leading-none">
                 Check-out
               </span>
