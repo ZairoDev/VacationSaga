@@ -191,7 +191,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           command_timeout: 15m
-          script_stop: false
+          script_stop: true
           envs: RELEASE_ID
           script: |
             set -euo pipefail
@@ -274,25 +274,18 @@ jobs:
             }
 
             cleanup_old_releases() {
-              local live_release="" idx=0 target="" dir=""
+              local live_release idx target dir
               live_release="$(readlink -f "${DEPLOY_DIR}" 2>/dev/null || echo "")"
-              echo "Cleaning up old QA releases (keeping last 3, live=${live_release})..."
-              while IFS= read -r dir; do
-                [ -n "${dir}" ] || continue
+              idx=0
+              for dir in $(ls -1dt "${RELEASES_DIR}"/*/ 2>/dev/null || true); do
                 [ -d "${dir}" ] || continue
                 idx=$((idx + 1))
-                if [ "${idx}" -le 3 ]; then
-                  continue
-                fi
+                [ "${idx}" -le 3 ] && continue
                 target="${dir%/}"
-                if [ "${target}" = "${live_release}" ]; then
-                  continue
-                fi
+                [ "${target}" = "${live_release}" ] && continue
                 echo "Removing ${target}"
                 sudo rm -rf "${target}" || echo "WARN: failed to remove ${target}"
-              done < <(find "${RELEASES_DIR}" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' 2>/dev/null | sort -nr | cut -d' ' -f2- || true)
-              echo "Cleanup complete"
-              return 0
+              done
             }
 
             ensure_release_layout
@@ -338,7 +331,7 @@ jobs:
             fi
 
             set +e
-            cleanup_old_releases || true
+            cleanup_old_releases
             set -euo pipefail
 
             echo "QA DEPLOYMENT SUCCESSFUL — ${RELEASE_ID}"
