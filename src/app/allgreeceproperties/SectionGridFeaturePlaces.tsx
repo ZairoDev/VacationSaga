@@ -34,9 +34,9 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
   const country = params.get("place") || params.get("location") || "Greece";
   const pType = params.get("propertyType") || "";
   const urlRentalType = params.get("rentalType");
-  const urlGuests    = parseInt(params.get("guests")    || "1");
-  const urlBedrooms  = parseInt(params.get("bedrooms")  || "0");
-  const urlBathrooms = parseInt(params.get("bathrooms") || "0");
+  const urlGuests = parseInt(params.get("guests") || "1", 10) || 1;
+  const urlBedrooms = parseInt(params.get("bedrooms") || "0", 10) || 0;
+  const urlBathrooms = parseInt(params.get("bathrooms") || "0", 10) || 0;
   const recordPerPage = 12;
 
   const [rentalForm, setRentalForm] = useState<string>("");
@@ -50,9 +50,14 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
   const [maxPrice, setMaxPrice] = useState<number>(999999);
   const [houserool, setHouseRool] = useState<string>("");
   const [filtersApplied, setFiltersApplied] = useState(false);
+  const [filterUiKey, setFilterUiKey] = useState(0);
   const isInitialMount = useRef(true);
+  const skipNextFilterEffect = useRef(false);
 
-  const fetchProperties = async (page: number = 1) => {
+  const fetchProperties = async (
+    page: number = 1,
+    overrides?: { guests?: number; bedrooms?: number; bathrooms?: number }
+  ) => {
     setLoading(true);
     try {
       const response = await axios.get(
@@ -61,9 +66,9 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
           params: {
             limit: recordPerPage,
             page,
-            guests,
-            bedrooms,
-            bathrooms,
+            guests: overrides?.guests ?? guests,
+            bedrooms: overrides?.bedrooms ?? bedrooms,
+            bathrooms: overrides?.bathrooms ?? bathrooms,
           },
         }
       );
@@ -99,7 +104,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
       setCurrentPage(1);
     }
     try {
-      const response = await axios.post("api/filters", {
+      const response = await axios.post("/api/filters", {
         rentalForm,
         propertyType,
         beds,
@@ -135,7 +140,13 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
     setFiltersApplied(true);
   };
 
-  const clearFilters = () => {
+  const clearFilters = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    // Skip the auto-apply effect once while we reset + refetch.
+    skipNextFilterEffect.current = true;
+
     setRentalForm("");
     setRentalType("Short Term");
     setPropertyType("");
@@ -149,11 +160,32 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
     setFiltersApplied(false);
     setCurrentPage(1);
     setFilterPage(1);
-    fetchProperties(1);
+    // Remount filter chips so they show 0 / defaults.
+    setFilterUiKey((k) => k + 1);
+
+    // Update the address bar WITHOUT Next.js navigation.
+    // router.replace() was causing a soft nav that could hit auth middleware → /login.
+    if (typeof window !== "undefined") {
+      const next = new URLSearchParams();
+      const place = params.get("place") || params.get("location");
+      if (place) next.set("place", place);
+      const qs = next.toString();
+      const url = qs
+        ? `${window.location.pathname}?${qs}`
+        : window.location.pathname;
+      window.history.replaceState(window.history.state, "", url);
+    }
+
+    fetchProperties(1, { guests: 1, bedrooms: 0, bathrooms: 0 });
   };
 
   // Auto-apply filters when they change (skip initial mount unless params from URL)
   useEffect(() => {
+    if (skipNextFilterEffect.current) {
+      skipNextFilterEffect.current = false;
+      return;
+    }
+
     if (isInitialMount.current) {
       isInitialMount.current = false;
       // If any search params came from URL, go straight to filter path
@@ -193,20 +225,27 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex-1 min-w-0">
                 <TabFilters
+                  key={filterUiKey}
                   setMinPrice={setMinPrice}
                   setMaxPrice={setMaxPrice}
                   setBathrooms={setBathrooms}
                   setBedRooms={setBedRooms}
                   setBeds={setBeds}
+                  setGuests={setGuests}
                   setPropertyType={setPropertyType}
                   setRentalForm={setRentalForm}
                   setRentalType={setRentalType}
                   setHouseRool={setHouseRool}
+                  initialBeds={beds}
+                  initialBedrooms={bedrooms}
+                  initialBathrooms={bathrooms}
+                  initialGuests={guests}
                 />
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 rounded-full p-1">
                   <button
+                    type="button"
                     onClick={() => handleRentalType("Long Term")}
                     className={`px-5 text-sm font-medium py-2 rounded-full transition-all duration-200 ${
                       rentalType === "Long Term"
@@ -217,6 +256,7 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
                     Long Term
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleRentalType("Short Term")}
                     className={`px-5 text-sm font-medium py-2 rounded-full transition-all duration-200 ${
                       rentalType === "Short Term"
@@ -227,8 +267,9 @@ const SectionGridFeaturePlaces: FC<SectionGridFeaturePlacesProps> = ({
                     Short Term
                   </button>
                 </div>
-                {(filtersApplied || beds > 0 || bedrooms > 0 || bathrooms > 0 || minPrice > 0 || maxPrice < 999999 || propertyType || rentalForm) && (
+                {(filtersApplied || beds > 0 || bedrooms > 0 || bathrooms > 0 || guests > 1 || minPrice > 0 || maxPrice < 999999 || propertyType || rentalForm) && (
                   <button
+                    type="button"
                     className="px-5 py-2 text-sm font-medium rounded-full border-2 border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500 text-neutral-700 dark:text-neutral-300 hover:text-primary-6000 dark:hover:text-primary-500 transition-all duration-200 flex items-center gap-2"
                     onClick={clearFilters}
                   >

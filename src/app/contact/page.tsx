@@ -19,7 +19,7 @@ const info = [
   },
   {
     title: "🗺 ADDRESS",
-    desc: "117/N/70 3rd Floor Kakadeo Kanpur",
+    desc: "The Berry Coworks, Sector 142, Noida, Uttar Pradesh 201304",
   },
   {
     title: "💌 EMAIL",

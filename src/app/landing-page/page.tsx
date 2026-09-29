@@ -541,7 +541,7 @@ export default function Home() {
                 Creating unforgettable travel experiences since 2017.
               </p>
               <p className="mt-2 text-base text-gray-400">
-                117/N/70 3rd Floor Kakadeo Kanpur
+                The Berry Coworks, Sector 142, Noida, Uttar Pradesh 201304
               </p>
               <p className="mt-2 text-base text-gray-400">
                 info@vacationsaga.com | +91 8960980806

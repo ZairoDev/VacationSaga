@@ -91,7 +91,7 @@ const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-xs leading-5 text-neutral-600 dark:text-neutral-400">
-              117/N/70 3rd Floor Kakadeo Kanpur
+              The Berry Coworks, Sector 142, Noida, Uttar Pradesh 201304
             </p>
             <a
               href="mailto:info@vacationsaga.com"
