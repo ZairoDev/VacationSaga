@@ -174,7 +174,8 @@ jobs:
       - name: Upload release to VPS
         run: |
           set -euo pipefail
-          RELEASE_ID="$(date -u +%Y%m%d_%H%M%S)_${GITHUB_SHA::7}"
+          # Use the checked-out commit (workflow_run head_sha), not GITHUB_SHA.
+          RELEASE_ID="$(date -u +%Y%m%d_%H%M%S)_$(git rev-parse --short HEAD)"
           echo "RELEASE_ID=${RELEASE_ID}" >> "${GITHUB_ENV}"
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o BatchMode=yes \
             release.tar.gz \
@@ -190,7 +191,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           command_timeout: 15m
-          script_stop: false
+          script_stop: true
           envs: RELEASE_ID
           script: |
             set -euo pipefail
@@ -207,18 +208,20 @@ jobs:
             echo "Activating QA release: ${RELEASE_ID} on port ${APP_PORT}"
 
             health_check() {
-              local attempt=1 max_attempts=30 HTTP_CODE="000" APP_STATUS="unknown"
+              local attempt=1 max_attempts=30 HTTP_CODE="000" APP_STATUS="unknown" DEPLOY_MARKER=""
               while [ "${attempt}" -le "${max_attempts}" ]; do
                 APP_STATUS="$(pm2 jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];print(m[0]['pm2_env']['status'] if m else 'missing')" 2>/dev/null || echo "error")"
                 if [ "${APP_STATUS}" = "online" ]; then
                   HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:${APP_PORT}/" 2>/dev/null || true)"
                   HTTP_CODE="${HTTP_CODE:-000}"
-                  if [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" -ge 200 ] && [ "${HTTP_CODE}" -lt 500 ]; then
-                    echo "Health check passed (HTTP ${HTTP_CODE}) on attempt ${attempt}"
+                  DEPLOY_MARKER="$(curl -s --max-time 5 "http://localhost:${APP_PORT}/deploy-release.txt" 2>/dev/null || true)"
+                  if [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" -ge 200 ] && [ "${HTTP_CODE}" -lt 500 ] \
+                    && [ "${DEPLOY_MARKER}" = "${RELEASE_ID}" ]; then
+                    echo "Health check passed (HTTP ${HTTP_CODE}, release=${DEPLOY_MARKER}) on attempt ${attempt}"
                     return 0
                   fi
                 fi
-                echo "Attempt ${attempt}/${max_attempts}: status=${APP_STATUS} http=${HTTP_CODE:-pending}"
+                echo "Attempt ${attempt}/${max_attempts}: status=${APP_STATUS} http=${HTTP_CODE:-pending} marker=${DEPLOY_MARKER:-missing}"
                 sleep 2
                 attempt=$((attempt + 1))
               done
@@ -233,13 +236,11 @@ jobs:
                 echo "ERROR: next binary missing at ${DEPLOY_DIR}/node_modules/.bin/next"
                 return 1
               fi
-              if pm2 describe "${PM2_APP_NAME}" >/dev/null 2>&1; then
-                if pm2 reload "${PM2_APP_NAME}" --update-env; then
-                  pm2 save
-                  return 0
-                fi
-                echo "WARN: pm2 reload failed — recreating"
-                pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+              # Always recreate after a symlink flip — reload keeps old cwd/.next.
+              pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+              sleep 1
+              if command -v fuser >/dev/null 2>&1; then
+                fuser -k "${APP_PORT}/tcp" 2>/dev/null || true
                 sleep 1
               fi
               pm2 start ./node_modules/.bin/next \
@@ -311,6 +312,9 @@ jobs:
               sudo rm -rf "${NEW_RELEASE}"
               exit 1
             fi
+
+            mkdir -p "${NEW_RELEASE}/public"
+            printf '%s\n' "${RELEASE_ID}" > "${NEW_RELEASE}/public/deploy-release.txt"
 
             sudo ln -sfn "${NEW_RELEASE}" "${DEPLOY_DIR}"
             sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
