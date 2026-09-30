@@ -35,7 +35,7 @@ const info = [
   },
   {
     title: "For Booking Support",
-    desc: "+91 8960980806 / 9621119484",
+    desc: "+91 9076621166 / 9621119484",
   },
 ];
 

@@ -346,7 +346,7 @@ const SectionGridCategoryBox: React.FC<SectionGridCategoryBoxProps> = ({
               Contact Us
             </Link>
             <Link
-              href="https://wa.me/918960980806?text=Hi%20VacationSaga%2C%20I%20need%20help%20finding%20a%20property."
+              href="https://wa.me/919076621166?text=Hi%20VacationSaga%2C%20I%20need%20help%20finding%20a%20property."
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Chat on WhatsApp"
