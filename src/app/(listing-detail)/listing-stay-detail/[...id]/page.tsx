@@ -1593,7 +1593,7 @@ const ListingStayDetailPageContent: FC<ListingStayDetailPageProps> = ({ params }
   const message = isSoldOut 
     ? encodeURIComponent(`Hello, the property ${propertyName} (VSID: ${propertyvsid}) is rented. I'd like to find similar properties or be notified when available.`)
     : encodeURIComponent(`Hello, I want to enquire about ${propertyName} (VSID: ${propertyvsid})`);
-  const whatsappUrl = `https://wa.me/+918960980806?text=${message}`;
+  const whatsappUrl = `https://wa.me/+919076621166?text=${message}`;
 
     return (
       <div className="w-full max-w-md mx-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg transition-colors duration-300">
