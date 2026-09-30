@@ -251,7 +251,7 @@ export default function Home() {
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
                   <Link
                     className="px-8 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 flex items-center justify-center"
-                    href={`https://wa.me/+918960980806`}
+                    href={`https://wa.me/+919076621166`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -544,7 +544,7 @@ export default function Home() {
                 The Berry Coworks, Sector 142, Noida, Uttar Pradesh 201304
               </p>
               <p className="mt-2 text-base text-gray-400">
-                info@vacationsaga.com | +91 8960980806
+                info@vacationsaga.com | +91 9076621166
               </p>
             </div>
             <div className="flex space-x-6">

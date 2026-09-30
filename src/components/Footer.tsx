@@ -57,8 +57,8 @@ const COLUMNS = [
     links: [
       { label: "info@vacationsaga.com",  href: "mailto:info@vacationsaga.com" },
       {
-        label: "+91 8960980806",
-        href: "https://wa.me/918960980806"
+        label: "+91 9076621166",
+        href: "https://wa.me/919076621166"
       },
       { label: "Privacy Policy",         href: "/privacy-policy" },
       { label: "Terms & Conditions",     href: "/termsandconditions" },
