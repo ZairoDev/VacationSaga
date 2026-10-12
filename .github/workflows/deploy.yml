@@ -252,12 +252,21 @@ jobs:
             NEW_RELEASE="${RELEASES_DIR}/${RELEASE_ID}"
             RUN_USER="$(whoami)"
             RUN_GROUP="$(id -gn)"
+            # nginx/PM2 serve this app as jenkins. SSH for deploy is root.
+            # Files owned by root make jenkins fail with EACCES (.next/cache, .env).
+            APP_USER="jenkins"
+            APP_GROUP="jenkins"
 
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "Activating release: ${RELEASE_ID}"
             echo "SSH user: ${RUN_USER} (uid=$(id -u), group=${RUN_GROUP})"
+            echo "App user: ${APP_USER}"
             echo "App port: ${APP_PORT}"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            pm2_as_app() {
+              sudo -u "${APP_USER}" -H pm2 "$@"
+            }
 
             health_check() {
               local attempt=1
@@ -271,7 +280,7 @@ jobs:
               EXPECTED_ROOT="$(readlink -f "${DEPLOY_DIR}")"
 
               while [ "${attempt}" -le "${max_attempts}" ]; do
-                APP_STATUS="$(pm2 jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];print(m[0]['pm2_env']['status'] if m else 'missing')" 2>/dev/null || echo "error")"
+                APP_STATUS="$(pm2_as_app jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];print(m[0]['pm2_env']['status'] if m else 'missing')" 2>/dev/null || echo "error")"
 
                 if [ "${APP_STATUS}" = "online" ]; then
                   HTTP_CODE="$(curl -s -o /dev/null -w "%{http_code}" \
@@ -279,7 +288,7 @@ jobs:
                   HTTP_CODE="${HTTP_CODE:-000}"
 
                   # Prove PM2 is bound to the NEW release dir (reload used to keep the old cwd).
-                  PM2_CWD="$(pm2 jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];e=m[0].get('pm2_env',{}) if m else {};print(e.get('pm_cwd') or e.get('cwd') or '')" 2>/dev/null || true)"
+                  PM2_CWD="$(pm2_as_app jlist 2>/dev/null | python3 -c "import sys,json;apps=json.load(sys.stdin);m=[a for a in apps if a.get('name')=='${PM2_APP_NAME}'];e=m[0].get('pm2_env',{}) if m else {};print(e.get('pm_cwd') or e.get('cwd') or '')" 2>/dev/null || true)"
                   PM2_ROOT="$(readlink -f "${PM2_CWD}" 2>/dev/null || echo "")"
 
                   if [ "${HTTP_CODE}" != "000" ] && [ "${HTTP_CODE}" -ge 200 ] && [ "${HTTP_CODE}" -lt 500 ] \
@@ -309,7 +318,8 @@ jobs:
 
               # Always recreate after a symlink flip. `pm2 reload` keeps the old
               # resolved cwd/.next, so prod can stay on a previous release.
-              pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+              # Use jenkins's PM2. `pm2` as root talks to a different daemon.
+              pm2_as_app delete "${PM2_APP_NAME}" 2>/dev/null || true
               sleep 2
 
               if command -v fuser >/dev/null 2>&1; then
@@ -319,12 +329,12 @@ jobs:
 
               # Start Next.js directly — do NOT use `pm2 start npm`.
               # Use absolute cwd so PM2 does not pin an old resolved path.
-              pm2 start "$(pwd)/node_modules/.bin/next" \
+              pm2_as_app start "$(pwd)/node_modules/.bin/next" \
                 --name "${PM2_APP_NAME}" \
                 --cwd "$(pwd)" \
                 --update-env \
                 -- start -p "${APP_PORT}"
-              pm2 save
+              pm2_as_app save
             }
 
             ensure_release_layout() {
@@ -335,17 +345,17 @@ jobs:
                 MIGRATED="${RELEASES_DIR}/migrated_$(date +%Y%m%d_%H%M%S)"
                 sudo mv "${DEPLOY_DIR}" "${MIGRATED}"
                 sudo ln -s "${MIGRATED}" "${DEPLOY_DIR}"
-                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
-                sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${MIGRATED}"
+                sudo chown -h "${APP_USER}:${APP_GROUP}" "${DEPLOY_DIR}" || true
+                sudo chown -R "${APP_USER}:${APP_GROUP}" "${MIGRATED}"
 
                 start_or_reload_app || true
               fi
 
               if [ ! -e "${DEPLOY_DIR}" ]; then
                 sudo mkdir -p "${RELEASES_DIR}/bootstrap"
-                sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${RELEASES_DIR}/bootstrap"
+                sudo chown -R "${APP_USER}:${APP_GROUP}" "${RELEASES_DIR}/bootstrap"
                 sudo ln -s "${RELEASES_DIR}/bootstrap" "${DEPLOY_DIR}"
-                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+                sudo chown -h "${APP_USER}:${APP_GROUP}" "${DEPLOY_DIR}" || true
               fi
             }
 
@@ -373,7 +383,7 @@ jobs:
               if [ -n "${previous_release}" ] && [ -d "${previous_release}" ]; then
                 echo "Rolling back to ${previous_release}"
                 sudo ln -sfn "${previous_release}" "${DEPLOY_DIR}"
-                sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+                sudo chown -h "${APP_USER}:${APP_GROUP}" "${DEPLOY_DIR}" || true
                 start_or_reload_app
               else
                 echo "WARNING: No valid previous release to roll back to (${previous_release})"
@@ -439,7 +449,7 @@ jobs:
             sudo rm -rf "${NEW_RELEASE}"
             sudo mkdir -p "${NEW_RELEASE}"
             sudo tar -xzf "${ARCHIVE}" -C "${NEW_RELEASE}"
-            sudo chown -R "${RUN_USER}:${RUN_GROUP}" "${NEW_RELEASE}"
+            sudo chown -R "${APP_USER}:${APP_GROUP}" "${NEW_RELEASE}"
             rm -f "${ARCHIVE}"
 
             copy_runtime_env "${PREVIOUS_RELEASE}" "${NEW_RELEASE}"
@@ -454,9 +464,18 @@ jobs:
             mkdir -p "${NEW_RELEASE}/public"
             printf '%s\n' "${RELEASE_ID}" > "${NEW_RELEASE}/public/deploy-release.txt"
 
+            # copy_runtime_env and the marker are created as root. Hand the
+            # release back to jenkins so it can read .env and write .next/cache.
+            sudo chown -R "${APP_USER}:${APP_GROUP}" "${NEW_RELEASE}"
+            for ENV_FILE in .env.local .env.production .env; do
+              if [ -f "${NEW_RELEASE}/${ENV_FILE}" ]; then
+                sudo chmod 640 "${NEW_RELEASE}/${ENV_FILE}"
+              fi
+            done
+
             echo "Switching live symlink..."
             sudo ln -sfn "${NEW_RELEASE}" "${DEPLOY_DIR}"
-            sudo chown -h "${RUN_USER}:${RUN_GROUP}" "${DEPLOY_DIR}" || true
+            sudo chown -h "${APP_USER}:${APP_GROUP}" "${DEPLOY_DIR}" || true
 
             start_or_reload_app
 
@@ -464,7 +483,7 @@ jobs:
             if ! health_check; then
               echo "Health check failed — initiating rollback"
               echo "--- PM2 logs ---"
-              pm2 logs "${PM2_APP_NAME}" --lines 50 --nostream || true
+              pm2_as_app logs "${PM2_APP_NAME}" --lines 50 --nostream || true
               rollback_to "${PREVIOUS_RELEASE}"
               sudo rm -rf "${NEW_RELEASE}"
               exit 1
@@ -481,6 +500,6 @@ jobs:
             echo "Release: ${RELEASE_ID}"
             echo "Time: $(date)"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            pm2 list || true
+            pm2_as_app list || true
             sudo ss -ltnp 2>/dev/null | grep ":${APP_PORT}" || true
             exit 0
